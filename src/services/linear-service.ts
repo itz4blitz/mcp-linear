@@ -8,6 +8,59 @@ export class LinearService {
     this.client = client;
   }
 
+  private nonEmptyString(value: string | undefined): string | undefined {
+    return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+  }
+
+  private nonEmptyArray<T>(value: T[] | undefined): T[] | undefined {
+    return Array.isArray(value) && value.length > 0 ? value : undefined;
+  }
+
+  private compactIssueInput<T extends {
+    assigneeId?: string;
+    projectId?: string;
+    cycleId?: string;
+    dueDate?: string;
+    labelIds?: string[];
+    addedLabelIds?: string[];
+    removedLabelIds?: string[];
+    parentId?: string;
+    subscriberIds?: string[];
+    stateId?: string;
+    templateId?: string;
+    teamId?: string;
+  }>(input: T): T {
+    const compacted = {
+      ...input,
+      assigneeId: this.nonEmptyString(input.assigneeId),
+      projectId: this.nonEmptyString(input.projectId),
+      cycleId: this.nonEmptyString(input.cycleId),
+      dueDate: this.nonEmptyString(input.dueDate),
+      parentId: this.nonEmptyString(input.parentId),
+      subscriberIds: this.nonEmptyArray(input.subscriberIds),
+      stateId: this.nonEmptyString(input.stateId),
+      templateId: this.nonEmptyString(input.templateId),
+      teamId: this.nonEmptyString(input.teamId),
+    } as T;
+
+    const addedLabelIds = this.nonEmptyArray(input.addedLabelIds);
+    const removedLabelIds = this.nonEmptyArray(input.removedLabelIds);
+
+    if (addedLabelIds || removedLabelIds) {
+      compacted.addedLabelIds = addedLabelIds as T['addedLabelIds'];
+      compacted.removedLabelIds = removedLabelIds as T['removedLabelIds'];
+      compacted.labelIds = undefined;
+    } else {
+      compacted.labelIds = this.nonEmptyArray(input.labelIds) as T['labelIds'];
+      compacted.addedLabelIds = undefined;
+      compacted.removedLabelIds = undefined;
+    }
+
+    return Object.fromEntries(
+      Object.entries(compacted).filter(([, value]) => value !== undefined),
+    ) as T;
+  }
+
   async getUserInfo() {
     const viewer = await this.client.viewer;
     return {
@@ -434,7 +487,7 @@ export class LinearService {
     templateId?: string;
     sortOrder?: number;
   }) {
-    const createdIssue = await this.client.createIssue({
+    const createdIssue = await this.client.createIssue(this.compactIssueInput({
       title: args.title,
       description: args.description,
       teamId: args.teamId,
@@ -450,7 +503,7 @@ export class LinearService {
       stateId: args.stateId,
       templateId: args.templateId,
       sortOrder: args.sortOrder,
-    });
+    }));
 
     // Access the issue from the payload
     if (createdIssue.success && createdIssue.issue) {
@@ -485,7 +538,7 @@ export class LinearService {
     teamId?: string;
     sortOrder?: number;
   }) {
-    const updatedIssue = await this.client.updateIssue(args.id, {
+    const updatedIssue = await this.client.updateIssue(args.id, this.compactIssueInput({
       title: args.title,
       description: args.description,
       stateId: args.stateId,
@@ -502,7 +555,7 @@ export class LinearService {
       subscriberIds: args.subscriberIds,
       teamId: args.teamId,
       sortOrder: args.sortOrder,
-    });
+    }));
 
     if (updatedIssue.success && updatedIssue.issue) {
       const issueData = await updatedIssue.issue;
@@ -521,7 +574,7 @@ export class LinearService {
     const createdComment = await this.client.createComment({
       issueId: args.issueId,
       body: args.body,
-      parentId: args.parentId,
+      ...(this.nonEmptyString(args.parentId) ? { parentId: this.nonEmptyString(args.parentId) } : {}),
     });
 
     if (createdComment.success && createdComment.comment) {
