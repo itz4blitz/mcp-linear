@@ -4,20 +4,20 @@
 
 # MCP Linear
 
-A Model Context Protocol (MCP) server implementation for the Linear GraphQL API that enables AI assistants to interact with Linear project management systems.
+`mcp-linear` is a Model Context Protocol server for Linear that exposes a practical project-management surface for AI assistants.
+
+It is designed for real workflow use, not just raw CRUD. The current tool surface covers issue management, project updates, milestones, roadmaps, initiatives, saved views, favorites, custom fields, cycles, and PM-oriented issue queries.
 
 ![MCP Linear](https://img.shields.io/badge/MCP-Linear-blue)
 
-## Features
+## Highlights
 
-MCP Linear bridges the gap between AI assistant and Linear (project management tool) by implementing the MCP protocol. This allows to:
-
-- Retrieve issues, projects, teams, and other data from Linear
-- Create and update issues
-- Change issue status
-- Assign issues to team members
-- Add comments
-- Create projects and teams
+- Read and update issues, projects, cycles, milestones, roadmaps, and initiatives
+- Create project updates and manage project planning objects
+- Work with saved views and favorites
+- Read and update issue custom fields
+- Use PM-oriented queries like project issue filters and cycle issue filters
+- Validate the built server with an MCP SDK smoke test as part of the default test flow
 
 ## Example prompts
 
@@ -26,36 +26,63 @@ Once connected, you can use prompts like:
 - "Show me all my Linear issues"
 - "Create a new issue titled 'Fix login bug' in the Frontend team"
 - "Change the status of issue FE-123 to 'In Progress'"
-- "Assign issue BE-456 to John Smith"
-- "Add a comment to issue UI-789: 'This needs to be fixed by Friday'"
+- "Show issues in project OrdelloTS that are Todo or In Progress"
+- "Get cycle issues for the current sprint, excluding completed work"
+- "Create a project update for OrdelloTS summarizing this week's progress"
 
-## Installation
+## Getting a Linear API token
 
-### Getting Your Linear API Token
+To use MCP Linear, you need a Linear API token:
 
-To use MCP Linear, you'll need a Linear API token. Here's how to get one:
+1. Log in to [linear.app](https://linear.app)
+2. Open your workspace settings
+3. Go to **Security & access**
+4. Create a **Personal API Key**
+5. Copy the token and store it securely
 
-1. Log in to your Linear account at [linear.app](https://linear.app)
-2. Click on organization avatar (in the top-left corner)
-3. Select **Settings**
-4. Navigate to **Security & access** in the left sidebar
-5. Under **Personal API Keys** click **New API Key**
-6. Give your key a name (e.g., `MCP Linear Integration`)
-7. Copy the generated API token and store it securely - you won't be able to see it again!
+## Local installation
 
-### Installing from This Fork
+### Clone and build
 
 ```bash
 git clone https://github.com/itz4blitz/mcp-linear.git
 cd mcp-linear
 npm install
 npm run build
+```
+
+### Optional: link the CLI locally
+
+```bash
 npm link
 ```
 
-### Manual Configuration
+This makes the `mcp-linear` command available globally from your local checkout.
 
-After running `npm link`, add the following to your MCP settings file:
+## Running the server
+
+### With an explicit token
+
+```bash
+mcp-linear --token YOUR_LINEAR_API_TOKEN
+```
+
+### With an environment variable
+
+```bash
+export LINEAR_API_TOKEN=YOUR_LINEAR_API_TOKEN
+mcp-linear
+```
+
+### Directly from the built output
+
+```bash
+node dist/index.js --token YOUR_LINEAR_API_TOKEN
+```
+
+## MCP client configuration
+
+If you linked the CLI locally, use a config like:
 
 ```json
 {
@@ -70,53 +97,62 @@ After running `npm link`, add the following to your MCP settings file:
 }
 ```
 
-#### Client-Specific Configuration Locations
+If you prefer running directly from the repository build, point your client at `dist/index.js`:
+
+```json
+{
+  "mcpServers": {
+    "linear": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/mcp-linear/dist/index.js"
+      ],
+      "env": {
+        "LINEAR_API_TOKEN": "<YOUR_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+Common config locations:
 
 - Cursor: `~/.cursor/mcp.json`
 - Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Claude VSCode Extension: `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 - GoMCP: `~/.config/gomcp/config.yaml`
 
-### Manual run
+## Available tools
 
-Prerequisites
+See [`TOOLS.md`](./TOOLS.md) for the full inventory.
 
-- Node.js (v18+)
-- NPM or Yarn
-- Linear API token
+Especially useful current tool groups:
 
-```bash
-# Clone and install locally
-git clone https://github.com/itz4blitz/mcp-linear.git
-cd mcp-linear
-npm install
-npm run build
-npm link  # Makes the package available globally
-```
-
-#### Running the Server
-
-Run the server with your Linear API token:
-
-```bash
-mcp-linear --token YOUR_LINEAR_API_TOKEN
-```
-
-Or set the token in your environment and run without arguments:
-
-```bash
-export LINEAR_API_TOKEN=YOUR_LINEAR_API_TOKEN
-mcp-linear
-```
-
-## Available Tools
-
-See [TOOLS.md](./TOOLS.md) for a complete list of available tools and planned features.
+- issue management
+- project management and project updates
+- cycle management
+- milestone management
+- roadmap management
+- initiative management
+- saved views and favorites
+- custom fields
 
 ## Development
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information on how to develop locally.
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for local development details.
+
+The default validation path is:
+
+```bash
+npm test
+npm run build
+```
+
+`npm test` runs both:
+
+- Jest unit tests
+- an official MCP SDK smoke test against the built stdio server
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. See [`LICENSE`](./LICENSE).
