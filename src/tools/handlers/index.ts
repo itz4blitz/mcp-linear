@@ -29,6 +29,13 @@ import {
   handleAddIssueToProject,
   handleGetProjectIssues,
 } from './project-handlers.js';
+import {
+  handleCreateSavedView,
+  handleDeleteSavedView,
+  handleGetFavoriteViews,
+  handleGetSavedViews,
+  handleUpdateSavedView,
+} from './view-handlers.js';
 import { handleGetTeams, handleGetWorkflowStates } from './team-handlers.js';
 import {
   handleGetViewer,
@@ -81,6 +88,13 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_updateProject: handleUpdateProject(linearService),
     linear_addIssueToProject: handleAddIssueToProject(linearService),
     linear_getProjectIssues: handleGetProjectIssues(linearService),
+
+    // View tools
+    linear_getSavedViews: handleGetSavedViews(linearService),
+    linear_createSavedView: handleCreateSavedView(linearService),
+    linear_updateSavedView: handleUpdateSavedView(linearService),
+    linear_deleteSavedView: handleDeleteSavedView(linearService),
+    linear_getFavoriteViews: handleGetFavoriteViews(linearService),
 
     // Cycle Management tools
     linear_getCycles: handleGetCycles(linearService),
@@ -162,6 +176,13 @@ export {
   handleUpdateProject,
   handleAddIssueToProject,
   handleGetProjectIssues,
+
+  // View handlers
+  handleGetSavedViews,
+  handleCreateSavedView,
+  handleUpdateSavedView,
+  handleDeleteSavedView,
+  handleGetFavoriteViews,
 
   // Cycle Management handlers
   handleGetCycles,

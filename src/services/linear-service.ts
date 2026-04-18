@@ -1,4 +1,52 @@
-import { LinearClient } from '@linear/sdk';
+import { CustomView, LinearClient, LinearDocument, LinearFetch, Team, User } from '@linear/sdk';
+
+type JsonObject = Record<string, unknown>;
+
+type FavoriteViewNode = {
+  id: string;
+  type: string;
+  sortOrder: number;
+  customView?: {
+    id: string;
+    name: string;
+    slugId?: string | null;
+    shared: boolean;
+  } | null;
+  predefinedViewType?: string | null;
+  predefinedViewTeam?: {
+    id: string;
+    name: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  url?: string | null;
+};
+
+const FAVORITE_VIEWS_QUERY = `
+  query FavoriteViews($first: Int, $includeArchived: Boolean, $orderBy: PaginationOrderBy) {
+    favorites(first: $first, includeArchived: $includeArchived, orderBy: $orderBy) {
+      nodes {
+        id
+        type
+        sortOrder
+        predefinedViewType
+        createdAt
+        updatedAt
+        url
+        customView {
+          id
+          name
+          slugId
+          shared
+        }
+        predefinedViewTeam {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
 
 // Define Linear API service
 export class LinearService {
@@ -14,6 +62,115 @@ export class LinearService {
 
   private nonEmptyArray<T>(value: T[] | undefined): T[] | undefined {
     return Array.isArray(value) && value.length > 0 ? value : undefined;
+  }
+
+  private nonEmptyObject<T extends JsonObject>(value: T | undefined): T | undefined {
+    return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length > 0
+      ? value
+      : undefined;
+  }
+
+  private nullableNonEmptyString(value: string | null | undefined): string | null | undefined {
+    return value === null ? null : this.nonEmptyString(value);
+  }
+
+  private nullableNonEmptyObject<T extends JsonObject>(value: T | null | undefined): T | null | undefined {
+    return value === null ? null : this.nonEmptyObject(value);
+  }
+
+  private compactObject<T extends Record<string, unknown>>(input: T): T {
+    return Object.fromEntries(
+      Object.entries(input).filter(([, value]) => value !== undefined),
+    ) as T;
+  }
+
+  private normalizePaginationOrderBy(
+    value: string | undefined,
+  ): LinearDocument.PaginationOrderBy | undefined {
+    if (value === 'createdAt') {
+      return LinearDocument.PaginationOrderBy.CreatedAt;
+    }
+
+    if (value === 'updatedAt') {
+      return LinearDocument.PaginationOrderBy.UpdatedAt;
+    }
+
+    return undefined;
+  }
+
+  private async normalizeUserReference(userFetch: LinearFetch<User> | undefined) {
+    const user = userFetch ? await userFetch : null;
+
+    return user
+      ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        }
+      : null;
+  }
+
+  private async normalizeTeamReference(teamFetch: LinearFetch<Team> | undefined) {
+    const team = teamFetch ? await teamFetch : null;
+
+    return team
+      ? {
+          id: team.id,
+          name: team.name,
+        }
+      : null;
+  }
+
+  // Linear calls these saved views in the product UI, but the SDK/API surface uses CustomView.
+  private async normalizeSavedView(view: CustomView) {
+    const [team, owner, creator] = await Promise.all([
+      this.normalizeTeamReference(view.team),
+      this.normalizeUserReference(view.owner),
+      this.normalizeUserReference(view.creator),
+    ]);
+
+    return {
+      id: view.id,
+      name: view.name,
+      description: view.description,
+      shared: view.shared,
+      icon: view.icon,
+      color: view.color,
+      slugId: view.slugId,
+      filterData: view.filterData,
+      filters: view.filters,
+      projectFilterData: view.projectFilterData,
+      team,
+      owner,
+      creator,
+      createdAt: view.createdAt,
+      updatedAt: view.updatedAt,
+    };
+  }
+
+  private normalizeFavoriteViewNode(favorite: FavoriteViewNode) {
+    if (!favorite.customView && !favorite.predefinedViewType) {
+      return null;
+    }
+
+    return {
+      id: favorite.id,
+      type: favorite.type,
+      sortOrder: favorite.sortOrder,
+      customView: favorite.customView
+        ? {
+            id: favorite.customView.id,
+            name: favorite.customView.name,
+            slugId: favorite.customView.slugId,
+            shared: favorite.customView.shared,
+          }
+        : null,
+      predefinedViewType: favorite.predefinedViewType ?? null,
+      predefinedViewTeam: favorite.predefinedViewTeam ?? null,
+      createdAt: new Date(favorite.createdAt),
+      updatedAt: new Date(favorite.updatedAt),
+      url: favorite.url ?? undefined,
+    };
   }
 
   private compactIssueInput<T extends {
@@ -147,6 +304,133 @@ export class LinearService {
           })),
         };
       }),
+    );
+  }
+
+  async getSavedViews(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const views = await this.client.customViews(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    return Promise.all(views.nodes.map((view) => this.normalizeSavedView(view)));
+  }
+
+  async createSavedView(args: {
+    name: string;
+    description?: string;
+    shared?: boolean;
+    icon?: string;
+    color?: string;
+    teamId?: string;
+    projectId?: string;
+    ownerId?: string;
+    filters?: JsonObject;
+    filterData?: JsonObject;
+    projectFilterData?: JsonObject;
+  }) {
+    const createdView = await this.client.createCustomView(
+      this.compactObject({
+        name: args.name,
+        description: this.nonEmptyString(args.description),
+        shared: args.shared,
+        icon: this.nonEmptyString(args.icon),
+        color: this.nonEmptyString(args.color),
+        teamId: this.nonEmptyString(args.teamId),
+        projectId: this.nonEmptyString(args.projectId),
+        ownerId: this.nonEmptyString(args.ownerId),
+        filters: this.nonEmptyObject(args.filters),
+        filterData: this.nonEmptyObject(args.filterData) as JsonObject | undefined,
+        projectFilterData: this.nonEmptyObject(args.projectFilterData) as JsonObject | undefined,
+      }),
+    );
+
+    if (!createdView.success || !createdView.customView) {
+      throw new Error('Failed to create saved view');
+    }
+
+    return this.normalizeSavedView(await createdView.customView);
+  }
+
+  async updateSavedView(args: {
+    id: string;
+    name?: string;
+    description?: string | null;
+    shared?: boolean;
+    icon?: string | null;
+    color?: string | null;
+    teamId?: string | null;
+    projectId?: string | null;
+    ownerId?: string | null;
+    filters?: JsonObject | null;
+    filterData?: JsonObject | null;
+    projectFilterData?: JsonObject | null;
+  }) {
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      description: this.nullableNonEmptyString(args.description),
+      shared: args.shared,
+      icon: this.nullableNonEmptyString(args.icon),
+      color: this.nullableNonEmptyString(args.color),
+      teamId: this.nullableNonEmptyString(args.teamId),
+      projectId: this.nullableNonEmptyString(args.projectId),
+      ownerId: this.nullableNonEmptyString(args.ownerId),
+      filters: this.nullableNonEmptyObject(args.filters),
+      filterData: this.nullableNonEmptyObject(args.filterData) as JsonObject | null | undefined,
+      projectFilterData: this.nullableNonEmptyObject(args.projectFilterData) as JsonObject | null | undefined,
+    });
+
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one saved view field must be provided');
+    }
+
+    const updatedView = await this.client.updateCustomView(
+      args.id,
+      updateInput,
+    );
+
+    if (!updatedView.success || !updatedView.customView) {
+      throw new Error(`Failed to update saved view ${args.id}`);
+    }
+
+    return this.normalizeSavedView(await updatedView.customView);
+  }
+
+  async deleteSavedView(id: string) {
+    const deletePayload = await this.client.deleteCustomView(id);
+
+    if (!deletePayload.success) {
+      throw new Error(`Failed to delete saved view ${id}`);
+    }
+
+    return {
+      success: deletePayload.success,
+      id: deletePayload.entityId,
+    };
+  }
+
+  async getFavoriteViews(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const response = await this.client.client.request<
+      { favorites: { nodes: FavoriteViewNode[] } },
+      Record<string, unknown>
+    >(
+      FAVORITE_VIEWS_QUERY,
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    const normalizedFavorites = response.favorites.nodes.map((favorite) =>
+      this.normalizeFavoriteViewNode(favorite),
+    );
+
+    return normalizedFavorites.filter(
+      (favorite): favorite is NonNullable<typeof favorite> => favorite !== null,
     );
   }
 
