@@ -1107,6 +1107,176 @@ describe('LinearService issue unlink operations', () => {
   });
 });
 
+describe('LinearService roadmap operations', () => {
+  it('returns normalized roadmaps when the feature is enabled', async () => {
+    const roadmaps = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'roadmap-1',
+          name: 'Platform Roadmap',
+          description: 'Quarterly priorities',
+          color: '#123456',
+          slugId: 'platform-roadmap',
+          sortOrder: 1,
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+          archivedAt: null,
+          url: 'https://linear.app/roadmap/1',
+          owner: Promise.resolve({ id: 'user-1', name: 'Owner', email: 'owner@example.com' }),
+          creator: Promise.resolve({ id: 'user-2', name: 'Creator', email: 'creator@example.com' }),
+        },
+      ],
+    });
+
+    const service = new LinearService({
+      organization: Promise.resolve({ id: 'org-1', name: 'Premier Studio', roadmapEnabled: true }),
+      roadmaps,
+    } as never);
+
+    await expect(service.getRoadmaps({ limit: 10, includeArchived: true })).resolves.toEqual([
+      {
+        id: 'roadmap-1',
+        name: 'Platform Roadmap',
+        description: 'Quarterly priorities',
+        color: '#123456',
+        slugId: 'platform-roadmap',
+        sortOrder: 1,
+        owner: { id: 'user-1', name: 'Owner', email: 'owner@example.com' },
+        creator: { id: 'user-2', name: 'Creator', email: 'creator@example.com' },
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+        archivedAt: null,
+        url: 'https://linear.app/roadmap/1',
+      },
+    ]);
+
+    expect(roadmaps).toHaveBeenCalledWith({ first: 10, includeArchived: true });
+  });
+
+  it('returns roadmap details with associated projects', async () => {
+    const roadmap = jest.fn().mockResolvedValue({
+      id: 'roadmap-1',
+      name: 'Platform Roadmap',
+      description: 'Quarterly priorities',
+      color: '#123456',
+      slugId: 'platform-roadmap',
+      sortOrder: 1,
+      createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+      archivedAt: null,
+      url: 'https://linear.app/roadmap/1',
+      owner: Promise.resolve({ id: 'user-1', name: 'Owner', email: 'owner@example.com' }),
+      creator: Promise.resolve({ id: 'user-2', name: 'Creator', email: 'creator@example.com' }),
+      projects: jest.fn().mockResolvedValue({
+        nodes: [
+          {
+            id: 'project-1',
+            name: 'Core App',
+            state: 'started',
+            url: 'https://linear.app/project/1',
+          },
+        ],
+      }),
+    });
+
+    const service = new LinearService({
+      organization: Promise.resolve({ id: 'org-1', name: 'Premier Studio', roadmapEnabled: true }),
+      roadmap,
+    } as never);
+
+    await expect(service.getRoadmapById('roadmap-1')).resolves.toMatchObject({
+      id: 'roadmap-1',
+      projects: [
+        {
+          id: 'project-1',
+          name: 'Core App',
+          state: 'started',
+          url: 'https://linear.app/project/1',
+        },
+      ],
+    });
+  });
+
+  it('creates, updates, and archives a roadmap', async () => {
+    const archiveRoadmapMutation = jest.fn().mockResolvedValue({ success: true, entity: Promise.resolve(null) });
+    const activeRoadmapRecord = {
+      id: 'roadmap-1',
+      name: 'Platform Roadmap',
+      description: 'Quarterly priorities',
+      color: '#123456',
+      slugId: 'platform-roadmap',
+      sortOrder: 1,
+      createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+      archivedAt: null,
+      url: 'https://linear.app/roadmap/1',
+      owner: Promise.resolve({ id: 'user-1', name: 'Owner', email: 'owner@example.com' }),
+      creator: Promise.resolve({ id: 'user-2', name: 'Creator', email: 'creator@example.com' }),
+      projects: jest.fn().mockResolvedValue({ nodes: [] }),
+      archive: archiveRoadmapMutation,
+    };
+    const archivedRoadmapRecord = {
+      ...activeRoadmapRecord,
+      archivedAt: new Date('2024-01-03T00:00:00.000Z'),
+    };
+
+    const createRoadmap = jest.fn().mockResolvedValue({
+      success: true,
+      roadmap: Promise.resolve(activeRoadmapRecord),
+    });
+    const updateRoadmap = jest.fn().mockResolvedValue({
+      success: true,
+      roadmap: Promise.resolve(activeRoadmapRecord),
+    });
+    const roadmap = jest
+      .fn()
+      .mockResolvedValueOnce(activeRoadmapRecord)
+      .mockResolvedValueOnce(activeRoadmapRecord)
+      .mockResolvedValueOnce(archivedRoadmapRecord);
+
+    const service = new LinearService({
+      organization: Promise.resolve({ id: 'org-1', name: 'Premier Studio', roadmapEnabled: true }),
+      createRoadmap,
+      updateRoadmap,
+      roadmap,
+    } as never);
+
+    await expect(service.createRoadmap({ name: 'Platform Roadmap', description: 'Quarterly priorities' }))
+      .resolves.toMatchObject({ id: 'roadmap-1', projects: [] });
+    expect(createRoadmap).toHaveBeenCalledWith({
+      name: 'Platform Roadmap',
+      description: 'Quarterly priorities',
+    });
+
+    await expect(service.updateRoadmap({ id: 'roadmap-1', color: '#123456' })).resolves.toMatchObject({
+      id: 'roadmap-1',
+      color: '#123456',
+    });
+    expect(updateRoadmap).toHaveBeenCalledWith('roadmap-1', { color: '#123456' });
+
+    await expect(service.archiveRoadmap('roadmap-1')).resolves.toMatchObject({
+      success: true,
+      roadmap: {
+        id: 'roadmap-1',
+        archivedAt: new Date('2024-01-03T00:00:00.000Z'),
+      },
+    });
+    expect(archiveRoadmapMutation).toHaveBeenCalled();
+    expect(roadmap).toHaveBeenCalledTimes(3);
+  });
+
+  it('blocks roadmap operations when the workspace does not have roadmaps enabled', async () => {
+    const service = new LinearService({
+      organization: Promise.resolve({ id: 'org-1', name: 'Premier Studio', roadmapEnabled: false }),
+      roadmaps: jest.fn(),
+    } as never);
+
+    await expect(service.getRoadmaps()).rejects.toThrow(
+      'Roadmaps are not enabled for organization Premier Studio',
+    );
+  });
+});
+
 describe('LinearService custom field updates', () => {
   it('passes structured JSON values through to the discovered custom field mutation', async () => {
     const request = createCustomFieldRequestMock();

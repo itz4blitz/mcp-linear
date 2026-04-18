@@ -82,6 +82,16 @@ The following tools are currently implemented and available in the MCP Linear:
 | `linear_removeIssueFromProject` | Remove an existing issue from a project   | ✅ Implemented |
 | `linear_getProjectIssues`       | Get all issues associated with a project  | ✅ Implemented |
 
+### Roadmap Tools
+
+| Tool Name                | Description                                               | Status         |
+| ------------------------ | --------------------------------------------------------- | -------------- |
+| `linear_getRoadmaps`     | Get Linear roadmaps with optional archived filtering      | ✅ Implemented |
+| `linear_getRoadmapById`  | Get details of a specific roadmap                         | ✅ Implemented |
+| `linear_createRoadmap`   | Create a new roadmap                                      | ✅ Implemented |
+| `linear_updateRoadmap`   | Update an existing roadmap                                | ✅ Implemented |
+| `linear_archiveRoadmap`  | Archive a roadmap                                         | ✅ Implemented |
+
 ### Cycle Management Tools
 
 | Tool Name                | Description                               | Status         |
@@ -166,11 +176,6 @@ The following tools are recommended for future implementation to enhance the cap
 
 | Tool Name                      | Description                       | Priority | Status     |
 | ------------------------------ | --------------------------------- | -------- | ---------- |
-| `linear_getRoadmaps`           | Get a list of roadmaps            | Medium   | 📝 Planned |
-| `linear_getRoadmapById`        | Get details of a specific roadmap | Medium   | 📝 Planned |
-| `linear_createRoadmap`         | Create a new roadmap              | Medium   | 📝 Planned |
-| `linear_updateRoadmap`         | Update an existing roadmap        | Low      | 📝 Planned |
-| `linear_archiveRoadmap`        | Archive a roadmap                 | Low      | 📝 Planned |
 | `linear_getRoadmapItems`       | Get items in a roadmap            | Medium   | 📝 Planned |
 | `linear_addItemToRoadmap`      | Add an item to a roadmap          | Medium   | 📝 Planned |
 | `linear_removeItemFromRoadmap` | Remove an item from a roadmap     | Low      | 📝 Planned |
