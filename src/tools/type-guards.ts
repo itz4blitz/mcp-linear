@@ -443,15 +443,22 @@ export function isUpdateProjectArgs(args: unknown): args is {
   );
 }
 
+const PROJECT_UPDATE_HEALTH_STATUSES = ['onTrack', 'atRisk', 'offTrack'] as const;
+
+function isProjectUpdateHealthStatus(value: unknown): value is (typeof PROJECT_UPDATE_HEALTH_STATUSES)[number] {
+  return (
+    typeof value === 'string' &&
+    (PROJECT_UPDATE_HEALTH_STATUSES as readonly string[]).includes(value)
+  );
+}
+
 /**
  * Type guard for linear_createProjectUpdate tool arguments
  */
 export function isCreateProjectUpdateArgs(args: unknown): args is {
   projectId: string;
   body: string;
-  health?: string;
-  userId?: string;
-  attachments?: string[];
+  health?: 'onTrack' | 'atRisk' | 'offTrack';
 } {
   return (
     typeof args === 'object' &&
@@ -460,9 +467,8 @@ export function isCreateProjectUpdateArgs(args: unknown): args is {
     typeof (args as { projectId: string }).projectId === 'string' &&
     'body' in args &&
     typeof (args as { body: string }).body === 'string' &&
-    (!('health' in args) || typeof (args as { health: string }).health === 'string') &&
-    (!('userId' in args) || typeof (args as { userId: string }).userId === 'string') &&
-    (!('attachments' in args) || Array.isArray((args as { attachments: string[] }).attachments))
+    (!('health' in args) ||
+      isProjectUpdateHealthStatus((args as { health: unknown }).health))
   );
 }
 
@@ -472,7 +478,7 @@ export function isCreateProjectUpdateArgs(args: unknown): args is {
 export function isUpdateProjectUpdateArgs(args: unknown): args is {
   id: string;
   body?: string;
-  health?: string;
+  health?: 'onTrack' | 'atRisk' | 'offTrack';
 } {
   return (
     typeof args === 'object' &&
@@ -480,7 +486,8 @@ export function isUpdateProjectUpdateArgs(args: unknown): args is {
     'id' in args &&
     typeof (args as { id: string }).id === 'string' &&
     (!('body' in args) || typeof (args as { body: string }).body === 'string') &&
-    (!('health' in args) || typeof (args as { health: string }).health === 'string')
+    (!('health' in args) ||
+      isProjectUpdateHealthStatus((args as { health: unknown }).health))
   );
 }
 

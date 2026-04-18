@@ -33,7 +33,6 @@ describe('project update and archive MCP tools', () => {
         projectId: 'project-1',
         body: 'Weekly update',
         health: 'onTrack',
-        attachments: ['attachment-1'],
       }),
     ).resolves.toEqual({ id: 'update-1' });
 
@@ -41,7 +40,6 @@ describe('project update and archive MCP tools', () => {
       projectId: 'project-1',
       body: 'Weekly update',
       health: 'onTrack',
-      attachments: ['attachment-1'],
     });
   });
 
@@ -103,6 +101,21 @@ describe('project update and archive MCP tools', () => {
     await expect(
       handlers.linear_updateProjectUpdate({
         body: 'Missing id',
+      }),
+    ).rejects.toThrow('Invalid arguments for updateProjectUpdate');
+
+    await expect(
+      handlers.linear_createProjectUpdate({
+        projectId: 'project-1',
+        body: 'Weekly update',
+        health: 'green',
+      }),
+    ).rejects.toThrow('Invalid arguments for createProjectUpdate');
+
+    await expect(
+      handlers.linear_updateProjectUpdate({
+        id: 'update-1',
+        health: 'green',
       }),
     ).rejects.toThrow('Invalid arguments for updateProjectUpdate');
 

@@ -147,15 +147,6 @@ export const createProjectUpdateToolDefinition: MCPToolDefinition = {
         description: 'Optional health status for the update',
         enum: ['onTrack', 'atRisk', 'offTrack'],
       },
-      userId: {
-        type: 'string',
-        description: 'Optional user ID for the update author',
-      },
-      attachments: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Optional attachment IDs for the update',
-      },
     },
     required: ['projectId', 'body'],
   },
