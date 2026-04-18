@@ -138,6 +138,18 @@ type UpdateIssueCustomFieldPlan = {
   valueInputCandidates: GraphQLArgument[];
 };
 
+type FavoriteMutationPlan = {
+  mutationField: GraphQLField;
+  inputArgument?: GraphQLArgument;
+  inputType?: GraphQLType | null;
+  entityArgument?: GraphQLArgument;
+  entityInputField?: GraphQLArgument;
+  favoriteArgument?: GraphQLArgument;
+  favoriteInputField?: GraphQLArgument;
+  directIdCandidates: GraphQLArgument[];
+  inputIdCandidates: GraphQLArgument[];
+};
+
 const INTROSPECT_TYPE_QUERY = `
   query LinearCustomFieldType($name: String!) {
     __type(name: $name) {
@@ -259,6 +271,22 @@ const UPDATE_CUSTOM_FIELD_MUTATION_PATTERNS = [
   /issue.*field.*value.*update/i,
 ];
 
+const ADD_FAVORITE_MUTATION_PATTERNS = [
+  /addtofavorites?/i,
+  /favorite.*add/i,
+  /add.*favorite/i,
+  /favorite.*create/i,
+  /create.*favorite/i,
+];
+
+const REMOVE_FAVORITE_MUTATION_PATTERNS = [
+  /removefromfavorites?/i,
+  /favorite.*remove/i,
+  /remove.*favorite/i,
+  /favorite.*delete/i,
+  /delete.*favorite/i,
+];
+
 const ISSUE_ARGUMENT_PATTERNS = [/^issueId$/i, /(^|[^a-z])issue([^a-z]|$)/i, /^id$/i];
 const CUSTOM_FIELD_ARGUMENT_PATTERNS = [
   /^customFieldId$/i,
@@ -267,6 +295,25 @@ const CUSTOM_FIELD_ARGUMENT_PATTERNS = [
   /custom.*field/i,
   /field.*definition/i,
 ];
+const FAVORITE_ENTITY_ARGUMENT_PATTERNS = [
+  /^entityId$/i,
+  /^targetId$/i,
+  /^resourceId$/i,
+  /^objectId$/i,
+  /^customViewId$/i,
+  /^viewId$/i,
+  /^issueId$/i,
+  /^projectId$/i,
+  /^documentId$/i,
+  /^roadmapId$/i,
+  /^initiativeId$/i,
+  /entity/i,
+  /target/i,
+  /resource/i,
+  /custom.*view/i,
+  /predefined.*view/i,
+];
+const FAVORITE_ID_ARGUMENT_PATTERNS = [/^favoriteId$/i, /^id$/i, /favorite/i];
 const VALUE_ARGUMENT_PATTERNS = [
   /^value$/i,
   /fieldValue/i,
@@ -760,6 +807,16 @@ function pickArgument(args: GraphQLArgument[], patterns: RegExp[]): GraphQLArgum
     .sort((left, right) => right.score - left.score)[0]?.arg;
 }
 
+function pickIdLikeArgument(args: GraphQLArgument[]): GraphQLArgument | undefined {
+  const idLikeArgs = args.filter((arg) => isIdLikeName(arg.name));
+
+  if (idLikeArgs.length === 1) {
+    return idLikeArgs[0];
+  }
+
+  return idLikeArgs.find((arg) => /^id$/i.test(arg.name));
+}
+
 // Define Linear API service
 export class LinearService {
   private client: LinearClient;
@@ -861,28 +918,60 @@ export class LinearService {
     };
   }
 
+  private normalizeFavoriteNode(favorite: Record<string, unknown>) {
+    const customView = getFirstRecord(favorite, ['customView']);
+    const predefinedViewTeam = getFirstRecord(favorite, ['predefinedViewTeam']);
+    const createdAt = getFirstString(favorite, ['createdAt']);
+    const updatedAt = getFirstString(favorite, ['updatedAt']);
+
+    return {
+      id: getFirstString(favorite, ['id', 'favoriteId']) ?? '',
+      type: getFirstString(favorite, ['type']) ?? 'unknown',
+      sortOrder: typeof favorite.sortOrder === 'number' ? favorite.sortOrder : null,
+      customView: customView
+        ? {
+            id: getFirstString(customView, ['id']) ?? '',
+            name: getFirstString(customView, ['name']) ?? '',
+            slugId: getFirstString(customView, ['slugId']) ?? null,
+            shared: getFirstBoolean(customView, ['shared']) ?? false,
+          }
+        : null,
+      predefinedViewType: getFirstString(favorite, ['predefinedViewType']) ?? null,
+      predefinedViewTeam: predefinedViewTeam
+        ? {
+            id: getFirstString(predefinedViewTeam, ['id']) ?? '',
+            name: getFirstString(predefinedViewTeam, ['name']) ?? '',
+          }
+        : null,
+      createdAt: createdAt ? new Date(createdAt) : null,
+      updatedAt: updatedAt ? new Date(updatedAt) : null,
+      url: getFirstString(favorite, ['url']) ?? null,
+    };
+  }
+
   private normalizeFavoriteViewNode(favorite: FavoriteViewNode) {
-    if (!favorite.customView && !favorite.predefinedViewType) {
+    const normalizedFavorite = this.normalizeFavoriteNode(favorite);
+
+    if (!normalizedFavorite.customView && !normalizedFavorite.predefinedViewType) {
       return null;
     }
 
+    return normalizedFavorite;
+  }
+
+  private normalizeFavoriteMutationPayload(payload: Record<string, unknown>) {
+    const favoriteRecord = getFirstRecord(payload, ['favorite']);
+    const normalizedFavorite = favoriteRecord
+      ? this.normalizeFavoriteNode(favoriteRecord)
+      : getFirstString(payload, ['id', 'favoriteId', 'type', 'url']) || 'sortOrder' in payload
+        ? this.normalizeFavoriteNode(payload)
+        : null;
+
     return {
-      id: favorite.id,
-      type: favorite.type,
-      sortOrder: favorite.sortOrder,
-      customView: favorite.customView
-        ? {
-            id: favorite.customView.id,
-            name: favorite.customView.name,
-            slugId: favorite.customView.slugId,
-            shared: favorite.customView.shared,
-          }
-        : null,
-      predefinedViewType: favorite.predefinedViewType ?? null,
-      predefinedViewTeam: favorite.predefinedViewTeam ?? null,
-      createdAt: new Date(favorite.createdAt),
-      updatedAt: new Date(favorite.updatedAt),
-      url: favorite.url ?? undefined,
+      success: getFirstBoolean(payload, ['success']) ?? normalizedFavorite !== null,
+      id: getFirstString(payload, ['id', 'favoriteId']) ?? normalizedFavorite?.id ?? null,
+      entityId: getFirstString(payload, ['entityId', 'targetId', 'resourceId']) ?? null,
+      favorite: normalizedFavorite,
     };
   }
 
@@ -1048,6 +1137,47 @@ export class LinearService {
     };
   }
 
+  private async resolveFavoriteMutationPlan(kind: 'add' | 'remove'): Promise<FavoriteMutationPlan> {
+    const mutationType = await this.requireType('Mutation');
+    const mutationField = pickBestField(
+      mutationType.fields ?? [],
+      kind === 'add' ? ADD_FAVORITE_MUTATION_PATTERNS : REMOVE_FAVORITE_MUTATION_PATTERNS,
+    );
+
+    if (!mutationField) {
+      throw new Error(
+        `The authenticated Linear schema does not expose a ${kind} favorite mutation`,
+      );
+    }
+
+    const inputArgument = mutationField.args.find((arg) => {
+      const namedType = unwrapTypeRef(arg.type);
+      return namedType.kind === 'INPUT_OBJECT' || /input/i.test(arg.name);
+    });
+
+    const inputType = inputArgument
+      ? await this.getType(unwrapTypeRef(inputArgument.type).name as string)
+      : null;
+    const directArgs = mutationField.args.filter((arg) => arg !== inputArgument);
+    const inputFields = inputType?.inputFields ?? [];
+
+    return {
+      mutationField,
+      inputArgument,
+      inputType,
+      entityArgument:
+        pickArgument(directArgs, FAVORITE_ENTITY_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(directArgs),
+      entityInputField:
+        pickArgument(inputFields, FAVORITE_ENTITY_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(inputFields),
+      favoriteArgument:
+        pickArgument(directArgs, FAVORITE_ID_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(directArgs),
+      favoriteInputField:
+        pickArgument(inputFields, FAVORITE_ID_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(inputFields),
+      directIdCandidates: directArgs.filter((arg) => isIdLikeName(arg.name)),
+      inputIdCandidates: inputFields.filter((arg) => isIdLikeName(arg.name)),
+    };
+  }
+
   private async buildSelectionSet(
     typeRef: GraphQLTypeRef,
     preferredFields: string[],
@@ -1194,6 +1324,57 @@ export class LinearService {
       throw new Error(
         'The custom field mutation does not expose a value argument that matches the provided data',
       );
+    }
+
+    if (plan.inputArgument) {
+      variableDefinitions.push(`$${plan.inputArgument.name}: ${typeRefToGraphQL(plan.inputArgument.type)}`);
+      invocationArgs.push(`${plan.inputArgument.name}: $${plan.inputArgument.name}`);
+      variables[plan.inputArgument.name] = inputValue;
+    }
+
+    return {
+      variableDefinitions,
+      invocationArgs,
+      variables,
+    };
+  }
+
+  private buildFavoriteMutationRequest(
+    plan: FavoriteMutationPlan,
+    args: { entityId?: string; favoriteId?: string },
+  ): { variableDefinitions: string[]; invocationArgs: string[]; variables: Record<string, unknown> } {
+    const variableDefinitions: string[] = [];
+    const invocationArgs: string[] = [];
+    const variables: Record<string, unknown> = {};
+    const inputValue: Record<string, unknown> = {};
+
+    const requestedValue = args.favoriteId ?? args.entityId;
+    if (!requestedValue) {
+      throw new Error('A favorite identifier must be provided');
+    }
+
+    const favoriteTarget = args.favoriteId
+      ? plan.favoriteArgument ?? plan.favoriteInputField
+      : undefined;
+    const entityTarget = args.entityId ? plan.entityArgument ?? plan.entityInputField : undefined;
+    const fallbackTarget =
+      plan.directIdCandidates.length === 1
+        ? plan.directIdCandidates[0]
+        : plan.inputIdCandidates.length === 1
+          ? plan.inputIdCandidates[0]
+          : undefined;
+    const target = favoriteTarget ?? entityTarget ?? fallbackTarget;
+
+    if (!target) {
+      throw new Error('The favorite mutation does not expose a compatible identifier argument');
+    }
+
+    if (target === plan.favoriteInputField || target === plan.entityInputField || plan.inputIdCandidates.includes(target)) {
+      inputValue[target.name] = requestedValue;
+    } else {
+      variableDefinitions.push(`$${target.name}: ${typeRefToGraphQL(target.type)}`);
+      invocationArgs.push(`${target.name}: $${target.name}`);
+      variables[target.name] = requestedValue;
     }
 
     if (plan.inputArgument) {
@@ -1423,6 +1604,50 @@ export class LinearService {
     return normalizedFavorites.filter(
       (favorite): favorite is NonNullable<typeof favorite> => favorite !== null,
     );
+  }
+
+  async addToFavorites(args: { entityId: string }) {
+    const plan = await this.resolveFavoriteMutationPlan('add');
+    const { variableDefinitions, invocationArgs, variables } = this.buildFavoriteMutationRequest(plan, {
+      entityId: args.entityId,
+    });
+    const selectionSet =
+      (await this.buildSelectionSet(
+        plan.mutationField.type,
+        ['success', 'favorite', 'id', 'favoriteId', 'entityId', 'targetId', 'resourceId'],
+        3,
+        new Set(),
+        {
+          favorite: ['id', 'type', 'sortOrder', 'createdAt', 'updatedAt', 'url', 'customView', 'predefinedViewType', 'predefinedViewTeam'],
+          customView: ['id', 'name', 'slugId', 'shared'],
+          predefinedViewTeam: ['id', 'name'],
+        },
+      )) || ' { success }';
+    const mutation = `mutation LinearAddToFavorites(${variableDefinitions.join(', ')}) { ${plan.mutationField.name}${invocationArgs.length > 0 ? `(${invocationArgs.join(', ')})` : ''}${selectionSet} }`;
+    const response = await this.requestGraphQL<Record<string, Record<string, unknown>>>(mutation, variables);
+
+    return this.normalizeFavoriteMutationPayload(response[plan.mutationField.name] ?? {});
+  }
+
+  async removeFromFavorites(args: { favoriteId?: string; entityId?: string }) {
+    const plan = await this.resolveFavoriteMutationPlan('remove');
+    const { variableDefinitions, invocationArgs, variables } = this.buildFavoriteMutationRequest(plan, args);
+    const selectionSet =
+      (await this.buildSelectionSet(
+        plan.mutationField.type,
+        ['success', 'favorite', 'id', 'favoriteId', 'entityId', 'targetId', 'resourceId'],
+        3,
+        new Set(),
+        {
+          favorite: ['id', 'type', 'sortOrder', 'createdAt', 'updatedAt', 'url', 'customView', 'predefinedViewType', 'predefinedViewTeam'],
+          customView: ['id', 'name', 'slugId', 'shared'],
+          predefinedViewTeam: ['id', 'name'],
+        },
+      )) || ' { success }';
+    const mutation = `mutation LinearRemoveFromFavorites(${variableDefinitions.join(', ')}) { ${plan.mutationField.name}${invocationArgs.length > 0 ? `(${invocationArgs.join(', ')})` : ''}${selectionSet} }`;
+    const response = await this.requestGraphQL<Record<string, Record<string, unknown>>>(mutation, variables);
+
+    return this.normalizeFavoriteMutationPayload(response[plan.mutationField.name] ?? {});
   }
 
   async getIssues(limit = 25) {

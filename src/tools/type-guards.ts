@@ -1237,3 +1237,30 @@ export function isGetFavoriteViewsArgs(args: unknown): args is {
     (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
+
+/**
+ * Type guard for linear_addToFavorites tool arguments
+ */
+export function isAddToFavoritesArgs(args: unknown): args is { entityId: string } {
+  return (
+    isJsonObject(args) &&
+    'entityId' in args &&
+    typeof (args as { entityId: unknown }).entityId === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_removeFromFavorites tool arguments
+ */
+export function isRemoveFromFavoritesArgs(args: unknown): args is {
+  favoriteId?: string;
+  entityId?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    (typeof (args as { favoriteId?: unknown }).favoriteId === 'string' ||
+      typeof (args as { entityId?: unknown }).entityId === 'string') &&
+    (!('favoriteId' in args) || typeof (args as { favoriteId: unknown }).favoriteId === 'string') &&
+    (!('entityId' in args) || typeof (args as { entityId: unknown }).entityId === 'string')
+  );
+}

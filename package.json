@@ -39,6 +39,8 @@
       "linear_updateSavedView",
       "linear_deleteSavedView",
       "linear_getFavoriteViews",
+      "linear_addToFavorites",
+      "linear_removeFromFavorites",
       "linear_createProjectUpdate",
       "linear_updateProjectUpdate",
       "linear_getProjectUpdates",

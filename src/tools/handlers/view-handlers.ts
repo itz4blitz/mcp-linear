@@ -1,9 +1,11 @@
 import { LinearService } from '../../services/linear-service.js';
 import {
+  isAddToFavoritesArgs,
   isCreateSavedViewArgs,
   isDeleteSavedViewArgs,
   isGetFavoriteViewsArgs,
   isGetSavedViewsArgs,
+  isRemoveFromFavoritesArgs,
   isUpdateSavedViewArgs,
 } from '../type-guards.js';
 import { logError } from '../../utils/config.js';
@@ -78,6 +80,36 @@ export function handleGetFavoriteViews(linearService: LinearService) {
       return await linearService.getFavoriteViews(args);
     } catch (error) {
       logError('Error getting favorite views', error);
+      throw error;
+    }
+  };
+}
+
+export function handleAddToFavorites(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isAddToFavoritesArgs(args)) {
+        throw new Error('Invalid arguments for addToFavorites');
+      }
+
+      return await linearService.addToFavorites(args);
+    } catch (error) {
+      logError('Error adding item to favorites', error);
+      throw error;
+    }
+  };
+}
+
+export function handleRemoveFromFavorites(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isRemoveFromFavoritesArgs(args)) {
+        throw new Error('Invalid arguments for removeFromFavorites');
+      }
+
+      return await linearService.removeFromFavorites(args);
+    } catch (error) {
+      logError('Error removing item from favorites', error);
       throw error;
     }
   };

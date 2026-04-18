@@ -117,6 +117,8 @@ Linear calls these "saved views" in the product UI. The GraphQL API and SDK expo
 | `linear_updateSavedView`  | Update a Linear saved view (`updateCustomView` in the API/SDK)                  | ✅ Implemented |
 | `linear_deleteSavedView`  | Delete a Linear saved view (`deleteCustomView` in the API/SDK)                  | ✅ Implemented |
 | `linear_getFavoriteViews` | Get favorite views, including both saved/custom views and predefined Linear views | ✅ Implemented |
+| `linear_addToFavorites`   | Add an entity to the current user's favorites using schema-driven GraphQL mutation discovery | ✅ Implemented |
+| `linear_removeFromFavorites` | Remove a favorite entry or entity from the current user's favorites using schema-driven GraphQL mutation discovery | ✅ Implemented |
 
 ## Recommended Future Tools
 
@@ -259,8 +261,6 @@ The following tools are recommended for future implementation to enhance the cap
 | Tool Name                    | Description                         | Priority | Status     |
 | ---------------------------- | ----------------------------------- | -------- | ---------- |
 | `linear_getFavorites`        | Get a list of user's favorite items | Medium   | 📝 Planned |
-| `linear_addToFavorites`      | Add an item to favorites            | Medium   | 📝 Planned |
-| `linear_removeFromFavorites` | Remove an item from favorites       | Medium   | 📝 Planned |
 | `linear_pinIssue`            | Pin an issue to the top of a list   | Medium   | 📝 Planned |
 | `linear_unpinIssue`          | Unpin an issue                      | Medium   | 📝 Planned |
 
