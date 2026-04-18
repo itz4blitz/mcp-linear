@@ -52,14 +52,8 @@ describe('milestone MCP tools', () => {
     });
     expect(updateMilestoneTool?.input_schema).toMatchObject({
       required: ['id'],
-      anyOf: [
-        { required: ['name'] },
-        { required: ['projectId'] },
-        { required: ['description'] },
-        { required: ['targetDate'] },
-        { required: ['sortOrder'] },
-      ],
     });
+    expect(updateMilestoneTool?.description).toContain('Provide id plus at least one other field');
   });
 
   it('routes milestone handlers to the linear service', async () => {

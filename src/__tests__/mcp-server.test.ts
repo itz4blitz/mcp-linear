@@ -1,18 +1,43 @@
 import { convertToolDefinition } from '../tool-schema.js';
+import { allToolDefinitions } from '../tools/definitions/index.js';
 import { removeFromFavoritesToolDefinition } from '../tools/definitions/view-tools.js';
 
 describe('convertToolDefinition', () => {
-  it('preserves schema composition keywords like anyOf in inputSchema', () => {
-    expect(removeFromFavoritesToolDefinition.input_schema.anyOf).toBeDefined();
+  it('drops top-level schema composition keywords that break some MCP hosts', () => {
+    const toolDefinition = {
+      ...removeFromFavoritesToolDefinition,
+      input_schema: {
+        ...removeFromFavoritesToolDefinition.input_schema,
+        anyOf: [{ required: ['favoriteId'] }, { required: ['entityId'] }],
+      },
+    };
 
-    const converted = convertToolDefinition(removeFromFavoritesToolDefinition);
+    const converted = convertToolDefinition(toolDefinition);
 
     expect(converted.inputSchema).toEqual(
       expect.objectContaining({
         type: 'object',
-        properties: removeFromFavoritesToolDefinition.input_schema.properties,
-        anyOf: removeFromFavoritesToolDefinition.input_schema.anyOf,
+        properties: toolDefinition.input_schema.properties,
       }),
     );
+    expect(converted.inputSchema).not.toHaveProperty('anyOf');
+  });
+
+  it('emits host-compatible top-level input schemas for every tool', () => {
+    const disallowedTopLevelKeys = ['oneOf', 'anyOf', 'allOf', 'enum', 'not'];
+
+    for (const toolDefinition of allToolDefinitions) {
+      const converted = convertToolDefinition(toolDefinition);
+
+      expect(converted.inputSchema).toEqual(
+        expect.objectContaining({
+          type: 'object',
+        }),
+      );
+
+      for (const key of disallowedTopLevelKeys) {
+        expect(converted.inputSchema).not.toHaveProperty(key);
+      }
+    }
   });
 });

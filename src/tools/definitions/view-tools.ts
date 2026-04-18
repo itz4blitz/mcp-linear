@@ -142,7 +142,8 @@ export const createSavedViewToolDefinition: MCPToolDefinition = {
 
 export const updateSavedViewToolDefinition: MCPToolDefinition = {
   name: 'linear_updateSavedView',
-  description: 'Update a Linear saved view (API: updateCustomView)',
+  description:
+    'Update a Linear saved view (API: updateCustomView). Provide id plus at least one other field to change.',
   input_schema: {
     type: 'object',
     properties: {
@@ -196,19 +197,6 @@ export const updateSavedViewToolDefinition: MCPToolDefinition = {
       },
     },
     required: ['id'],
-    anyOf: [
-      { required: ['name'] },
-      { required: ['description'] },
-      { required: ['shared'] },
-      { required: ['icon'] },
-      { required: ['color'] },
-      { required: ['teamId'] },
-      { required: ['projectId'] },
-      { required: ['ownerId'] },
-      { required: ['filters'] },
-      { required: ['filterData'] },
-      { required: ['projectFilterData'] },
-    ],
   },
   output_schema: savedViewOutputItemSchema,
 };
@@ -347,7 +335,8 @@ export const addToFavoritesToolDefinition: MCPToolDefinition = {
 
 export const removeFromFavoritesToolDefinition: MCPToolDefinition = {
   name: 'linear_removeFromFavorites',
-  description: 'Remove an entity or favorite entry from the current user\'s Linear favorites',
+  description:
+    'Remove an entity or favorite entry from the current user\'s Linear favorites. Provide either favoriteId or entityId.',
   input_schema: {
     type: 'object',
     properties: {
@@ -360,7 +349,6 @@ export const removeFromFavoritesToolDefinition: MCPToolDefinition = {
         description: 'Entity ID to remove from favorites when the workspace schema supports it',
       },
     },
-    anyOf: [{ required: ['favoriteId'] }, { required: ['entityId'] }],
   },
   output_schema: favoriteMutationOutputSchema,
 };

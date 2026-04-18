@@ -138,7 +138,7 @@ export const createMilestoneToolDefinition: MCPToolDefinition = {
 
 export const updateMilestoneToolDefinition: MCPToolDefinition = {
   name: 'linear_updateMilestone',
-  description: 'Update an existing project milestone in Linear',
+  description: 'Update an existing project milestone in Linear. Provide id plus at least one other field to change.',
   input_schema: {
     type: 'object',
     properties: {
@@ -168,13 +168,6 @@ export const updateMilestoneToolDefinition: MCPToolDefinition = {
       },
     },
     required: ['id'],
-    anyOf: [
-      { required: ['name'] },
-      { required: ['projectId'] },
-      { required: ['description'] },
-      { required: ['targetDate'] },
-      { required: ['sortOrder'] },
-    ],
   },
   output_schema: {
     type: 'object',
