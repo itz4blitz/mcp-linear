@@ -959,3 +959,158 @@ export function isRemoveProjectFromInitiativeInput(args: unknown): args is {
     typeof (args as { projectId: string }).projectId === 'string'
   );
 }
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return typeof value === 'string' || value === null;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0;
+}
+
+function isSavedViewOrderBy(value: unknown): value is 'createdAt' | 'updatedAt' {
+  return value === 'createdAt' || value === 'updatedAt';
+}
+
+/**
+ * Type guard for linear_getSavedViews tool arguments
+ */
+export function isGetSavedViewsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+/**
+ * Type guard for linear_createSavedView tool arguments
+ */
+export function isCreateSavedViewArgs(args: unknown): args is {
+  name: string;
+  description?: string;
+  shared?: boolean;
+  icon?: string;
+  color?: string;
+  teamId?: string;
+  projectId?: string;
+  ownerId?: string;
+  filters?: Record<string, unknown>;
+  filterData?: Record<string, unknown>;
+  projectFilterData?: Record<string, unknown>;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'name' in args &&
+    typeof (args as { name: string }).name === 'string' &&
+    (!('description' in args) || typeof (args as { description: string }).description === 'string') &&
+    (!('shared' in args) || typeof (args as { shared: boolean }).shared === 'boolean') &&
+    (!('icon' in args) || typeof (args as { icon: string }).icon === 'string') &&
+    (!('color' in args) || typeof (args as { color: string }).color === 'string') &&
+    (!('teamId' in args) || typeof (args as { teamId: string }).teamId === 'string') &&
+    (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
+    (!('ownerId' in args) || typeof (args as { ownerId: string }).ownerId === 'string') &&
+    (!('filters' in args) || isJsonObject((args as { filters: unknown }).filters)) &&
+    (!('filterData' in args) || isJsonObject((args as { filterData: unknown }).filterData)) &&
+    (!('projectFilterData' in args) ||
+      isJsonObject((args as { projectFilterData: unknown }).projectFilterData))
+  );
+}
+
+/**
+ * Type guard for linear_updateSavedView tool arguments
+ */
+export function isUpdateSavedViewArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  description?: string | null;
+  shared?: boolean;
+  icon?: string | null;
+  color?: string | null;
+  teamId?: string | null;
+  projectId?: string | null;
+  ownerId?: string | null;
+  filters?: Record<string, unknown> | null;
+  filterData?: Record<string, unknown> | null;
+  projectFilterData?: Record<string, unknown> | null;
+} {
+  if (typeof args !== 'object' || args === null) {
+    return false;
+  }
+
+  const hasUpdateField = [
+    'name',
+    'description',
+    'shared',
+    'icon',
+    'color',
+    'teamId',
+    'projectId',
+    'ownerId',
+    'filters',
+    'filterData',
+    'projectFilterData',
+  ].some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+
+  return (
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string' &&
+    hasUpdateField &&
+    (!('name' in args) || typeof (args as { name: string }).name === 'string') &&
+    (!('description' in args) || isNullableString((args as { description: unknown }).description)) &&
+    (!('shared' in args) || typeof (args as { shared: boolean }).shared === 'boolean') &&
+    (!('icon' in args) || isNullableString((args as { icon: unknown }).icon)) &&
+    (!('color' in args) || isNullableString((args as { color: unknown }).color)) &&
+    (!('teamId' in args) || isNullableString((args as { teamId: unknown }).teamId)) &&
+    (!('projectId' in args) || isNullableString((args as { projectId: unknown }).projectId)) &&
+    (!('ownerId' in args) || isNullableString((args as { ownerId: unknown }).ownerId)) &&
+    (!('filters' in args) ||
+      (args as { filters: unknown }).filters === null || isJsonObject((args as { filters: unknown }).filters)) &&
+    (!('filterData' in args) ||
+      (args as { filterData: unknown }).filterData === null ||
+      isJsonObject((args as { filterData: unknown }).filterData)) &&
+    (!('projectFilterData' in args) ||
+      (args as { projectFilterData: unknown }).projectFilterData === null ||
+      isJsonObject((args as { projectFilterData: unknown }).projectFilterData))
+  );
+}
+
+/**
+ * Type guard for linear_deleteSavedView tool arguments
+ */
+export function isDeleteSavedViewArgs(args: unknown): args is { id: string } {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_getFavoriteViews tool arguments
+ */
+export function isGetFavoriteViewsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
