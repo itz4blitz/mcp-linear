@@ -3,9 +3,9 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import { MCPToolDefinition } from './types.js';
+import { convertToolDefinition } from './tool-schema.js';
 import pkg from '../package.json' with { type: 'json' };
 
 /**
@@ -23,21 +23,6 @@ export interface MCPServerConfig {
   tools: MCPToolDefinition[];
   handleInitialize: () => Promise<{ tools: MCPToolDefinition[] }>;
   handleRequest: (req: { name: string; args: unknown }) => Promise<unknown>;
-}
-
-/**
- * Convert MCPToolDefinition to the MCP SDK Tool format
- */
-function convertToolDefinition(toolDef: MCPToolDefinition): Tool {
-  return {
-    name: toolDef.name,
-    description: toolDef.description,
-    inputSchema: {
-      type: 'object',
-      properties: toolDef.input_schema.properties,
-      ...(toolDef.input_schema.required ? { required: toolDef.input_schema.required } : {}),
-    },
-  };
 }
 
 /**
