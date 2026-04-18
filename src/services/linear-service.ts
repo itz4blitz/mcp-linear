@@ -945,7 +945,7 @@ export class LinearService {
         : null,
       createdAt: createdAt ? new Date(createdAt) : null,
       updatedAt: updatedAt ? new Date(updatedAt) : null,
-      url: getFirstString(favorite, ['url']) ?? null,
+      url: getFirstString(favorite, ['url']),
     };
   }
 
@@ -961,9 +961,12 @@ export class LinearService {
 
   private normalizeFavoriteMutationPayload(payload: Record<string, unknown>) {
     const favoriteRecord = getFirstRecord(payload, ['favorite']);
+    const hasInlineFavoriteFields =
+      getFirstString(payload, ['id', 'favoriteId', 'type', 'url']) !== undefined ||
+      'sortOrder' in payload;
     const normalizedFavorite = favoriteRecord
       ? this.normalizeFavoriteNode(favoriteRecord)
-      : getFirstString(payload, ['id', 'favoriteId', 'type', 'url']) || 'sortOrder' in payload
+      : hasInlineFavoriteFields
         ? this.normalizeFavoriteNode(payload)
         : null;
 
