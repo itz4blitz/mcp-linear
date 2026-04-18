@@ -1,3 +1,11 @@
+type JSONGuardValue =
+  | null
+  | string
+  | number
+  | boolean
+  | JSONGuardValue[]
+  | { [key: string]: JSONGuardValue };
+
 /**
  * Type guard for linear_getIssues tool arguments
  */
@@ -18,6 +26,80 @@ export function isGetIssueByIdArgs(args: unknown): args is { id: string } {
     args !== null &&
     'id' in args &&
     typeof (args as { id: string }).id === 'string'
+  );
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isJSONValue(value: unknown): value is JSONGuardValue {
+  if (value === null) {
+    return true;
+  }
+
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return true;
+  }
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.every((item) => isJSONValue(item));
+  }
+
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((item) => isJSONValue(item));
+}
+
+/**
+ * Type guard for linear_getCustomFields tool arguments
+ */
+export function isGetCustomFieldsArgs(
+  args: unknown,
+): args is Record<string, never> | undefined {
+  return args === undefined || (isPlainObject(args) && Object.keys(args).length === 0);
+}
+
+/**
+ * Type guard for linear_getIssueCustomFields tool arguments
+ */
+export function isGetIssueCustomFieldsArgs(args: unknown): args is { issueId: string } {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'issueId' in args &&
+    typeof (args as { issueId: string }).issueId === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_updateIssueCustomField tool arguments
+ */
+export function isUpdateIssueCustomFieldArgs(args: unknown): args is {
+  issueId: string;
+  customFieldId: string;
+  value: JSONGuardValue;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'issueId' in args &&
+    typeof (args as { issueId: string }).issueId === 'string' &&
+    'customFieldId' in args &&
+    typeof (args as { customFieldId: string }).customFieldId === 'string' &&
+    'value' in args &&
+    isJSONValue((args as { value: unknown }).value)
   );
 }
 

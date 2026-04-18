@@ -48,9 +48,722 @@ const FAVORITE_VIEWS_QUERY = `
   }
 `;
 
+type JSONPrimitive = string | number | boolean | null;
+type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
+
+type GraphQLTypeKind =
+  | 'SCALAR'
+  | 'OBJECT'
+  | 'INTERFACE'
+  | 'UNION'
+  | 'ENUM'
+  | 'INPUT_OBJECT'
+  | 'LIST'
+  | 'NON_NULL';
+
+type GraphQLTypeRef = {
+  kind: GraphQLTypeKind;
+  name: string | null;
+  ofType?: GraphQLTypeRef | null;
+};
+
+type GraphQLArgument = {
+  name: string;
+  description?: string | null;
+  type: GraphQLTypeRef;
+};
+
+type GraphQLField = {
+  name: string;
+  description?: string | null;
+  args: GraphQLArgument[];
+  type: GraphQLTypeRef;
+};
+
+type GraphQLType = {
+  kind: GraphQLTypeKind;
+  name: string;
+  description?: string | null;
+  fields?: GraphQLField[] | null;
+  inputFields?: GraphQLArgument[] | null;
+  enumValues?: Array<{ name: string }> | null;
+};
+
+type GraphQLTypeQueryResult = {
+  __type: GraphQLType | null;
+};
+
+type NormalizedCustomFieldOption = {
+  id?: string;
+  name?: string;
+  color?: string;
+  raw: Record<string, unknown>;
+};
+
+type NormalizedCustomFieldDefinition = {
+  id?: string;
+  name?: string;
+  description?: string;
+  type?: string;
+  required?: boolean;
+  team?: {
+    id?: string;
+    name?: string;
+    key?: string;
+  };
+  options?: NormalizedCustomFieldOption[];
+  raw: Record<string, unknown>;
+};
+
+type NormalizedIssueCustomFieldValue = {
+  id?: string;
+  customFieldId?: string;
+  name?: string;
+  type?: string;
+  value?: JSONValue;
+  displayValue?: string;
+  customField?: NormalizedCustomFieldDefinition;
+  raw: Record<string, unknown>;
+};
+
+type UpdateIssueCustomFieldPlan = {
+  mutationField: GraphQLField;
+  issueArgument?: GraphQLArgument;
+  inputArgument?: GraphQLArgument;
+  inputType?: GraphQLType | null;
+  issueInputField?: GraphQLArgument;
+  customFieldDirectCandidates: GraphQLArgument[];
+  customFieldInputCandidates: GraphQLArgument[];
+  valueDirectCandidates: GraphQLArgument[];
+  valueInputCandidates: GraphQLArgument[];
+};
+
+const INTROSPECT_TYPE_QUERY = `
+  query LinearCustomFieldType($name: String!) {
+    __type(name: $name) {
+      kind
+      name
+      description
+      fields(includeDeprecated: true) {
+        name
+        description
+        args {
+          name
+          description
+          type {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+                ofType {
+                  kind
+                  name
+                  ofType {
+                    kind
+                    name
+                    ofType {
+                      kind
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        type {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+                ofType {
+                  kind
+                  name
+                  ofType {
+                    kind
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      inputFields {
+        name
+        description
+        type {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+                ofType {
+                  kind
+                  name
+                  ofType {
+                    kind
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      enumValues(includeDeprecated: true) {
+        name
+      }
+    }
+  }
+`;
+
+const CUSTOM_FIELD_DEFINITION_PATTERNS = [
+  /customfields?/i,
+  /fielddefinitions?/i,
+  /custom field/i,
+  /field definition/i,
+];
+
+const ISSUE_CUSTOM_FIELD_VALUE_PATTERNS = [
+  /customfieldvalues?/i,
+  /fieldvalues?/i,
+  /customfields?/i,
+  /field value/i,
+  /custom field/i,
+];
+
+const UPDATE_CUSTOM_FIELD_MUTATION_PATTERNS = [
+  /updateissuecustomfield/i,
+  /issuecustomfieldupdate/i,
+  /updatecustomfieldvalue/i,
+  /issuefieldvalueupdate/i,
+  /issue.*custom.*field.*update/i,
+  /issue.*field.*value.*update/i,
+];
+
+const ISSUE_ARGUMENT_PATTERNS = [/^issueId$/i, /(^|[^a-z])issue([^a-z]|$)/i, /^id$/i];
+const CUSTOM_FIELD_ARGUMENT_PATTERNS = [
+  /^customFieldId$/i,
+  /^fieldId$/i,
+  /^definitionId$/i,
+  /custom.*field/i,
+  /field.*definition/i,
+];
+const VALUE_ARGUMENT_PATTERNS = [
+  /^value$/i,
+  /fieldValue/i,
+  /customFieldValue/i,
+  /stringValue/i,
+  /numberValue/i,
+  /booleanValue/i,
+  /dateValue/i,
+  /optionIds?/i,
+  /values?/i,
+];
+
+const DEFAULT_NESTED_FIELDS = ['id', 'name', 'key', 'identifier', 'title', 'color', 'label'];
+const CUSTOM_FIELD_DEFINITION_FIELDS = [
+  'id',
+  'name',
+  'description',
+  'type',
+  'required',
+  'archivedAt',
+  'createdAt',
+  'updatedAt',
+  'team',
+  'options',
+  'values',
+];
+const ISSUE_CUSTOM_FIELD_VALUE_FIELDS = [
+  'id',
+  'value',
+  'displayValue',
+  'stringValue',
+  'numberValue',
+  'booleanValue',
+  'dateValue',
+  'option',
+  'options',
+  'selectedOption',
+  'selectedOptions',
+  'customFieldId',
+  'fieldId',
+  'customField',
+  'field',
+  'definition',
+  'name',
+  'type',
+];
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isJSONValue(value: unknown): value is JSONValue {
+  if (value === null) {
+    return true;
+  }
+
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return true;
+  }
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.every((item) => isJSONValue(item));
+  }
+
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
+  return Object.values(value).every((item) => isJSONValue(item));
+}
+
+function unwrapTypeRef(typeRef: GraphQLTypeRef): GraphQLTypeRef {
+  let current = typeRef;
+
+  while ((current.kind === 'NON_NULL' || current.kind === 'LIST') && current.ofType) {
+    current = current.ofType;
+  }
+
+  return current;
+}
+
+function isListType(typeRef: GraphQLTypeRef): boolean {
+  if (typeRef.kind === 'LIST') {
+    return true;
+  }
+
+  return typeRef.kind === 'NON_NULL' && typeRef.ofType ? isListType(typeRef.ofType) : false;
+}
+
+function isNonNullType(typeRef: GraphQLTypeRef): boolean {
+  return typeRef.kind === 'NON_NULL';
+}
+
+function typeRefToGraphQL(typeRef: GraphQLTypeRef): string {
+  if (typeRef.kind === 'NON_NULL') {
+    return `${typeRefToGraphQL(typeRef.ofType as GraphQLTypeRef)}!`;
+  }
+
+  if (typeRef.kind === 'LIST') {
+    return `[${typeRefToGraphQL(typeRef.ofType as GraphQLTypeRef)}]`;
+  }
+
+  return typeRef.name ?? 'String';
+}
+
+function hasRequiredArguments(field: GraphQLField): boolean {
+  return field.args.some((arg) => isNonNullType(arg.type));
+}
+
+function fieldSearchText(field: GraphQLField | GraphQLArgument): string {
+  const namedType = unwrapTypeRef(field.type);
+  return `${field.name} ${field.description ?? ''} ${namedType.name ?? ''}`.toLowerCase();
+}
+
+function matchesPatterns(value: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(value));
+}
+
+function matchesArgumentPatterns(argument: GraphQLArgument, patterns: RegExp[]): boolean {
+  return patterns.some(
+    (pattern) => pattern.test(argument.name) || pattern.test(fieldSearchText(argument)),
+  );
+}
+
+function scoreField(field: GraphQLField, patterns: RegExp[]): number {
+  const searchable = fieldSearchText(field);
+  let score = 0;
+
+  for (const pattern of patterns) {
+    if (pattern.test(searchable)) {
+      score += 100;
+    }
+  }
+
+  const name = field.name.toLowerCase();
+  if (name.includes('custom')) {
+    score += 25;
+  }
+  if (name.includes('field')) {
+    score += 25;
+  }
+  if (name.includes('value')) {
+    score += 15;
+  }
+  if (name.includes('update')) {
+    score += 15;
+  }
+
+  return score;
+}
+
+function pickBestField(fields: GraphQLField[], patterns: RegExp[]): GraphQLField | undefined {
+  return fields
+    .map((field) => ({ field, score: scoreField(field, patterns) }))
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score)[0]?.field;
+}
+
+function isIdLikeName(name: string): boolean {
+  return /^id$/i.test(name) || /Id$/i.test(name);
+}
+
+function getFirstString(record: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function getFirstBoolean(record: Record<string, unknown>, keys: string[]): boolean | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function getFirstRecord(record: Record<string, unknown>, keys: string[]): Record<string, unknown> | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (isPlainObject(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function getFirstRecordArray(
+  record: Record<string, unknown>,
+  keys: string[],
+): Record<string, unknown>[] | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value.filter((item): item is Record<string, unknown> => isPlainObject(item));
+    }
+
+    if (isPlainObject(value) && Array.isArray(value.nodes)) {
+      return value.nodes.filter((item): item is Record<string, unknown> => isPlainObject(item));
+    }
+  }
+
+  return undefined;
+}
+
+function extractListItems(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is Record<string, unknown> => isPlainObject(item));
+  }
+
+  if (!isPlainObject(value)) {
+    return [];
+  }
+
+  if (Array.isArray(value.nodes)) {
+    return value.nodes.filter((item): item is Record<string, unknown> => isPlainObject(item));
+  }
+
+  if (Array.isArray(value.edges)) {
+    return value.edges
+      .map((edge) => (isPlainObject(edge) && isPlainObject(edge.node) ? edge.node : undefined))
+      .filter((item): item is Record<string, unknown> => item !== undefined);
+  }
+
+  return [value];
+}
+
+function normalizeCustomFieldOption(raw: Record<string, unknown>): NormalizedCustomFieldOption {
+  return {
+    id: getFirstString(raw, ['id']),
+    name: getFirstString(raw, ['name', 'label']),
+    color: getFirstString(raw, ['color']),
+    raw,
+  };
+}
+
+function normalizeCustomFieldDefinition(raw: Record<string, unknown>): NormalizedCustomFieldDefinition {
+  const team = getFirstRecord(raw, ['team']);
+  const options = getFirstRecordArray(raw, ['options', 'values']);
+
+  return {
+    id: getFirstString(raw, ['id', 'customFieldId', 'fieldId']),
+    name: getFirstString(raw, ['name', 'label', 'displayName']),
+    description: getFirstString(raw, ['description']),
+    type: getFirstString(raw, ['type', 'dataType', 'fieldType']),
+    required: getFirstBoolean(raw, ['required', 'isRequired']),
+    team: team
+      ? {
+          id: getFirstString(team, ['id']),
+          name: getFirstString(team, ['name']),
+          key: getFirstString(team, ['key']),
+        }
+      : undefined,
+    options: options?.map((option) => normalizeCustomFieldOption(option)),
+    raw,
+  };
+}
+
+function compactJSONRecord(record: Record<string, JSONValue | undefined>): { [key: string]: JSONValue } {
+  return Object.fromEntries(
+    Object.entries(record).filter(([, value]) => value !== undefined),
+  ) as { [key: string]: JSONValue };
+}
+
+function extractCustomFieldValue(raw: Record<string, unknown>): JSONValue | undefined {
+  for (const key of [
+    'value',
+    'fieldValue',
+    'customFieldValue',
+    'stringValue',
+    'numberValue',
+    'booleanValue',
+    'dateValue',
+  ]) {
+    if (key in raw && isJSONValue(raw[key])) {
+      return raw[key];
+    }
+  }
+
+  const option = getFirstRecord(raw, ['option', 'selectedOption']);
+  if (option) {
+    return compactJSONRecord({
+      id: getFirstString(option, ['id']),
+      name: getFirstString(option, ['name', 'label']),
+      color: getFirstString(option, ['color']),
+    });
+  }
+
+  const options = getFirstRecordArray(raw, ['options', 'selectedOptions']);
+  if (options) {
+    return options.map((option) =>
+      compactJSONRecord({
+        id: getFirstString(option, ['id']),
+        name: getFirstString(option, ['name', 'label']),
+        color: getFirstString(option, ['color']),
+      }),
+    );
+  }
+
+  return undefined;
+}
+
+function normalizeIssueCustomFieldValue(raw: Record<string, unknown>): NormalizedIssueCustomFieldValue {
+  const customFieldRecord = getFirstRecord(raw, ['customField', 'field', 'definition']);
+  const customField = customFieldRecord ? normalizeCustomFieldDefinition(customFieldRecord) : undefined;
+
+  return {
+    id: getFirstString(raw, ['id']),
+    customFieldId:
+      getFirstString(raw, ['customFieldId', 'fieldId', 'definitionId']) ?? customField?.id,
+    name: getFirstString(raw, ['name', 'label', 'displayName']) ?? customField?.name,
+    type: getFirstString(raw, ['type', 'dataType', 'fieldType']) ?? customField?.type,
+    value: extractCustomFieldValue(raw),
+    displayValue: getFirstString(raw, ['displayValue', 'displayText', 'text']),
+    customField,
+    raw,
+  };
+}
+
+function validateGraphQLValue(typeRef: GraphQLTypeRef, value: JSONValue): boolean {
+  if (value === null) {
+    return !isNonNullType(typeRef);
+  }
+
+  if (typeRef.kind === 'NON_NULL' && typeRef.ofType) {
+    return validateGraphQLValue(typeRef.ofType, value);
+  }
+
+  if (typeRef.kind === 'LIST' && typeRef.ofType) {
+    return Array.isArray(value) && value.every((item) => validateGraphQLValue(typeRef.ofType as GraphQLTypeRef, item));
+  }
+
+  if (typeRef.kind === 'ENUM') {
+    return typeof value === 'string';
+  }
+
+  if (typeRef.kind !== 'SCALAR') {
+    return isJSONValue(value);
+  }
+
+  switch (typeRef.name) {
+    case 'String':
+    case 'ID':
+    case 'Date':
+    case 'DateTime':
+    case 'TimelessDate':
+      return typeof value === 'string';
+    case 'Int':
+    case 'Float':
+      return typeof value === 'number' && Number.isFinite(value);
+    case 'Boolean':
+      return typeof value === 'boolean';
+    case 'JSON':
+    case 'JSONObject':
+      return isJSONValue(value);
+    default:
+      return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+  }
+}
+
+function scoreValueCandidate(candidate: GraphQLArgument, value: JSONValue): number {
+  if (!validateGraphQLValue(candidate.type, value)) {
+    return -1;
+  }
+
+  const name = candidate.name.toLowerCase();
+  const namedType = unwrapTypeRef(candidate.type);
+  let score = matchesPatterns(name, VALUE_ARGUMENT_PATTERNS) ? 50 : 0;
+
+  if (name === 'value') {
+    score += 40;
+  }
+
+  if (value === null) {
+    if (!isNonNullType(candidate.type)) {
+      score += 25;
+    }
+    return score;
+  }
+
+  if (Array.isArray(value)) {
+    if (isListType(candidate.type)) {
+      score += 35;
+    }
+    if (namedType.name === 'JSON' || namedType.name === 'JSONObject') {
+      score += 25;
+    }
+    if (name.includes('option') || name.includes('values')) {
+      score += 15;
+    }
+    return score;
+  }
+
+  if (isPlainObject(value)) {
+    if (namedType.name === 'JSON' || namedType.name === 'JSONObject') {
+      score += 40;
+    }
+    return score;
+  }
+
+  if (typeof value === 'string') {
+    if (namedType.name === 'String' || namedType.name === 'ID') {
+      score += 35;
+    }
+    if (name.includes('string') || name.includes('text') || name.includes('date')) {
+      score += 20;
+    }
+    return score;
+  }
+
+  if (typeof value === 'number') {
+    if (namedType.name === 'Int' || namedType.name === 'Float') {
+      score += 35;
+    }
+    if (name.includes('number') || name.includes('int') || name.includes('float')) {
+      score += 20;
+    }
+    return score;
+  }
+
+  if (typeof value === 'boolean') {
+    if (namedType.name === 'Boolean') {
+      score += 35;
+    }
+    if (name.includes('boolean')) {
+      score += 20;
+    }
+  }
+
+  return score;
+}
+
+function pickValueCandidate(candidates: GraphQLArgument[], value: JSONValue): GraphQLArgument | undefined {
+  return candidates
+    .map((candidate) => ({ candidate, score: scoreValueCandidate(candidate, value) }))
+    .filter((candidate) => candidate.score >= 0)
+    .sort((left, right) => right.score - left.score)[0]?.candidate;
+}
+
+function scoreArgument(arg: GraphQLArgument, patterns: RegExp[]): number {
+  const searchable = fieldSearchText(arg);
+  const name = arg.name.toLowerCase();
+  let score = 0;
+
+  for (const pattern of patterns) {
+    if (pattern.test(arg.name) || pattern.test(searchable)) {
+      score += 100;
+    }
+  }
+
+  if (name.includes('issue')) {
+    score += 20;
+  }
+  if (name.includes('custom')) {
+    score += 20;
+  }
+  if (name.includes('field')) {
+    score += 20;
+  }
+  if (name.includes('value')) {
+    score += 15;
+  }
+
+  return score;
+}
+
+function pickArgument(args: GraphQLArgument[], patterns: RegExp[]): GraphQLArgument | undefined {
+  return args
+    .map((arg) => ({
+      arg,
+      score: matchesArgumentPatterns(arg, patterns) ? scoreArgument(arg, patterns) : 0,
+    }))
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score)[0]?.arg;
+}
+
 // Define Linear API service
 export class LinearService {
   private client: LinearClient;
+  private typeCache = new Map<string, Promise<GraphQLType | null>>();
 
   constructor(client: LinearClient) {
     this.client = client;
@@ -216,6 +929,284 @@ export class LinearService {
     return Object.fromEntries(
       Object.entries(compacted).filter(([, value]) => value !== undefined),
     ) as T;
+  }
+
+  private async requestGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+    return await this.client.client.request<T, Record<string, unknown>>(query, variables ?? {});
+  }
+
+  private async getType(typeName: string): Promise<GraphQLType | null> {
+    const cached = this.typeCache.get(typeName);
+    if (cached) {
+      return await cached;
+    }
+
+    const pending = this.requestGraphQL<GraphQLTypeQueryResult>(INTROSPECT_TYPE_QUERY, {
+      name: typeName,
+    })
+      .then((result) => result.__type)
+      .catch((error) => {
+        this.typeCache.delete(typeName);
+        throw error;
+      });
+
+    this.typeCache.set(typeName, pending);
+    return await pending;
+  }
+
+  private async requireType(typeName: string): Promise<GraphQLType> {
+    const type = await this.getType(typeName);
+    if (!type) {
+      throw new Error(`Linear schema type ${typeName} is not available for this token`);
+    }
+
+    return type;
+  }
+
+  private async resolveCustomFieldDefinitionsField(): Promise<GraphQLField> {
+    const queryType = await this.requireType('Query');
+    const field = pickBestField(queryType.fields ?? [], CUSTOM_FIELD_DEFINITION_PATTERNS);
+
+    if (!field) {
+      throw new Error(
+        'The authenticated Linear schema does not expose a custom field definitions query',
+      );
+    }
+
+    return field;
+  }
+
+  private async resolveIssueCustomFieldValuesField(): Promise<GraphQLField> {
+    const issueType = await this.requireType('Issue');
+    const field = pickBestField(issueType.fields ?? [], ISSUE_CUSTOM_FIELD_VALUE_PATTERNS);
+
+    if (!field) {
+      throw new Error(
+        'The authenticated Linear schema does not expose issue custom field values on Issue',
+      );
+    }
+
+    return field;
+  }
+
+  private async resolveUpdateIssueCustomFieldPlan(): Promise<UpdateIssueCustomFieldPlan> {
+    const mutationType = await this.requireType('Mutation');
+    const mutationField = pickBestField(
+      mutationType.fields ?? [],
+      UPDATE_CUSTOM_FIELD_MUTATION_PATTERNS,
+    );
+
+    if (!mutationField) {
+      throw new Error(
+        'The authenticated Linear schema does not expose an issue custom field update mutation',
+      );
+    }
+
+    const inputArgument = mutationField.args.find((arg) => {
+      const namedType = unwrapTypeRef(arg.type);
+      return namedType.kind === 'INPUT_OBJECT' || /input/i.test(arg.name);
+    });
+
+    const inputType = inputArgument
+      ? await this.getType(unwrapTypeRef(inputArgument.type).name as string)
+      : null;
+    const directArgs = mutationField.args.filter((arg) => arg !== inputArgument);
+    const inputFields = inputType?.inputFields ?? [];
+    const issueArgument = pickArgument(directArgs, ISSUE_ARGUMENT_PATTERNS);
+    const issueInputField = pickArgument(inputFields, ISSUE_ARGUMENT_PATTERNS);
+    const directSkipNames = new Set(issueArgument ? [issueArgument.name] : []);
+    const inputSkipNames = new Set(issueInputField ? [issueInputField.name] : []);
+
+    return {
+      mutationField,
+      issueArgument,
+      inputArgument,
+      inputType,
+      issueInputField,
+      customFieldDirectCandidates: directArgs.filter(
+        (arg) =>
+          !directSkipNames.has(arg.name) &&
+          matchesArgumentPatterns(arg, CUSTOM_FIELD_ARGUMENT_PATTERNS),
+      ),
+      customFieldInputCandidates: inputFields.filter(
+        (arg) =>
+          !inputSkipNames.has(arg.name) &&
+          matchesArgumentPatterns(arg, CUSTOM_FIELD_ARGUMENT_PATTERNS),
+      ),
+      valueDirectCandidates: directArgs.filter(
+        (arg) =>
+          !directSkipNames.has(arg.name) &&
+          !matchesArgumentPatterns(arg, CUSTOM_FIELD_ARGUMENT_PATTERNS) &&
+          (matchesArgumentPatterns(arg, VALUE_ARGUMENT_PATTERNS) || !isIdLikeName(arg.name)),
+      ),
+      valueInputCandidates: inputFields.filter(
+        (arg) =>
+          !inputSkipNames.has(arg.name) &&
+          !matchesArgumentPatterns(arg, CUSTOM_FIELD_ARGUMENT_PATTERNS) &&
+          (matchesArgumentPatterns(arg, VALUE_ARGUMENT_PATTERNS) || !isIdLikeName(arg.name)),
+      ),
+    };
+  }
+
+  private async buildSelectionSet(
+    typeRef: GraphQLTypeRef,
+    preferredFields: string[],
+    depth = 2,
+    visited = new Set<string>(),
+    nestedFieldPreferences: Record<string, string[]> = {},
+  ): Promise<string> {
+    const namedType = unwrapTypeRef(typeRef);
+    if (!namedType.name || depth < 0) {
+      return '';
+    }
+
+    if (namedType.kind === 'SCALAR' || namedType.kind === 'ENUM') {
+      return '';
+    }
+
+    if (visited.has(namedType.name)) {
+      return '';
+    }
+
+    const type = await this.getType(namedType.name);
+    if (!type?.fields || type.fields.length === 0) {
+      return '';
+    }
+
+    if (namedType.name.endsWith('Connection')) {
+      const nodesField = type.fields.find((field) => field.name === 'nodes');
+      if (!nodesField) {
+        return '';
+      }
+
+      const nodeSelection = await this.buildSelectionSet(
+        nodesField.type,
+        preferredFields,
+        depth - 1,
+        new Set([...visited, namedType.name]),
+        nestedFieldPreferences,
+      );
+
+      return nodeSelection ? ` { nodes${nodeSelection} }` : '';
+    }
+
+    const orderedFields = [
+      ...preferredFields
+        .map((fieldName) => type.fields?.find((field) => field.name === fieldName))
+        .filter((field): field is GraphQLField => field !== undefined),
+      ...type.fields.filter(
+        (field) =>
+          !preferredFields.includes(field.name) &&
+          !hasRequiredArguments(field) &&
+          ['SCALAR', 'ENUM'].includes(unwrapTypeRef(field.type).kind),
+      ),
+    ];
+    const selections: string[] = [];
+
+    for (const field of orderedFields) {
+      if (hasRequiredArguments(field)) {
+        continue;
+      }
+
+      const childType = unwrapTypeRef(field.type);
+      if (childType.kind === 'SCALAR' || childType.kind === 'ENUM') {
+        selections.push(field.name);
+        continue;
+      }
+
+      if (depth === 0) {
+        continue;
+      }
+
+      const childSelection = await this.buildSelectionSet(
+        field.type,
+        nestedFieldPreferences[field.name] ?? DEFAULT_NESTED_FIELDS,
+        depth - 1,
+        new Set([...visited, namedType.name]),
+        nestedFieldPreferences,
+      );
+
+      if (childSelection) {
+        selections.push(`${field.name}${childSelection}`);
+      }
+    }
+
+    return selections.length > 0 ? ` { ${selections.join(' ')} }` : '';
+  }
+
+  private buildUpdateIssueCustomFieldMutationRequest(
+    plan: UpdateIssueCustomFieldPlan,
+    args: {
+      issueId: string;
+      customFieldId: string;
+      value: JSONValue;
+    },
+  ): { variableDefinitions: string[]; invocationArgs: string[]; variables: Record<string, unknown> } {
+    const variableDefinitions: string[] = [];
+    const invocationArgs: string[] = [];
+    const variables: Record<string, unknown> = {};
+    const inputValue: Record<string, unknown> = {};
+    const customFieldInputField = pickArgument(
+      plan.customFieldInputCandidates,
+      CUSTOM_FIELD_ARGUMENT_PATTERNS,
+    );
+    const customFieldDirectArgument = customFieldInputField
+      ? undefined
+      : pickArgument(plan.customFieldDirectCandidates, CUSTOM_FIELD_ARGUMENT_PATTERNS);
+    const valueInputField = pickValueCandidate(plan.valueInputCandidates, args.value);
+    const valueDirectArgument = valueInputField
+      ? undefined
+      : pickValueCandidate(plan.valueDirectCandidates, args.value);
+
+    if (plan.issueArgument) {
+      variableDefinitions.push(`$${plan.issueArgument.name}: ${typeRefToGraphQL(plan.issueArgument.type)}`);
+      invocationArgs.push(`${plan.issueArgument.name}: $${plan.issueArgument.name}`);
+      variables[plan.issueArgument.name] = args.issueId;
+    } else if (plan.issueInputField) {
+      inputValue[plan.issueInputField.name] = args.issueId;
+    } else {
+      throw new Error('The custom field mutation does not expose an issue identifier argument');
+    }
+
+    if (customFieldDirectArgument) {
+      variableDefinitions.push(
+        `$${customFieldDirectArgument.name}: ${typeRefToGraphQL(customFieldDirectArgument.type)}`,
+      );
+      invocationArgs.push(`${customFieldDirectArgument.name}: $${customFieldDirectArgument.name}`);
+      variables[customFieldDirectArgument.name] = args.customFieldId;
+    } else if (customFieldInputField) {
+      inputValue[customFieldInputField.name] = args.customFieldId;
+    } else {
+      throw new Error(
+        'The custom field mutation does not expose a custom field identifier argument',
+      );
+    }
+
+    if (valueDirectArgument) {
+      variableDefinitions.push(
+        `$${valueDirectArgument.name}: ${typeRefToGraphQL(valueDirectArgument.type)}`,
+      );
+      invocationArgs.push(`${valueDirectArgument.name}: $${valueDirectArgument.name}`);
+      variables[valueDirectArgument.name] = args.value;
+    } else if (valueInputField) {
+      inputValue[valueInputField.name] = args.value;
+    } else {
+      throw new Error(
+        'The custom field mutation does not expose a value argument that matches the provided data',
+      );
+    }
+
+    if (plan.inputArgument) {
+      variableDefinitions.push(`$${plan.inputArgument.name}: ${typeRefToGraphQL(plan.inputArgument.type)}`);
+      invocationArgs.push(`${plan.inputArgument.name}: $${plan.inputArgument.name}`);
+      variables[plan.inputArgument.name] = inputValue;
+    }
+
+    return {
+      variableDefinitions,
+      invocationArgs,
+      variables,
+    };
   }
 
   async getUserInfo() {
@@ -852,6 +1843,102 @@ export class LinearService {
     } else {
       throw new Error('Failed to update issue');
     }
+  }
+
+  async getCustomFields() {
+    const field = await this.resolveCustomFieldDefinitionsField();
+    const selectionSet = await this.buildSelectionSet(field.type, CUSTOM_FIELD_DEFINITION_FIELDS);
+    const query = `query LinearGetCustomFields { ${field.name}${selectionSet} }`;
+    const response = await this.requestGraphQL<Record<string, unknown>>(query);
+
+    return extractListItems(response[field.name]).map((item) => normalizeCustomFieldDefinition(item));
+  }
+
+  async getIssueCustomFields(issueId: string) {
+    const field = await this.resolveIssueCustomFieldValuesField();
+    const selectionSet = await this.buildSelectionSet(field.type, ISSUE_CUSTOM_FIELD_VALUE_FIELDS);
+    const query = `
+      query LinearGetIssueCustomFields($id: String!) {
+        issue(id: $id) {
+          id
+          identifier
+          ${field.name}${selectionSet}
+        }
+      }
+    `;
+    const response = await this.requestGraphQL<{ issue: Record<string, unknown> | null }>(query, {
+      id: issueId,
+    });
+
+    if (!response.issue) {
+      throw new Error(`Issue with ID ${issueId} not found`);
+    }
+
+    return {
+      issueId: getFirstString(response.issue, ['id']) ?? issueId,
+      identifier: getFirstString(response.issue, ['identifier']),
+      customFields: extractListItems(response.issue[field.name]).map((item) =>
+        normalizeIssueCustomFieldValue(item),
+      ),
+    };
+  }
+
+  async updateIssueCustomField(args: {
+    issueId: string;
+    customFieldId: string;
+    value: JSONValue;
+  }) {
+    if (!isJSONValue(args.value)) {
+      throw new Error('Custom field values must be JSON-compatible; use null to clear the value');
+    }
+
+    const plan = await this.resolveUpdateIssueCustomFieldPlan();
+    const selectionSet = await this.buildSelectionSet(plan.mutationField.type, [
+      'success',
+      'issue',
+      'customFieldValue',
+      'fieldValue',
+      'issueCustomField',
+      'customField',
+      'value',
+    ], 2, undefined, {
+      issue: ['id'],
+      customFieldValue: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      fieldValue: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      issueCustomField: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      customField: ['id'],
+    });
+    const { variableDefinitions, invocationArgs, variables } =
+      this.buildUpdateIssueCustomFieldMutationRequest(plan, args);
+    const mutation = `
+      mutation LinearUpdateIssueCustomField(${variableDefinitions.join(', ')}) {
+        ${plan.mutationField.name}(${invocationArgs.join(', ')})${selectionSet}
+      }
+    `;
+    const response = await this.requestGraphQL<Record<string, unknown>>(mutation, variables);
+    const payload = response[plan.mutationField.name];
+    const payloadRecord = isPlainObject(payload) ? payload : { value: payload };
+    const currentValueRecord = getFirstRecord(payloadRecord, [
+      'customFieldValue',
+      'fieldValue',
+      'issueCustomField',
+    ]);
+    const success = typeof payloadRecord.success === 'boolean' ? payloadRecord.success : true;
+
+    if (!success) {
+      throw new Error(`Linear mutation ${plan.mutationField.name} reported success=false`);
+    }
+
+    return {
+      success,
+      issueId: args.issueId,
+      customFieldId: args.customFieldId,
+      value: args.value,
+      currentValue: currentValueRecord
+        ? normalizeIssueCustomFieldValue(currentValueRecord)
+        : undefined,
+      raw: payload,
+    };
   }
 
   async createComment(args: { issueId: string; body: string; parentId?: string }) {
