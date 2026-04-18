@@ -27,6 +27,7 @@ import {
   // Project Management handlers
   handleUpdateProject,
   handleAddIssueToProject,
+  handleRemoveIssueFromProject,
   handleGetProjectIssues,
 } from './project-handlers.js';
 import {
@@ -48,6 +49,7 @@ import {
   handleGetCycles,
   handleGetActiveCycle,
   handleAddIssueToCycle,
+  handleRemoveIssueFromCycle,
 } from './cycle-handlers.js';
 import {
   // Initiative Management handlers
@@ -87,6 +89,7 @@ export function registerToolHandlers(linearService: LinearService) {
     // Project Management tools
     linear_updateProject: handleUpdateProject(linearService),
     linear_addIssueToProject: handleAddIssueToProject(linearService),
+    linear_removeIssueFromProject: handleRemoveIssueFromProject(linearService),
     linear_getProjectIssues: handleGetProjectIssues(linearService),
 
     // View tools
@@ -100,6 +103,7 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_getCycles: handleGetCycles(linearService),
     linear_getActiveCycle: handleGetActiveCycle(linearService),
     linear_addIssueToCycle: handleAddIssueToCycle(linearService),
+    linear_removeIssueFromCycle: handleRemoveIssueFromCycle(linearService),
 
     // Initiative Management tools
     linear_getInitiatives: getInitiativesHandler(linearService),
@@ -175,6 +179,7 @@ export {
   // Project Management handlers
   handleUpdateProject,
   handleAddIssueToProject,
+  handleRemoveIssueFromProject,
   handleGetProjectIssues,
 
   // View handlers
@@ -188,6 +193,7 @@ export {
   handleGetCycles,
   handleGetActiveCycle,
   handleAddIssueToCycle,
+  handleRemoveIssueFromCycle,
 
   // Initiative Management handlers
   getInitiativesHandler,
