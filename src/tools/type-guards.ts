@@ -885,7 +885,7 @@ export function isRemoveProjectFromInitiativeInput(args: unknown): args is {
     'initiativeId' in args &&
     typeof (args as { initiativeId: string }).initiativeId === 'string' &&
     'projectId' in args &&
-      typeof (args as { projectId: string }).projectId === 'string'
+    typeof (args as { projectId: string }).projectId === 'string'
   );
 }
 
@@ -911,11 +911,10 @@ function isSavedViewOrderBy(value: unknown): value is 'createdAt' | 'updatedAt' 
 export function isGetSavedViewsArgs(args: unknown): args is {
   limit?: number;
   includeArchived?: boolean;
-  orderBy?: string;
+  orderBy?: 'createdAt' | 'updatedAt';
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
@@ -1034,11 +1033,10 @@ export function isDeleteSavedViewArgs(args: unknown): args is { id: string } {
 export function isGetFavoriteViewsArgs(args: unknown): args is {
   limit?: number;
   includeArchived?: boolean;
-  orderBy?: string;
+  orderBy?: 'createdAt' | 'updatedAt';
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&

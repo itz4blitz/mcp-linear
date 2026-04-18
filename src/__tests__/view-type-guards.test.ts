@@ -16,10 +16,12 @@ describe('saved view type guards', () => {
   });
 
   it('rejects invalid pagination args for saved view tools', () => {
+    expect(isGetSavedViewsArgs([])).toBe(false);
     expect(isGetSavedViewsArgs({ limit: 0 })).toBe(false);
     expect(isGetSavedViewsArgs({ limit: 1.5 })).toBe(false);
     expect(isGetSavedViewsArgs({ orderBy: 'name' })).toBe(false);
 
+    expect(isGetFavoriteViewsArgs([])).toBe(false);
     expect(isGetFavoriteViewsArgs({ limit: -1 })).toBe(false);
     expect(isGetFavoriteViewsArgs({ orderBy: 'name' })).toBe(false);
   });

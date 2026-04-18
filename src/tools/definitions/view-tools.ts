@@ -196,6 +196,19 @@ export const updateSavedViewToolDefinition: MCPToolDefinition = {
       },
     },
     required: ['id'],
+    anyOf: [
+      { required: ['name'] },
+      { required: ['description'] },
+      { required: ['shared'] },
+      { required: ['icon'] },
+      { required: ['color'] },
+      { required: ['teamId'] },
+      { required: ['projectId'] },
+      { required: ['ownerId'] },
+      { required: ['filters'] },
+      { required: ['filterData'] },
+      { required: ['projectFilterData'] },
+    ],
   },
   output_schema: savedViewOutputItemSchema,
 };
@@ -254,7 +267,7 @@ export const getFavoriteViewsToolDefinition: MCPToolDefinition = {
           properties: {
             id: { type: 'string' },
             name: { type: 'string' },
-            slugId: { type: 'string' },
+            slugId: nullableStringSchema,
             shared: { type: 'boolean' },
           },
         },
