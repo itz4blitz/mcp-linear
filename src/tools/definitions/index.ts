@@ -26,6 +26,10 @@ import {
   createProjectToolDefinition,
   // Project Management tools
   updateProjectToolDefinition,
+  createProjectUpdateToolDefinition,
+  updateProjectUpdateToolDefinition,
+  getProjectUpdatesToolDefinition,
+  archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
@@ -62,6 +66,10 @@ export const allToolDefinitions: MCPToolDefinition[] = [
 
   // Project Management tools
   updateProjectToolDefinition,
+  createProjectUpdateToolDefinition,
+  updateProjectUpdateToolDefinition,
+  getProjectUpdatesToolDefinition,
+  archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
 
@@ -133,6 +141,10 @@ export {
 
   // Project Management tools
   updateProjectToolDefinition,
+  createProjectUpdateToolDefinition,
+  updateProjectUpdateToolDefinition,
+  getProjectUpdatesToolDefinition,
+  archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
 

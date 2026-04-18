@@ -26,6 +26,10 @@ import {
   handleCreateProject,
   // Project Management handlers
   handleUpdateProject,
+  handleCreateProjectUpdate,
+  handleUpdateProjectUpdate,
+  handleGetProjectUpdates,
+  handleArchiveProject,
   handleAddIssueToProject,
   handleGetProjectIssues,
 } from './project-handlers.js';
@@ -79,6 +83,10 @@ export function registerToolHandlers(linearService: LinearService) {
 
     // Project Management tools
     linear_updateProject: handleUpdateProject(linearService),
+    linear_createProjectUpdate: handleCreateProjectUpdate(linearService),
+    linear_updateProjectUpdate: handleUpdateProjectUpdate(linearService),
+    linear_getProjectUpdates: handleGetProjectUpdates(linearService),
+    linear_archiveProject: handleArchiveProject(linearService),
     linear_addIssueToProject: handleAddIssueToProject(linearService),
     linear_getProjectIssues: handleGetProjectIssues(linearService),
 
@@ -160,6 +168,10 @@ export {
 
   // Project Management handlers
   handleUpdateProject,
+  handleCreateProjectUpdate,
+  handleUpdateProjectUpdate,
+  handleGetProjectUpdates,
+  handleArchiveProject,
   handleAddIssueToProject,
   handleGetProjectIssues,
 

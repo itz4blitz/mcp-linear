@@ -126,6 +126,199 @@ export const updateProjectToolDefinition: MCPToolDefinition = {
 };
 
 /**
+ * Tool definition for creating a project update
+ */
+export const createProjectUpdateToolDefinition: MCPToolDefinition = {
+  name: 'linear_createProjectUpdate',
+  description: 'Create a new project update for a Linear project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: {
+        type: 'string',
+        description: 'ID of the project to create the update for',
+      },
+      body: {
+        type: 'string',
+        description: 'Body content of the project update',
+      },
+      health: {
+        type: 'string',
+        description: 'Optional health status for the update',
+        enum: ['onTrack', 'atRisk', 'offTrack'],
+      },
+      userId: {
+        type: 'string',
+        description: 'Optional user ID for the update author',
+      },
+      attachments: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Optional attachment IDs for the update',
+      },
+    },
+    required: ['projectId', 'body'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      body: { type: 'string' },
+      health: { type: 'string' },
+      createdAt: { type: 'string' },
+      updatedAt: { type: 'string' },
+      user: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+      project: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
+/**
+ * Tool definition for updating a project update
+ */
+export const updateProjectUpdateToolDefinition: MCPToolDefinition = {
+  name: 'linear_updateProjectUpdate',
+  description: 'Update an existing project update in Linear',
+  input_schema: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'string',
+        description: 'ID of the project update to update',
+      },
+      body: {
+        type: 'string',
+        description: 'Updated body content of the project update',
+      },
+      health: {
+        type: 'string',
+        description: 'Updated health status for the project update',
+        enum: ['onTrack', 'atRisk', 'offTrack'],
+      },
+    },
+    required: ['id'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      body: { type: 'string' },
+      health: { type: 'string' },
+      createdAt: { type: 'string' },
+      updatedAt: { type: 'string' },
+      user: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+      project: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
+/**
+ * Tool definition for getting project updates
+ */
+export const getProjectUpdatesToolDefinition: MCPToolDefinition = {
+  name: 'linear_getProjectUpdates',
+  description: 'Get all updates associated with a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: {
+        type: 'string',
+        description: 'ID of the project to get updates for',
+      },
+      limit: {
+        type: 'number',
+        description: 'Maximum number of project updates to return (default: 25)',
+      },
+    },
+    required: ['projectId'],
+  },
+  output_schema: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        body: { type: 'string' },
+        health: { type: 'string' },
+        createdAt: { type: 'string' },
+        updatedAt: { type: 'string' },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+        project: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+      },
+    },
+  },
+};
+
+/**
+ * Tool definition for archiving a project
+ */
+export const archiveProjectToolDefinition: MCPToolDefinition = {
+  name: 'linear_archiveProject',
+  description: 'Archive a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: {
+        type: 'string',
+        description: 'ID of the project to archive',
+      },
+    },
+    required: ['projectId'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      project: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          state: { type: 'string' },
+          archivedAt: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
+/**
  * Tool definition for adding an issue to a project
  */
 export const addIssueToProjectToolDefinition: MCPToolDefinition = {
