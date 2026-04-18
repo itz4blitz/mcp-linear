@@ -1,4 +1,13 @@
-import { CustomView, LinearClient, LinearDocument, LinearFetch, Roadmap, Team, User } from '@linear/sdk';
+import {
+  CustomView,
+  LinearClient,
+  LinearDocument,
+  LinearFetch,
+  ProjectMilestone,
+  Roadmap,
+  Team,
+  User,
+} from '@linear/sdk';
 
 type JsonObject = Record<string, unknown>;
 
@@ -929,6 +938,29 @@ export class LinearService {
     };
   }
 
+  private async normalizeProjectMilestone(milestone: ProjectMilestone) {
+    const project = milestone.project ? await milestone.project : null;
+
+    return {
+      id: milestone.id,
+      name: milestone.name,
+      description: milestone.description,
+      status: milestone.status,
+      progress: milestone.progress,
+      sortOrder: milestone.sortOrder,
+      targetDate: milestone.targetDate,
+      createdAt: milestone.createdAt,
+      updatedAt: milestone.updatedAt,
+      archivedAt: milestone.archivedAt,
+      project: project
+        ? {
+            id: project.id,
+            name: project.name,
+          }
+        : null,
+    };
+  }
+
   private compactIssueInput<T extends {
     assigneeId?: string;
     projectId?: string;
@@ -1341,6 +1373,24 @@ export class LinearService {
     );
   }
 
+  async getMilestones(args: { includeArchived?: boolean; limit?: number } = {}) {
+    const milestones = await this.client.projectMilestones({
+      first: args.limit ?? 50,
+      includeArchived: args.includeArchived ?? false,
+    });
+
+    return Promise.all(milestones.nodes.map((milestone) => this.normalizeProjectMilestone(milestone)));
+  }
+
+  async getMilestoneById(id: string) {
+    const milestone = await this.client.projectMilestone(id);
+
+    if (!milestone) {
+      throw new Error(`Milestone with ID ${id} not found`);
+    }
+
+    return this.normalizeProjectMilestone(milestone);
+  }
   async getRoadmaps(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
     await this.assertRoadmapsEnabled();
 
@@ -2179,6 +2229,30 @@ export class LinearService {
     }
   }
 
+  async createMilestone(args: {
+    name: string;
+    projectId: string;
+    description?: string;
+    targetDate?: string;
+    sortOrder?: number;
+  }) {
+    const createPayload = await this.client.createProjectMilestone(
+      this.compactObject({
+        name: args.name,
+        projectId: args.projectId,
+        description: this.nonEmptyString(args.description),
+        targetDate: this.nonEmptyString(args.targetDate),
+        sortOrder: args.sortOrder,
+      }),
+    );
+
+    if (!createPayload.success || !createPayload.projectMilestone) {
+      throw new Error('Failed to create milestone');
+    }
+
+    return this.normalizeProjectMilestone(await createPayload.projectMilestone);
+  }
+
   /**
    * Adds a label to an issue
    * @param issueId The ID or identifier of the issue
@@ -2738,6 +2812,35 @@ export class LinearService {
       console.error('Error updating project:', error);
       throw error;
     }
+  }
+
+  async updateMilestone(args: {
+    id: string;
+    name?: string;
+    projectId?: string;
+    description?: string;
+    targetDate?: string;
+    sortOrder?: number;
+  }) {
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      projectId: this.nonEmptyString(args.projectId),
+      description: this.nonEmptyString(args.description),
+      targetDate: this.nonEmptyString(args.targetDate),
+      sortOrder: args.sortOrder,
+    });
+
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one milestone field must be provided');
+    }
+
+    const updatePayload = await this.client.updateProjectMilestone(args.id, updateInput);
+
+    if (!updatePayload.success || !updatePayload.projectMilestone) {
+      throw new Error(`Failed to update milestone ${args.id}`);
+    }
+
+    return this.normalizeProjectMilestone(await updatePayload.projectMilestone);
   }
 
   /**
@@ -3337,6 +3440,28 @@ export class LinearService {
       console.error('Error archiving project:', error);
       throw error;
     }
+  }
+
+  async archiveMilestone(id: string) {
+    const milestone = await this.client.projectMilestone(id);
+
+    if (!milestone) {
+      throw new Error(`Milestone with ID ${id} not found`);
+    }
+
+    const deletePayload = await this.client.deleteProjectMilestone(id);
+
+    if (!deletePayload.success) {
+      throw new Error(`Failed to archive milestone ${id}`);
+    }
+
+    return {
+      success: true,
+      milestone: {
+        id: milestone.id,
+        name: milestone.name,
+      },
+    };
   }
 
   /**

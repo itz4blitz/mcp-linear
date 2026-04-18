@@ -413,6 +413,79 @@ describe('LinearService optional field sanitization', () => {
     });
   });
 
+  it('omits empty optional fields when creating a milestone', async () => {
+    const createProjectMilestone = jest.fn().mockResolvedValue({
+      success: true,
+      projectMilestone: Promise.resolve({
+        id: 'milestone-1',
+        name: 'Beta',
+        description: undefined,
+        status: 'unstarted',
+        progress: 0,
+        sortOrder: 1,
+        targetDate: undefined,
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+        archivedAt: undefined,
+        project: Promise.resolve({ id: 'project-1', name: 'Project One' }),
+      }),
+    });
+    const service = new LinearService({ createProjectMilestone } as never);
+
+    await service.createMilestone({
+      name: 'Beta',
+      projectId: 'project-1',
+      description: '',
+      targetDate: '',
+    });
+
+    expect(createProjectMilestone).toHaveBeenCalledWith({
+      name: 'Beta',
+      projectId: 'project-1',
+    });
+  });
+
+  it('omits empty optional fields when updating a milestone', async () => {
+    const updateProjectMilestone = jest.fn().mockResolvedValue({
+      success: true,
+      projectMilestone: Promise.resolve({
+        id: 'milestone-1',
+        name: 'Beta',
+        description: undefined,
+        status: 'unstarted',
+        progress: 0,
+        sortOrder: 2,
+        targetDate: undefined,
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+        archivedAt: undefined,
+        project: Promise.resolve({ id: 'project-1', name: 'Project One' }),
+      }),
+    });
+    const service = new LinearService({ updateProjectMilestone } as never);
+
+    await service.updateMilestone({
+      id: 'milestone-1',
+      name: 'Beta',
+      description: '',
+      targetDate: '',
+      sortOrder: 2,
+    });
+
+    expect(updateProjectMilestone).toHaveBeenCalledWith('milestone-1', {
+      name: 'Beta',
+      sortOrder: 2,
+    });
+  });
+
+  it('requires at least one milestone field for updates', async () => {
+    const service = new LinearService({ updateProjectMilestone: jest.fn() } as never);
+
+    await expect(service.updateMilestone({ id: 'milestone-1' })).rejects.toThrow(
+      'At least one milestone field must be provided',
+    );
+  });
+
   it('omits empty optional fields when updating a saved view', async () => {
     const updateCustomView = jest.fn().mockResolvedValue({
       success: true,

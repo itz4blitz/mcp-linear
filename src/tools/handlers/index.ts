@@ -45,6 +45,13 @@ import {
   handleUpdateRoadmap,
 } from './roadmap-handlers.js';
 import {
+  handleArchiveMilestone,
+  handleCreateMilestone,
+  handleGetMilestoneById,
+  handleGetMilestones,
+  handleUpdateMilestone,
+} from './milestone-handlers.js';
+import {
   handleCreateSavedView,
   handleDeleteSavedView,
   handleGetFavoriteViews,
@@ -116,6 +123,13 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_createRoadmap: handleCreateRoadmap(linearService),
     linear_updateRoadmap: handleUpdateRoadmap(linearService),
     linear_archiveRoadmap: handleArchiveRoadmap(linearService),
+
+    // Milestone tools
+    linear_getMilestones: handleGetMilestones(linearService),
+    linear_getMilestoneById: handleGetMilestoneById(linearService),
+    linear_createMilestone: handleCreateMilestone(linearService),
+    linear_updateMilestone: handleUpdateMilestone(linearService),
+    linear_archiveMilestone: handleArchiveMilestone(linearService),
 
     // View tools
     linear_getSavedViews: handleGetSavedViews(linearService),
@@ -223,6 +237,13 @@ export {
   handleAddIssueToProject,
   handleRemoveIssueFromProject,
   handleGetProjectIssues,
+
+  // Milestone handlers
+  handleGetMilestones,
+  handleGetMilestoneById,
+  handleCreateMilestone,
+  handleUpdateMilestone,
+  handleArchiveMilestone,
 
   // View handlers
   handleGetSavedViews,
