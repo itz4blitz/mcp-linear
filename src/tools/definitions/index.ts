@@ -38,6 +38,14 @@ import {
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
 import {
+  archiveRoadmapToolDefinition,
+  createRoadmapToolDefinition,
+  getRoadmapByIdToolDefinition,
+  getRoadmapsToolDefinition,
+  roadmapToolDefinitions,
+  updateRoadmapToolDefinition,
+} from './roadmap-tools.js';
+import {
   createSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
   getFavoriteViewsToolDefinition,
@@ -85,6 +93,9 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+
+  // Roadmap tools
+  ...roadmapToolDefinitions,
 
   // View tools
   getSavedViewsToolDefinition,
@@ -165,6 +176,13 @@ export {
 
   // Comment Management tools
   getCommentsToolDefinition,
+
+  // Roadmap tools
+  getRoadmapsToolDefinition,
+  getRoadmapByIdToolDefinition,
+  createRoadmapToolDefinition,
+  updateRoadmapToolDefinition,
+  archiveRoadmapToolDefinition,
 
   // Project Management tools
   updateProjectToolDefinition,
