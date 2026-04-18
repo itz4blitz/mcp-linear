@@ -11,11 +11,13 @@ import { logError } from '../../utils/config.js';
 export function handleGetMilestones(linearService: LinearService) {
   return async (args: unknown) => {
     try {
-      if (!isGetMilestonesArgs(args)) {
+      const normalizedArgs = args ?? {};
+
+      if (!isGetMilestonesArgs(normalizedArgs)) {
         throw new Error('Invalid arguments for getMilestones');
       }
 
-      return await linearService.getMilestones(args);
+      return await linearService.getMilestones(normalizedArgs);
     } catch (error) {
       logError('Error getting milestones', error);
       throw error;

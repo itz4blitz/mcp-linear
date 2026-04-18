@@ -83,6 +83,8 @@ describe('milestone MCP tools', () => {
       }),
     ).resolves.toEqual([{ id: 'milestone-1' }]);
     expect(getMilestones).toHaveBeenCalledWith({ includeArchived: true, limit: 10 });
+    await expect(handlers.linear_getMilestones(null)).resolves.toEqual([{ id: 'milestone-1' }]);
+    expect(getMilestones).toHaveBeenCalledWith({});
 
     await expect(handlers.linear_getMilestoneById({ id: 'milestone-1' })).resolves.toEqual({
       id: 'milestone-1',
