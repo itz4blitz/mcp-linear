@@ -30,6 +30,9 @@ describe('milestone MCP tools', () => {
     const getMilestoneByIdTool = allToolDefinitions.find(
       (tool) => tool.name === 'linear_getMilestoneById',
     );
+    const updateMilestoneTool = allToolDefinitions.find(
+      (tool) => tool.name === 'linear_updateMilestone',
+    );
 
     expect(getMilestonesTool?.input_schema.properties?.limit).toMatchObject({
       type: 'integer',
@@ -46,6 +49,16 @@ describe('milestone MCP tools', () => {
       targetDate: { type: ['string', 'null'] },
       archivedAt: { type: ['string', 'null'] },
       project: { type: ['object', 'null'] },
+    });
+    expect(updateMilestoneTool?.input_schema).toMatchObject({
+      required: ['id'],
+      anyOf: [
+        { required: ['name'] },
+        { required: ['projectId'] },
+        { required: ['description'] },
+        { required: ['targetDate'] },
+        { required: ['sortOrder'] },
+      ],
     });
   });
 
@@ -142,6 +155,11 @@ describe('milestone MCP tools', () => {
       handlers.linear_updateMilestone({
         id: 'milestone-1',
         sortOrder: '1',
+      }),
+    ).rejects.toThrow('Invalid arguments for updateMilestone');
+    await expect(
+      handlers.linear_updateMilestone({
+        id: 'milestone-1',
       }),
     ).rejects.toThrow('Invalid arguments for updateMilestone');
 

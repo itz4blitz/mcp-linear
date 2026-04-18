@@ -717,15 +717,19 @@ export function isUpdateMilestoneArgs(args: unknown): args is {
   sortOrder?: number;
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     'id' in args &&
     typeof (args as { id: string }).id === 'string' &&
     (!('name' in args) || typeof (args as { name: string }).name === 'string') &&
     (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
     (!('description' in args) || typeof (args as { description: string }).description === 'string') &&
     (!('targetDate' in args) || typeof (args as { targetDate: string }).targetDate === 'string') &&
-    (!('sortOrder' in args) || typeof (args as { sortOrder: number }).sortOrder === 'number')
+    (!('sortOrder' in args) || typeof (args as { sortOrder: number }).sortOrder === 'number') &&
+    ('name' in args ||
+      'projectId' in args ||
+      'description' in args ||
+      'targetDate' in args ||
+      'sortOrder' in args)
   );
 }
 

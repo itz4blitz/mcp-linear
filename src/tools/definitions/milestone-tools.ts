@@ -168,6 +168,13 @@ export const updateMilestoneToolDefinition: MCPToolDefinition = {
       },
     },
     required: ['id'],
+    anyOf: [
+      { required: ['name'] },
+      { required: ['projectId'] },
+      { required: ['description'] },
+      { required: ['targetDate'] },
+      { required: ['sortOrder'] },
+    ],
   },
   output_schema: {
     type: 'object',
