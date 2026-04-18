@@ -13,6 +13,10 @@ describe('roadmap MCP tools', () => {
 
   it('registers roadmap tool definitions', () => {
     const toolNames = allToolDefinitions.map((tool) => tool.name);
+    const getRoadmapsDefinition = allToolDefinitions.find((tool) => tool.name === 'linear_getRoadmaps');
+    const getRoadmapByIdDefinition = allToolDefinitions.find(
+      (tool) => tool.name === 'linear_getRoadmapById',
+    );
 
     expect(toolNames).toEqual(
       expect.arrayContaining([
@@ -23,6 +27,20 @@ describe('roadmap MCP tools', () => {
         'linear_archiveRoadmap',
       ]),
     );
+    expect(getRoadmapsDefinition?.input_schema.properties.limit).toMatchObject({
+      type: 'integer',
+      minimum: 1,
+      default: 25,
+    });
+    expect(getRoadmapByIdDefinition?.output_schema.properties?.owner).toMatchObject({
+      type: ['object', 'null'],
+    });
+    expect(getRoadmapByIdDefinition?.output_schema.properties?.creator).toMatchObject({
+      type: ['object', 'null'],
+    });
+    expect(getRoadmapByIdDefinition?.output_schema.properties?.archivedAt).toMatchObject({
+      type: ['string', 'null'],
+    });
   });
 
   it('routes roadmap calls to the linear service', async () => {

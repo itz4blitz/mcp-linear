@@ -933,7 +933,8 @@ describe('LinearService roadmap operations', () => {
   });
 
   it('creates, updates, and archives a roadmap', async () => {
-    const roadmapRecord = {
+    const archiveRoadmapMutation = jest.fn().mockResolvedValue({ success: true, entity: Promise.resolve(null) });
+    const activeRoadmapRecord = {
       id: 'roadmap-1',
       name: 'Platform Roadmap',
       description: 'Quarterly priorities',
@@ -942,23 +943,31 @@ describe('LinearService roadmap operations', () => {
       sortOrder: 1,
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-02T00:00:00.000Z'),
-      archivedAt: new Date('2024-01-03T00:00:00.000Z'),
+      archivedAt: null,
       url: 'https://linear.app/roadmap/1',
       owner: Promise.resolve({ id: 'user-1', name: 'Owner', email: 'owner@example.com' }),
       creator: Promise.resolve({ id: 'user-2', name: 'Creator', email: 'creator@example.com' }),
       projects: jest.fn().mockResolvedValue({ nodes: [] }),
-      archive: jest.fn().mockResolvedValue({ success: true, entity: Promise.resolve(null) }),
+      archive: archiveRoadmapMutation,
+    };
+    const archivedRoadmapRecord = {
+      ...activeRoadmapRecord,
+      archivedAt: new Date('2024-01-03T00:00:00.000Z'),
     };
 
     const createRoadmap = jest.fn().mockResolvedValue({
       success: true,
-      roadmap: Promise.resolve(roadmapRecord),
+      roadmap: Promise.resolve(activeRoadmapRecord),
     });
     const updateRoadmap = jest.fn().mockResolvedValue({
       success: true,
-      roadmap: Promise.resolve(roadmapRecord),
+      roadmap: Promise.resolve(activeRoadmapRecord),
     });
-    const roadmap = jest.fn().mockResolvedValue(roadmapRecord);
+    const roadmap = jest
+      .fn()
+      .mockResolvedValueOnce(activeRoadmapRecord)
+      .mockResolvedValueOnce(activeRoadmapRecord)
+      .mockResolvedValueOnce(archivedRoadmapRecord);
 
     const service = new LinearService({
       organization: Promise.resolve({ id: 'org-1', name: 'Premier Studio', roadmapEnabled: true }),
@@ -982,9 +991,13 @@ describe('LinearService roadmap operations', () => {
 
     await expect(service.archiveRoadmap('roadmap-1')).resolves.toMatchObject({
       success: true,
-      roadmap: { id: 'roadmap-1' },
+      roadmap: {
+        id: 'roadmap-1',
+        archivedAt: new Date('2024-01-03T00:00:00.000Z'),
+      },
     });
-    expect(roadmapRecord.archive).toHaveBeenCalled();
+    expect(archiveRoadmapMutation).toHaveBeenCalled();
+    expect(roadmap).toHaveBeenCalledTimes(3);
   });
 
   it('blocks roadmap operations when the workspace does not have roadmaps enabled', async () => {

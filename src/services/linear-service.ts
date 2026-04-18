@@ -1441,11 +1441,14 @@ export class LinearService {
       throw new Error(`Failed to archive roadmap ${roadmapId}`);
     }
 
-    const archivedRoadmap = archivePayload.entity ? await archivePayload.entity : null;
+    const archivedRoadmap = await this.client.roadmap(roadmapId);
+    if (!archivedRoadmap) {
+      throw new Error(`Failed to retrieve archived roadmap ${roadmapId}`);
+    }
 
     return {
       success: true,
-      roadmap: await this.normalizeRoadmap(archivedRoadmap ?? roadmap),
+      roadmap: await this.normalizeRoadmap(archivedRoadmap),
     };
   }
 

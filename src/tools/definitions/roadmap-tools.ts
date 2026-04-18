@@ -1,7 +1,7 @@
 import { MCPToolDefinition } from '../../types.js';
 
 const roadmapUserSchema = {
-  type: 'object',
+  type: ['object', 'null'],
   properties: {
     id: { type: 'string' },
     name: { type: 'string' },
@@ -30,7 +30,7 @@ const roadmapProperties = {
   creator: roadmapUserSchema,
   createdAt: { type: 'string' },
   updatedAt: { type: 'string' },
-  archivedAt: { type: 'string' },
+  archivedAt: { type: ['string', 'null'] },
   url: { type: 'string' },
 };
 
@@ -41,7 +41,9 @@ export const getRoadmapsToolDefinition: MCPToolDefinition = {
     type: 'object',
     properties: {
       limit: {
-        type: 'number',
+        type: 'integer',
+        minimum: 1,
+        default: 25,
         description: 'Maximum number of roadmaps to return (default: 25)',
       },
       includeArchived: {
