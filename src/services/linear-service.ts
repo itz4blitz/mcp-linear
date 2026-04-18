@@ -1168,10 +1168,8 @@ export class LinearService {
       mutationField,
       inputArgument,
       inputType,
-      entityArgument:
-        pickArgument(directArgs, FAVORITE_ENTITY_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(directArgs),
-      entityInputField:
-        pickArgument(inputFields, FAVORITE_ENTITY_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(inputFields),
+      entityArgument: pickArgument(directArgs, FAVORITE_ENTITY_ARGUMENT_PATTERNS),
+      entityInputField: pickArgument(inputFields, FAVORITE_ENTITY_ARGUMENT_PATTERNS),
       favoriteArgument:
         pickArgument(directArgs, FAVORITE_ID_ARGUMENT_PATTERNS) ?? pickIdLikeArgument(directArgs),
       favoriteInputField:
@@ -1345,6 +1343,7 @@ export class LinearService {
   private buildFavoriteMutationRequest(
     plan: FavoriteMutationPlan,
     args: { entityId?: string; favoriteId?: string },
+    kind: 'add' | 'remove',
   ): { variableDefinitions: string[]; invocationArgs: string[]; variables: Record<string, unknown> } {
     const variableDefinitions: string[] = [];
     const invocationArgs: string[] = [];
@@ -1366,9 +1365,24 @@ export class LinearService {
         : plan.inputIdCandidates.length === 1
           ? plan.inputIdCandidates[0]
           : undefined;
-    const target = favoriteTarget ?? entityTarget ?? fallbackTarget;
+    const removeEntityFallbackTarget =
+      kind === 'remove' && args.entityId && !args.favoriteId && fallbackTarget
+        ? matchesArgumentPatterns(fallbackTarget, FAVORITE_ENTITY_ARGUMENT_PATTERNS)
+          ? fallbackTarget
+          : undefined
+        : undefined;
+    const target =
+      favoriteTarget ??
+      entityTarget ??
+      removeEntityFallbackTarget ??
+      (kind === 'remove' && args.entityId && !args.favoriteId ? undefined : fallbackTarget);
 
     if (!target) {
+      if (kind === 'remove' && args.entityId && !args.favoriteId) {
+        throw new Error(
+          'The favorite removal mutation does not expose an entity identifier argument; use favoriteId for this schema',
+        );
+      }
       throw new Error('The favorite mutation does not expose a compatible identifier argument');
     }
 
@@ -1613,7 +1627,7 @@ export class LinearService {
     const plan = await this.resolveFavoriteMutationPlan('add');
     const { variableDefinitions, invocationArgs, variables } = this.buildFavoriteMutationRequest(plan, {
       entityId: args.entityId,
-    });
+    }, 'add');
     const selectionSet =
       (await this.buildSelectionSet(
         plan.mutationField.type,
@@ -1634,7 +1648,11 @@ export class LinearService {
 
   async removeFromFavorites(args: { favoriteId?: string; entityId?: string }) {
     const plan = await this.resolveFavoriteMutationPlan('remove');
-    const { variableDefinitions, invocationArgs, variables } = this.buildFavoriteMutationRequest(plan, args);
+    const { variableDefinitions, invocationArgs, variables } = this.buildFavoriteMutationRequest(
+      plan,
+      args,
+      'remove',
+    );
     const selectionSet =
       (await this.buildSelectionSet(
         plan.mutationField.type,
