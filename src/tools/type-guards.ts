@@ -443,6 +443,54 @@ export function isUpdateProjectArgs(args: unknown): args is {
   );
 }
 
+const PROJECT_UPDATE_HEALTH_STATUSES = ['onTrack', 'atRisk', 'offTrack'] as const;
+
+function isProjectUpdateHealthStatus(value: unknown): value is (typeof PROJECT_UPDATE_HEALTH_STATUSES)[number] {
+  return (
+    typeof value === 'string' &&
+    (PROJECT_UPDATE_HEALTH_STATUSES as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * Type guard for linear_createProjectUpdate tool arguments
+ */
+export function isCreateProjectUpdateArgs(args: unknown): args is {
+  projectId: string;
+  body: string;
+  health?: 'onTrack' | 'atRisk' | 'offTrack';
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'projectId' in args &&
+    typeof (args as { projectId: string }).projectId === 'string' &&
+    'body' in args &&
+    typeof (args as { body: string }).body === 'string' &&
+    (!('health' in args) ||
+      isProjectUpdateHealthStatus((args as { health: unknown }).health))
+  );
+}
+
+/**
+ * Type guard for linear_updateProjectUpdate tool arguments
+ */
+export function isUpdateProjectUpdateArgs(args: unknown): args is {
+  id: string;
+  body?: string;
+  health?: 'onTrack' | 'atRisk' | 'offTrack';
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string' &&
+    (!('body' in args) || typeof (args as { body: string }).body === 'string') &&
+    (!('health' in args) ||
+      isProjectUpdateHealthStatus((args as { health: unknown }).health))
+  );
+}
+
 /**
  * Type guard for linear_addIssueToProject tool arguments
  */
@@ -478,6 +526,22 @@ export function isRemoveIssueFromProjectArgs(args: unknown): args is {
 }
 
 /**
+ * Type guard for linear_getProjectUpdates tool arguments
+ */
+export function isGetProjectUpdatesArgs(args: unknown): args is {
+  projectId: string;
+  limit?: number;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'projectId' in args &&
+    typeof (args as { projectId: string }).projectId === 'string' &&
+    (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+  );
+}
+
+/**
  * Type guard for linear_getProjectIssues tool arguments
  */
 export function isGetProjectIssuesArgs(args: unknown): args is {
@@ -490,6 +554,20 @@ export function isGetProjectIssuesArgs(args: unknown): args is {
     'projectId' in args &&
     typeof (args as { projectId: string }).projectId === 'string' &&
     (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+  );
+}
+
+/**
+ * Type guard for linear_archiveProject tool arguments
+ */
+export function isArchiveProjectArgs(args: unknown): args is {
+  projectId: string;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'projectId' in args &&
+    typeof (args as { projectId: string }).projectId === 'string'
   );
 }
 

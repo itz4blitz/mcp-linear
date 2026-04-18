@@ -1899,9 +1899,7 @@ export class LinearService {
   async createProjectUpdate(args: {
     projectId: string;
     body: string;
-    health?: 'onTrack' | 'atRisk' | 'offTrack' | string;
-    userId?: string;
-    attachments?: string[];
+    health?: 'onTrack' | 'atRisk' | 'offTrack';
   }) {
     try {
       // Get the project
@@ -1915,8 +1913,6 @@ export class LinearService {
         projectId: args.projectId,
         body: args.body,
         health: args.health as any,
-        // Note: userId and attachmentIds are not supported in the direct API input
-        // The SDK uses the authenticated user by default
       });
 
       if (createPayload.success && createPayload.projectUpdate) {
@@ -1957,7 +1953,7 @@ export class LinearService {
   async updateProjectUpdate(args: {
     id: string;
     body?: string;
-    health?: 'onTrack' | 'atRisk' | 'offTrack' | string;
+    health?: 'onTrack' | 'atRisk' | 'offTrack';
   }) {
     try {
       // Get the project update

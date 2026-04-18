@@ -63,12 +63,16 @@ The following tools are currently implemented and available in the MCP Linear:
 
 ### Project Management Tools
 
-| Tool Name                  | Description                              | Status         |
-| -------------------------- | ---------------------------------------- | -------------- |
-| `linear_updateProject`     | Update an existing project               | ✅ Implemented |
-| `linear_addIssueToProject` | Add an existing issue to a project       | ✅ Implemented |
-| `linear_removeIssueFromProject` | Remove an existing issue from a project | ✅ Implemented |
-| `linear_getProjectIssues`  | Get all issues associated with a project | ✅ Implemented |
+| Tool Name                       | Description                               | Status         |
+| ------------------------------- | ----------------------------------------- | -------------- |
+| `linear_updateProject`          | Update an existing project                | ✅ Implemented |
+| `linear_createProjectUpdate`    | Create a new update for a project         | ✅ Implemented |
+| `linear_updateProjectUpdate`    | Update an existing project update         | ✅ Implemented |
+| `linear_getProjectUpdates`      | Get updates for a project                 | ✅ Implemented |
+| `linear_archiveProject`         | Archive a project                         | ✅ Implemented |
+| `linear_addIssueToProject`      | Add an existing issue to a project        | ✅ Implemented |
+| `linear_removeIssueFromProject` | Remove an existing issue from a project   | ✅ Implemented |
+| `linear_getProjectIssues`       | Get all issues associated with a project  | ✅ Implemented |
 
 ### Cycle Management Tools
 
@@ -121,8 +125,6 @@ The following tools are recommended for future implementation to enhance the cap
 
 | Tool Name                       | Description                       | Priority | Status     |
 | ------------------------------- | --------------------------------- | -------- | ---------- |
-| `linear_archiveProject`         | Archive a project                 | Medium   | 📝 Planned |
-| `linear_getProjectUpdates`      | Get updates for a project         | Medium   | 📝 Planned |
 | `linear_getProjectMembers`      | Get members assigned to a project | Medium   | 📝 Planned |
 | `linear_addProjectMember`       | Add a member to a project         | Medium   | 📝 Planned |
 | `linear_removeProjectMember`    | Remove a member from a project    | Medium   | 📝 Planned |

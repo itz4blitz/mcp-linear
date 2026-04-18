@@ -117,7 +117,6 @@ See [TOOLS.md](./TOOLS.md) for a complete list of available tools and planned fe
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information on how to develop locally.
 
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
