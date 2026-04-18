@@ -649,7 +649,7 @@ export function isArchiveProjectArgs(args: unknown): args is {
     typeof args === 'object' &&
     args !== null &&
     'projectId' in args &&
-      typeof (args as { projectId: string }).projectId === 'string'
+    typeof (args as { projectId: string }).projectId === 'string'
   );
 }
 
@@ -666,7 +666,7 @@ export function isGetRoadmapsArgs(args: unknown): args is {
     (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
-    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
 
@@ -1193,7 +1193,7 @@ function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
 }
 
-function isSavedViewOrderBy(value: unknown): value is 'createdAt' | 'updatedAt' {
+function isPaginationOrderBy(value: unknown): value is 'createdAt' | 'updatedAt' {
   return value === 'createdAt' || value === 'updatedAt';
 }
 
@@ -1210,7 +1210,7 @@ export function isGetSavedViewsArgs(args: unknown): args is {
     (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
-    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
 
@@ -1332,6 +1332,6 @@ export function isGetFavoriteViewsArgs(args: unknown): args is {
     (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
-    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
