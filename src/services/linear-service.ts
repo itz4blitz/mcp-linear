@@ -1391,7 +1391,6 @@ export class LinearService {
 
     return this.normalizeProjectMilestone(milestone);
   }
-
   async getRoadmaps(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
     await this.assertRoadmapsEnabled();
 

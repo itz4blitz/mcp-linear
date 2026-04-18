@@ -701,7 +701,8 @@ export function isCreateRoadmapArgs(args: unknown): args is {
       typeof (args as { description: string }).description === 'string') &&
     (!('color' in args) || typeof (args as { color: string }).color === 'string') &&
     (!('ownerId' in args) || typeof (args as { ownerId: string }).ownerId === 'string') &&
-    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+    (!('sortOrder' in args) ||
+      typeof (args as { sortOrder: unknown }).sortOrder === 'number')
   );
 }
 
@@ -733,7 +734,8 @@ export function isUpdateRoadmapArgs(args: unknown): args is {
       typeof (args as { description: string }).description === 'string') &&
     (!('color' in args) || typeof (args as { color: string }).color === 'string') &&
     (!('ownerId' in args) || typeof (args as { ownerId: string }).ownerId === 'string') &&
-    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+    (!('sortOrder' in args) ||
+      typeof (args as { sortOrder: unknown }).sortOrder === 'number')
   );
 }
 
