@@ -67,6 +67,7 @@ The following tools are currently implemented and available in the MCP Linear:
 | -------------------------- | ---------------------------------------- | -------------- |
 | `linear_updateProject`     | Update an existing project               | ✅ Implemented |
 | `linear_addIssueToProject` | Add an existing issue to a project       | ✅ Implemented |
+| `linear_removeIssueFromProject` | Remove an existing issue from a project | ✅ Implemented |
 | `linear_getProjectIssues`  | Get all issues associated with a project | ✅ Implemented |
 
 ### Cycle Management Tools
@@ -76,6 +77,7 @@ The following tools are currently implemented and available in the MCP Linear:
 | `linear_getCycles`       | Get a list of all cycles                  | ✅ Implemented |
 | `linear_getActiveCycle`  | Get the currently active cycle for a team | ✅ Implemented |
 | `linear_addIssueToCycle` | Add an issue to a cycle                   | ✅ Implemented |
+| `linear_removeIssueFromCycle` | Remove an issue from a cycle          | ✅ Implemented |
 
 ### Initiative Management Tools
 
@@ -109,7 +111,6 @@ The following tools are recommended for future implementation to enhance the cap
 | ------------------------------- | --------------------------------- | -------- | ---------- |
 | `linear_archiveProject`         | Archive a project                 | Medium   | 📝 Planned |
 | `linear_getProjectUpdates`      | Get updates for a project         | Medium   | 📝 Planned |
-| `linear_removeIssueFromProject` | Remove an issue from a project    | Medium   | 📝 Planned |
 | `linear_getProjectMembers`      | Get members assigned to a project | Medium   | 📝 Planned |
 | `linear_addProjectMember`       | Add a member to a project         | Medium   | 📝 Planned |
 | `linear_removeProjectMember`    | Remove a member from a project    | Medium   | 📝 Planned |
@@ -121,7 +122,6 @@ The following tools are recommended for future implementation to enhance the cap
 | `linear_getCycleById`         | Get details of a specific cycle | Medium   | 📝 Planned |
 | `linear_createCycle`          | Create a new cycle              | Medium   | 📝 Planned |
 | `linear_updateCycle`          | Update an existing cycle        | Medium   | 📝 Planned |
-| `linear_removeIssueFromCycle` | Remove an issue from a cycle    | Medium   | 📝 Planned |
 | `linear_completeCycle`        | Mark a cycle as complete        | Medium   | 📝 Planned |
 | `linear_getCycleStats`        | Get statistics for a cycle      | Medium   | 📝 Planned |
 

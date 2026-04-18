@@ -41,7 +41,9 @@
       "linear_updateIssue",
       "linear_createComment",
       "linear_addIssueLabel",
-      "linear_removeIssueLabel"
+      "linear_removeIssueLabel",
+      "linear_removeIssueFromProject",
+      "linear_removeIssueFromCycle"
     ]
   },
   "keywords": [

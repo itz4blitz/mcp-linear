@@ -27,6 +27,7 @@ import {
   // Project Management tools
   updateProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
 import { getTeamsToolDefinition, getWorkflowStatesToolDefinition } from './team-tools.js';
@@ -41,6 +42,7 @@ import {
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 } from './cycle-tools.js';
 import { initiativeToolDefinitions } from './initiative-tools.js';
 
@@ -63,12 +65,14 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   // Project Management tools
   updateProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 
   // Initiative Management tools
   ...initiativeToolDefinitions,
@@ -134,10 +138,12 @@ export {
   // Project Management tools
   updateProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 };

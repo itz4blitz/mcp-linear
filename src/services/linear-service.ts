@@ -1265,6 +1265,51 @@ export class LinearService {
   }
 
   /**
+   * Remove an issue from a project
+   * @param issueId ID of the issue to remove
+   * @param projectId ID of the project to remove the issue from
+   * @returns Success status and issue/project details
+   */
+  async removeIssueFromProject(issueId: string, projectId: string) {
+    try {
+      const issue = await this.client.issue(issueId);
+      if (!issue) {
+        throw new Error(`Issue with ID ${issueId} not found`);
+      }
+
+      const project = await this.client.project(projectId);
+      if (!project) {
+        throw new Error(`Project with ID ${projectId} not found`);
+      }
+
+      const currentProject = issue.project ? await issue.project : null;
+      if (!currentProject || currentProject.id !== projectId) {
+        throw new Error(`Issue ${issue.identifier} is not associated with project ${projectId}`);
+      }
+
+      await this.client.updateIssue(issue.id, { projectId: null });
+
+      const updatedIssue = await this.client.issue(issue.id);
+
+      return {
+        success: true,
+        issue: {
+          id: updatedIssue.id,
+          identifier: updatedIssue.identifier,
+          title: updatedIssue.title,
+        },
+        project: {
+          id: project.id,
+          name: project.name,
+        },
+      };
+    } catch (error) {
+      console.error('Error removing issue from project:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all issues associated with a project
    * @param projectId ID of the project
    * @param limit Maximum number of issues to return
@@ -1471,6 +1516,52 @@ export class LinearService {
       };
     } catch (error) {
       console.error('Error adding issue to cycle:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Removes an issue from a cycle
+   * @param issueId ID or identifier of the issue
+   * @param cycleId ID of the cycle
+   * @returns Success status and updated issue information
+   */
+  async removeIssueFromCycle(issueId: string, cycleId: string) {
+    try {
+      const issue = await this.client.issue(issueId);
+      if (!issue) {
+        throw new Error(`Issue with ID ${issueId} not found`);
+      }
+
+      const cycle = await this.client.cycle(cycleId);
+      if (!cycle) {
+        throw new Error(`Cycle with ID ${cycleId} not found`);
+      }
+
+      const currentCycle = issue.cycle ? await issue.cycle : null;
+      if (!currentCycle || currentCycle.id !== cycleId) {
+        throw new Error(`Issue ${issue.identifier} is not associated with cycle ${cycleId}`);
+      }
+
+      await this.client.updateIssue(issue.id, { cycleId: null });
+
+      const updatedIssue = await this.client.issue(issue.id);
+
+      return {
+        success: true,
+        issue: {
+          id: updatedIssue.id,
+          identifier: updatedIssue.identifier,
+          title: updatedIssue.title,
+        },
+        cycle: {
+          id: cycle.id,
+          number: cycle.number,
+          name: cycle.name,
+        },
+      };
+    } catch (error) {
+      console.error('Error removing issue from cycle:', error);
       throw error;
     }
   }

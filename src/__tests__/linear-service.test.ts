@@ -116,3 +116,88 @@ describe('LinearService optional field sanitization', () => {
     });
   });
 });
+
+describe('LinearService issue unlink operations', () => {
+  it('removes an issue from a project', async () => {
+    const issue = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+        project: Promise.resolve({
+          id: 'project-1',
+          name: 'Roadmap',
+        }),
+      })
+      .mockResolvedValueOnce({
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+      });
+    const project = jest.fn().mockResolvedValue({
+      id: 'project-1',
+      name: 'Roadmap',
+    });
+    const updateIssue = jest.fn().mockResolvedValue({ success: true });
+    const service = new LinearService({ issue, project, updateIssue } as never);
+
+    await expect(service.removeIssueFromProject('ABC-123', 'project-1')).resolves.toEqual({
+      success: true,
+      issue: {
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+      },
+      project: {
+        id: 'project-1',
+        name: 'Roadmap',
+      },
+    });
+
+    expect(updateIssue).toHaveBeenCalledWith('issue-1', { projectId: null });
+  });
+
+  it('removes an issue from a cycle', async () => {
+    const issue = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+        cycle: Promise.resolve({
+          id: 'cycle-1',
+          number: 42,
+          name: 'Sprint 42',
+        }),
+      })
+      .mockResolvedValueOnce({
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+      });
+    const cycle = jest.fn().mockResolvedValue({
+      id: 'cycle-1',
+      number: 42,
+      name: 'Sprint 42',
+    });
+    const updateIssue = jest.fn().mockResolvedValue({ success: true });
+    const service = new LinearService({ issue, cycle, updateIssue } as never);
+
+    await expect(service.removeIssueFromCycle('ABC-123', 'cycle-1')).resolves.toEqual({
+      success: true,
+      issue: {
+        id: 'issue-1',
+        identifier: 'ABC-123',
+        title: 'Test issue',
+      },
+      cycle: {
+        id: 'cycle-1',
+        number: 42,
+        name: 'Sprint 42',
+      },
+    });
+
+    expect(updateIssue).toHaveBeenCalledWith('issue-1', { cycleId: null });
+  });
+});
