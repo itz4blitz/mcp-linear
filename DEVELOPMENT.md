@@ -4,7 +4,7 @@ To develop locally:
 
 ```bash
 # Clone the repository
-git clone https://github.com/tacticlaunch/mcp-linear.git
+git clone https://github.com/itz4blitz/mcp-linear.git
 cd mcp-linear
 
 # Install dependencies
