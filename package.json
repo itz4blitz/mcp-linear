@@ -62,7 +62,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tacticlaunch/mcp-linear"
+    "url": "https://github.com/itz4blitz/mcp-linear"
   },
   "dependencies": {
     "@linear/sdk": "^38.0.0",

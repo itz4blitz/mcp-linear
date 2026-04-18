@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/tacticlaunch/mcp-linear/blob/main/docs/linear-app-icon.png?raw=true" alt="Linear App Icon" width="250" height="250">
+  <img src="./docs/linear-app-icon.png" alt="Linear App Icon" width="250" height="250">
 </p>
 
 # MCP Linear
@@ -7,12 +7,6 @@
 A Model Context Protocol (MCP) server implementation for the Linear GraphQL API that enables AI assistants to interact with Linear project management systems.
 
 ![MCP Linear](https://img.shields.io/badge/MCP-Linear-blue)
-[![npm version](https://img.shields.io/npm/v/@tacticlaunch/mcp-linear.svg)](https://www.npmjs.com/package/@tacticlaunch/mcp-linear)
-[![smithery badge](https://smithery.ai/badge/@tacticlaunch/mcp-linear)](https://smithery.ai/server/@tacticlaunch/mcp-linear)
-
-<a href="https://glama.ai/mcp/servers/@tacticlaunch/mcp-linear">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@tacticlaunch/mcp-linear/badge" />
-</a>
 
 ## Features
 
@@ -49,7 +43,7 @@ To use MCP Linear, you'll need a Linear API token. Here's how to get one:
 6. Give your key a name (e.g., `MCP Linear Integration`)
 7. Copy the generated API token and store it securely - you won't be able to see it again!
 
-### Installing via [Smithery](https://smithery.ai/server/@tacticlaunch/mcp-linear) (Recommended)
+### Installing via Smithery (Recommended)
 
 - To install MCP Linear for Cursor:
 
@@ -101,7 +95,7 @@ Prerequisites
 npm install -g @tacticlaunch/mcp-linear
 
 # Or clone and install locally
-git clone https://github.com/tacticlaunch/mcp-linear.git
+git clone https://github.com/itz4blitz/mcp-linear.git
 cd mcp-linear
 npm install
 npm link  # Makes the package available globally
@@ -124,16 +118,15 @@ mcp-linear
 
 ## Available Tools
 
-See [TOOLS.md](https://github.com/tacticlaunch/mcp-linear/blob/main/TOOLS.md) for a complete list of available tools and planned features.
+See [TOOLS.md](./TOOLS.md) for a complete list of available tools and planned features.
 
 ## Development
 
-See [DEVELOPMENT.md](https://github.com/tacticlaunch/mcp-linear/blob/main/DEVELOPMENT.md) for more information on how to develop locally.
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information on how to develop locally.
 
 ## Links
 
 [tacticlaunch/cursor-memory-bank](https://github.com/tacticlaunch/cursor-memory-bank) - If you are a developer seeking to enhance your workflow with Cursor, consider giving it a try.
-
 
 ## License
 
