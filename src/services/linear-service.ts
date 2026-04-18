@@ -31,6 +31,34 @@ type FavoriteViewNode = {
   url?: string | null;
 };
 
+type PMIssueQueryArgs = {
+  limit?: number;
+  states?: string[];
+  assigneeId?: string;
+  labelIds?: string[];
+  cycleId?: string;
+  projectMilestoneId?: string;
+  includeCompleted?: boolean;
+  orderBy?: string;
+};
+
+type ProjectIssueQueryArgs = PMIssueQueryArgs & {
+  projectId: string;
+};
+
+type CycleIssueQueryArgs = PMIssueQueryArgs & {
+  cycleId: string;
+};
+
+type MilestoneQueryArgs = {
+  includeArchived?: boolean;
+  limit?: number;
+  projectId?: string;
+  teamId?: string;
+  status?: string;
+  orderBy?: string;
+};
+
 const FAVORITE_VIEWS_QUERY = `
   query FavoriteViews($first: Int, $includeArchived: Boolean, $orderBy: PaginationOrderBy) {
     favorites(first: $first, includeArchived: $includeArchived, orderBy: $orderBy) {
@@ -1050,6 +1078,100 @@ export class LinearService {
             name: project.name,
           }
         : null,
+      };
+  }
+
+  private buildPMIssueFilter(args: PMIssueQueryArgs) {
+    const filter: Record<string, unknown> = {};
+
+    if (args.assigneeId) {
+      filter.assignee = { id: { eq: args.assigneeId } };
+    }
+
+    if (args.labelIds && args.labelIds.length > 0) {
+      filter.labels = { some: { id: { in: args.labelIds } } };
+    }
+
+    if (args.cycleId) {
+      filter.cycle = { id: { eq: args.cycleId } };
+    }
+
+    if (args.projectMilestoneId) {
+      filter.projectMilestone = { id: { eq: args.projectMilestoneId } };
+    }
+
+    if (args.includeCompleted === false) {
+      filter.completedAt = { null: true };
+    }
+
+    if (args.states && args.states.length > 0) {
+      filter.state = { name: { in: args.states } };
+    }
+
+    return this.compactObject(filter);
+  }
+
+  private async normalizeIssueSummary(issue: any) {
+    const [teamData, assigneeData, cycleData, projectMilestoneData, stateData] = await Promise.all([
+      issue.team ? issue.team : Promise.resolve(null),
+      issue.assignee ? issue.assignee : Promise.resolve(null),
+      issue.cycle ? issue.cycle : Promise.resolve(null),
+      issue.projectMilestone ? issue.projectMilestone : Promise.resolve(null),
+      issue.state ? issue.state : Promise.resolve(null),
+    ]);
+
+    const labels = await issue.labels();
+    const labelsList = labels.nodes.map((label: any) => ({
+      id: label.id,
+      name: label.name,
+      color: label.color,
+    }));
+
+    return {
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      description: issue.description,
+      state: stateData
+        ? {
+            id: stateData.id,
+            name: stateData.name,
+            color: stateData.color,
+            type: stateData.type,
+          }
+        : null,
+      priority: issue.priority,
+      estimate: issue.estimate,
+      dueDate: issue.dueDate,
+      team: teamData
+        ? {
+            id: teamData.id,
+            name: teamData.name,
+          }
+        : null,
+      assignee: assigneeData
+        ? {
+            id: assigneeData.id,
+            name: assigneeData.name,
+          }
+        : null,
+      cycle: cycleData
+        ? {
+            id: cycleData.id,
+            name: cycleData.name,
+          }
+        : null,
+      projectMilestone: projectMilestoneData
+        ? {
+            id: projectMilestoneData.id,
+            name: projectMilestoneData.name,
+          }
+        : null,
+      labels: labelsList,
+      sortOrder: issue.sortOrder,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      url: issue.url,
     };
   }
 
@@ -1571,13 +1693,61 @@ export class LinearService {
     );
   }
 
-  async getMilestones(args: { includeArchived?: boolean; limit?: number } = {}) {
-    const milestones = await this.client.projectMilestones({
-      first: args.limit ?? 50,
-      includeArchived: args.includeArchived ?? false,
-    });
+  async getMilestones(args: MilestoneQueryArgs = {}) {
+    const limit = args.limit ?? 50;
+    const includeArchived = args.includeArchived ?? false;
+    const orderBy = this.normalizePaginationOrderBy(args.orderBy);
 
-    return Promise.all(milestones.nodes.map((milestone) => this.normalizeProjectMilestone(milestone)));
+    const milestoneSource = async () => {
+      if (!args.projectId) {
+        return await this.client.projectMilestones(
+          this.compactObject({
+            first: limit,
+            includeArchived,
+            orderBy,
+          }),
+        );
+      }
+
+      const project = await this.client.project(args.projectId);
+      if (!project) {
+        throw new Error(`Project with ID ${args.projectId} not found`);
+      }
+
+      if (args.teamId) {
+        const projectTeams = await project.teams({ first: 50 });
+        const teamMatches = projectTeams.nodes.some((team) => team.id === args.teamId);
+
+        if (!teamMatches) {
+          return { nodes: [] as ProjectMilestone[] };
+        }
+      }
+
+      return await project.projectMilestones(
+        this.compactObject({
+          first: limit,
+          includeArchived,
+          orderBy,
+        }),
+      );
+    };
+
+    const milestones = await milestoneSource();
+    const normalizedMilestones = await Promise.all(
+      milestones.nodes.map((milestone) => this.normalizeProjectMilestone(milestone)),
+    );
+
+    return normalizedMilestones.filter((milestone) => {
+      if (args.projectId && milestone.project?.id !== args.projectId) {
+        return false;
+      }
+
+      if (args.status && milestone.status !== args.status) {
+        return false;
+      }
+
+      return true;
+    });
   }
 
   async getMilestoneById(id: string) {
@@ -3189,53 +3359,22 @@ export class LinearService {
    * @param limit Maximum number of issues to return
    * @returns List of issues in the project
    */
-  async getProjectIssues(projectId: string, limit = 25) {
+  async getProjectIssues(args: ProjectIssueQueryArgs) {
     try {
-      // Get the project
-      const project = await this.client.project(projectId);
+      const project = await this.client.project(args.projectId);
       if (!project) {
-        throw new Error(`Project with ID ${projectId} not found`);
+        throw new Error(`Project with ID ${args.projectId} not found`);
       }
 
-      // Get issues for the project
-      const issues = await this.client.issues({
-        first: limit,
-        filter: {
-          project: {
-            id: { eq: projectId },
-          },
-        },
-      });
-
-      // Process the issues
-      return Promise.all(
-        issues.nodes.map(async (issue) => {
-          const teamData = issue.team ? await issue.team : null;
-          const assigneeData = issue.assignee ? await issue.assignee : null;
-
-          return {
-            id: issue.id,
-            identifier: issue.identifier,
-            title: issue.title,
-            description: issue.description,
-            state: issue.state,
-            priority: issue.priority,
-            team: teamData
-              ? {
-                  id: teamData.id,
-                  name: teamData.name,
-                }
-              : null,
-            assignee: assigneeData
-              ? {
-                  id: assigneeData.id,
-                  name: assigneeData.name,
-                }
-              : null,
-            url: issue.url,
-          };
+      const issues = await project.issues(
+        this.compactObject({
+          first: args.limit ?? 25,
+          orderBy: this.normalizePaginationOrderBy(args.orderBy),
+          filter: this.buildPMIssueFilter(args),
         }),
       );
+
+      return await Promise.all(issues.nodes.map((issue) => this.normalizeIssueSummary(issue)));
     } catch (error) {
       console.error('Error getting project issues:', error);
       throw error;
@@ -3288,6 +3427,29 @@ export class LinearService {
       );
     } catch (error) {
       console.error('Error getting cycles:', error);
+      throw error;
+    }
+  }
+
+  async getCycleIssues(args: CycleIssueQueryArgs) {
+    try {
+      const cycle = await this.client.cycle(args.cycleId);
+      if (!cycle) {
+        throw new Error(`Cycle with ID ${args.cycleId} not found`);
+      }
+
+      const { cycleId: _cycleId, ...filterArgs } = args;
+      const issues = await cycle.issues(
+        this.compactObject({
+          first: args.limit ?? 25,
+          orderBy: this.normalizePaginationOrderBy(args.orderBy),
+          filter: this.buildPMIssueFilter(filterArgs),
+        }),
+      );
+
+      return await Promise.all(issues.nodes.map((issue) => this.normalizeIssueSummary(issue)));
+    } catch (error) {
+      console.error('Error getting cycle issues:', error);
       throw error;
     }
   }

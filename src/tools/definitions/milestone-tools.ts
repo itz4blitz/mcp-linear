@@ -1,8 +1,18 @@
 import { MCPToolDefinition } from '../../types.js';
 
+const milestoneOrderBySchema = {
+  type: 'string',
+  enum: ['createdAt', 'updatedAt'],
+};
+
+const milestoneStatusSchema = {
+  type: 'string',
+  enum: ['done', 'next', 'overdue', 'unstarted'],
+};
+
 export const getMilestonesToolDefinition: MCPToolDefinition = {
   name: 'linear_getMilestones',
-  description: 'Get a list of project milestones from Linear',
+  description: 'Get project milestones from Linear, with PM-friendly filters for project, team, and milestone status',
   input_schema: {
     type: 'object',
     properties: {
@@ -16,6 +26,22 @@ export const getMilestonesToolDefinition: MCPToolDefinition = {
         minimum: 1,
         description: 'Maximum number of milestones to return',
         default: 50,
+      },
+      projectId: {
+        type: 'string',
+        description: 'Filter milestones by project ID',
+      },
+      teamId: {
+        type: 'string',
+        description: 'Filter milestones by team ID via the milestone project membership',
+      },
+      status: {
+        ...milestoneStatusSchema,
+        description: 'Filter milestones by milestone status',
+      },
+      orderBy: {
+        ...milestoneOrderBySchema,
+        description: 'Sort milestones by created or updated date',
       },
     },
   },

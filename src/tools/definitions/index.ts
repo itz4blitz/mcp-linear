@@ -72,6 +72,7 @@ import {
   // Cycle Management tools
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
+  getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,
   removeIssueFromCycleToolDefinition,
 } from './cycle-tools.js';
@@ -125,6 +126,7 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   // Cycle Management tools
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
+  getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,
   removeIssueFromCycleToolDefinition,
 
@@ -231,6 +233,7 @@ export {
   // Cycle Management tools
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
+  getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,
   removeIssueFromCycleToolDefinition,
 };

@@ -1492,3 +1492,179 @@ describe('LinearService custom field discovery', () => {
     );
   });
 });
+
+describe('LinearService PM workflow queries', () => {
+  it('builds project issue filters for PM views and normalizes issue summaries', async () => {
+    const projectIssues = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'issue-1',
+          identifier: 'ORD-1',
+          title: 'Refine onboarding',
+          description: 'Polish the setup flow',
+          priority: 2,
+          estimate: 5,
+          dueDate: '2026-04-20',
+          sortOrder: 12,
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          url: 'https://linear.app/issue/ORD-1',
+          state: Promise.resolve({ id: 'state-1', name: 'In Progress', color: '#f00', type: 'started' }),
+          team: Promise.resolve({ id: 'team-1', name: 'Ordello' }),
+          assignee: Promise.resolve({ id: 'user-1', name: 'Alex' }),
+          cycle: Promise.resolve({ id: 'cycle-1', name: 'Sprint 1' }),
+          projectMilestone: Promise.resolve({ id: 'milestone-1', name: 'Phase 1' }),
+          labels: jest.fn().mockResolvedValue({ nodes: [{ id: 'label-1', name: 'frontend', color: '#0f0' }] }),
+        },
+      ],
+    });
+    const project = jest.fn().mockResolvedValue({
+      id: 'project-1',
+      issues: projectIssues,
+    });
+    const service = new LinearService({ project } as never);
+
+    const result = await service.getProjectIssues({
+      projectId: 'project-1',
+      limit: 10,
+      states: ['In Progress'],
+      assigneeId: 'user-1',
+      labelIds: ['label-1'],
+      cycleId: 'cycle-1',
+      projectMilestoneId: 'milestone-1',
+      includeCompleted: false,
+      orderBy: 'updatedAt',
+    });
+
+    expect(project).toHaveBeenCalledWith('project-1');
+    expect(projectIssues).toHaveBeenCalledWith({
+      first: 10,
+      orderBy: 'updatedAt',
+      filter: {
+        assignee: { id: { eq: 'user-1' } },
+        labels: { some: { id: { in: ['label-1'] } } },
+        cycle: { id: { eq: 'cycle-1' } },
+        projectMilestone: { id: { eq: 'milestone-1' } },
+        completedAt: { null: true },
+        state: { name: { in: ['In Progress'] } },
+      },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'issue-1',
+        identifier: 'ORD-1',
+        state: { id: 'state-1', name: 'In Progress', color: '#f00', type: 'started' },
+        labels: [{ id: 'label-1', name: 'frontend', color: '#0f0' }],
+        cycle: { id: 'cycle-1', name: 'Sprint 1' },
+        projectMilestone: { id: 'milestone-1', name: 'Phase 1' },
+      }),
+    ]);
+  });
+
+  it('filters milestones by project, team, and status for PM planning views', async () => {
+    const projectMilestones = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'milestone-1',
+          name: 'Phase 1',
+          description: 'Foundation',
+          progress: 25,
+          sortOrder: 1,
+          targetDate: '2026-04-30',
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          status: 'next',
+          project: Promise.resolve({ id: 'project-1', name: 'OrdelloTS' }),
+        },
+      ],
+    });
+    const teams = jest.fn().mockResolvedValue({ nodes: [{ id: 'team-1', name: 'Ordello' }] });
+    const project = jest.fn().mockResolvedValue({
+      id: 'project-1',
+      teams,
+      projectMilestones,
+    });
+    const service = new LinearService({ project } as never);
+
+    const result = await service.getMilestones({
+      projectId: 'project-1',
+      teamId: 'team-1',
+      status: 'next',
+      limit: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+    });
+
+    expect(project).toHaveBeenCalledWith('project-1');
+    expect(projectMilestones).toHaveBeenCalledWith({
+      first: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'milestone-1',
+        status: 'next',
+      }),
+    ]);
+  });
+
+  it('builds cycle issue filters for PM cycle views', async () => {
+    const cycleIssues = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'issue-1',
+          identifier: 'ORD-1',
+          title: 'Refine onboarding',
+          description: 'Polish the setup flow',
+          priority: 2,
+          estimate: 5,
+          dueDate: '2026-04-20',
+          sortOrder: 12,
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          url: 'https://linear.app/issue/ORD-1',
+          state: Promise.resolve({ id: 'state-1', name: 'Todo', color: '#00f', type: 'unstarted' }),
+          team: Promise.resolve({ id: 'team-1', name: 'Ordello' }),
+          assignee: Promise.resolve({ id: 'user-1', name: 'Alex' }),
+          cycle: Promise.resolve({ id: 'cycle-1', name: 'Sprint 1' }),
+          projectMilestone: undefined,
+          labels: jest.fn().mockResolvedValue({ nodes: [{ id: 'label-1', name: 'backend', color: '#0ff' }] }),
+        },
+      ],
+    });
+    const cycle = jest.fn().mockResolvedValue({
+      id: 'cycle-1',
+      issues: cycleIssues,
+    });
+    const service = new LinearService({ cycle } as never);
+
+    const result = await service.getCycleIssues({
+      cycleId: 'cycle-1',
+      limit: 10,
+      states: ['Todo'],
+      assigneeId: 'user-1',
+      labelIds: ['label-1'],
+      includeCompleted: false,
+      orderBy: 'createdAt',
+    });
+
+    expect(cycle).toHaveBeenCalledWith('cycle-1');
+    expect(cycleIssues).toHaveBeenCalledWith({
+      first: 10,
+      orderBy: 'createdAt',
+      filter: {
+        assignee: { id: { eq: 'user-1' } },
+        labels: { some: { id: { in: ['label-1'] } } },
+        completedAt: { null: true },
+        state: { name: { in: ['Todo'] } },
+      },
+    });
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        id: 'issue-1',
+        state: { id: 'state-1', name: 'Todo', color: '#00f', type: 'unstarted' },
+      }),
+    );
+  });
+});

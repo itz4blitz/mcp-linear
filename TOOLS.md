@@ -92,7 +92,7 @@ Linear exposes milestones as `ProjectMilestone` in the SDK/API. Archiving is imp
 | `linear_archiveProject`         | Archive a project                         | ✅ Implemented |
 | `linear_addIssueToProject`      | Add an existing issue to a project        | ✅ Implemented |
 | `linear_removeIssueFromProject` | Remove an existing issue from a project   | ✅ Implemented |
-| `linear_getProjectIssues`       | Get all issues associated with a project  | ✅ Implemented |
+| `linear_getProjectIssues`       | Get project issues with PM filters | ✅ Implemented |
 
 ### Roadmap Tools
 
@@ -110,6 +110,7 @@ Linear exposes milestones as `ProjectMilestone` in the SDK/API. Archiving is imp
 | ------------------------ | ----------------------------------------- | -------------- |
 | `linear_getCycles`       | Get a list of all cycles                  | ✅ Implemented |
 | `linear_getActiveCycle`  | Get the currently active cycle for a team | ✅ Implemented |
+| `linear_getCycleIssues`  | Get cycle issues with PM filters | ✅ Implemented |
 | `linear_addIssueToCycle` | Add an issue to a cycle                   | ✅ Implemented |
 | `linear_removeIssueFromCycle` | Remove an issue from a cycle          | ✅ Implemented |
 

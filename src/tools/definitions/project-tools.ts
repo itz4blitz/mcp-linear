@@ -1,5 +1,80 @@
 import { MCPToolDefinition } from '../../types.js';
 
+const issueOrderBySchema = {
+  type: 'string',
+  enum: ['createdAt', 'updatedAt'],
+};
+
+const positiveLimitSchema = {
+  type: 'integer',
+  minimum: 1,
+};
+
+const issueSummaryOutputSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    identifier: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: ['string', 'null'] },
+    state: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        color: { type: ['string', 'null'] },
+        type: { type: ['string', 'null'] },
+      },
+    },
+    priority: { type: 'number' },
+    estimate: { type: ['number', 'null'] },
+    dueDate: { type: ['string', 'null'] },
+    team: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    assignee: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    cycle: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    projectMilestone: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    labels: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          color: { type: 'string' },
+        },
+      },
+    },
+    sortOrder: { type: 'number' },
+    createdAt: { type: 'string' },
+    updatedAt: { type: 'string' },
+    url: { type: 'string' },
+  },
+};
+
 /**
  * Tool definition for getting projects
  */
@@ -400,7 +475,7 @@ export const removeIssueFromProjectToolDefinition: MCPToolDefinition = {
  */
 export const getProjectIssuesToolDefinition: MCPToolDefinition = {
   name: 'linear_getProjectIssues',
-  description: 'Get all issues associated with a project',
+  description: 'Get issues associated with a project, with PM-friendly filters like state, assignee, labels, cycle, and milestone',
   input_schema: {
     type: 'object',
     properties: {
@@ -409,8 +484,38 @@ export const getProjectIssuesToolDefinition: MCPToolDefinition = {
         description: 'ID of the project to get issues for',
       },
       limit: {
-        type: 'number',
+        ...positiveLimitSchema,
         description: 'Maximum number of issues to return (default: 25)',
+      },
+      states: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Filter issues by workflow state names',
+      },
+      assigneeId: {
+        type: 'string',
+        description: 'Filter issues by assignee ID',
+      },
+      labelIds: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Filter issues by label IDs',
+      },
+      cycleId: {
+        type: 'string',
+        description: 'Filter issues by cycle ID',
+      },
+      projectMilestoneId: {
+        type: 'string',
+        description: 'Filter issues by project milestone ID',
+      },
+      includeCompleted: {
+        type: 'boolean',
+        description: 'Include completed issues in the result set (default: true)',
+      },
+      orderBy: {
+        ...issueOrderBySchema,
+        description: 'Sort issues by created or updated date',
       },
     },
     required: ['projectId'],
@@ -418,18 +523,7 @@ export const getProjectIssuesToolDefinition: MCPToolDefinition = {
   output_schema: {
     type: 'array',
     items: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        identifier: { type: 'string' },
-        title: { type: 'string' },
-        description: { type: 'string' },
-        state: { type: 'string' },
-        priority: { type: 'number' },
-        team: { type: 'object' },
-        assignee: { type: 'object' },
-        url: { type: 'string' },
-      },
+      ...issueSummaryOutputSchema,
     },
   },
 };

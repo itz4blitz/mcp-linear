@@ -629,13 +629,28 @@ export function isGetProjectUpdatesArgs(args: unknown): args is {
 export function isGetProjectIssuesArgs(args: unknown): args is {
   projectId: string;
   limit?: number;
+  states?: string[];
+  assigneeId?: string;
+  labelIds?: string[];
+  cycleId?: string;
+  projectMilestoneId?: string;
+  includeCompleted?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     'projectId' in args &&
     typeof (args as { projectId: string }).projectId === 'string' &&
-    (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('states' in args) || isStringArray((args as { states: unknown }).states)) &&
+    (!('assigneeId' in args) || typeof (args as { assigneeId: string }).assigneeId === 'string') &&
+    (!('labelIds' in args) || isStringArray((args as { labelIds: unknown }).labelIds)) &&
+    (!('cycleId' in args) || typeof (args as { cycleId: string }).cycleId === 'string') &&
+    (!('projectMilestoneId' in args) ||
+      typeof (args as { projectMilestoneId: string }).projectMilestoneId === 'string') &&
+    (!('includeCompleted' in args) ||
+      typeof (args as { includeCompleted: boolean }).includeCompleted === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
 
@@ -757,12 +772,20 @@ export function isArchiveRoadmapArgs(args: unknown): args is { roadmapId: string
 export function isGetMilestonesArgs(args: unknown): args is {
   includeArchived?: boolean;
   limit?: number;
+  projectId?: string;
+  teamId?: string;
+  status?: 'done' | 'next' | 'overdue' | 'unstarted';
+  orderBy?: 'createdAt' | 'updatedAt';
 } {
   return (
     isJsonObject(args) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
-    (!('limit' in args) || isPositiveInteger((args as { limit: number }).limit))
+    (!('limit' in args) || isPositiveInteger((args as { limit: number }).limit)) &&
+    (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
+    (!('teamId' in args) || typeof (args as { teamId: string }).teamId === 'string') &&
+    (!('status' in args) || isMilestoneStatus((args as { status: unknown }).status)) &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
 
@@ -1022,10 +1045,35 @@ export function isGetCyclesArgs(args: unknown): args is {
   limit?: number;
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     (!('teamId' in args) || typeof (args as { teamId: string }).teamId === 'string') &&
-    (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit))
+  );
+}
+
+/**
+ * Type guard for linear_getCycleIssues tool arguments
+ */
+export function isGetCycleIssuesArgs(args: unknown): args is {
+  cycleId: string;
+  limit?: number;
+  states?: string[];
+  assigneeId?: string;
+  labelIds?: string[];
+  includeCompleted?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'cycleId' in args &&
+    typeof (args as { cycleId: string }).cycleId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('states' in args) || isStringArray((args as { states: unknown }).states)) &&
+    (!('assigneeId' in args) || typeof (args as { assigneeId: string }).assigneeId === 'string') &&
+    (!('labelIds' in args) || isStringArray((args as { labelIds: unknown }).labelIds)) &&
+    (!('includeCompleted' in args) ||
+      typeof (args as { includeCompleted: boolean }).includeCompleted === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
   );
 }
 
@@ -1287,8 +1335,16 @@ function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
 function isPaginationOrderBy(value: unknown): value is 'createdAt' | 'updatedAt' {
   return value === 'createdAt' || value === 'updatedAt';
+}
+
+function isMilestoneStatus(value: unknown): value is 'done' | 'next' | 'overdue' | 'unstarted' {
+  return value === 'done' || value === 'next' || value === 'overdue' || value === 'unstarted';
 }
 
 /**

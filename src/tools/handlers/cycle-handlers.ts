@@ -1,6 +1,7 @@
 import {
   isAddIssueToCycleArgs,
   isGetActiveCycleArgs,
+  isGetCycleIssuesArgs,
   isGetCyclesArgs,
   isRemoveIssueFromCycleArgs,
 } from '../type-guards.js';
@@ -38,6 +39,21 @@ export function handleGetActiveCycle(linearService: LinearService) {
       return await linearService.getActiveCycle(args.teamId);
     } catch (error) {
       logError('Error getting active cycle', error);
+      throw error;
+    }
+  };
+}
+
+export function handleGetCycleIssues(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isGetCycleIssuesArgs(args)) {
+        throw new Error('Invalid arguments for getCycleIssues');
+      }
+
+      return await linearService.getCycleIssues(args);
+    } catch (error) {
+      logError('Error getting cycle issues', error);
       throw error;
     }
   };

@@ -2,7 +2,7 @@ import { LinearService } from '../services/linear-service.js';
 import { allToolDefinitions } from '../tools/definitions/index.js';
 import { registerToolHandlers } from '../tools/handlers/index.js';
 
-describe('project update and archive MCP tools', () => {
+describe('project MCP tools', () => {
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -20,8 +20,35 @@ describe('project update and archive MCP tools', () => {
         'linear_updateProjectUpdate',
         'linear_getProjectUpdates',
         'linear_archiveProject',
+        'linear_getProjectIssues',
       ]),
     );
+  });
+
+  it('defines PM-oriented project issue filters', () => {
+    const getProjectIssuesTool = allToolDefinitions.find((tool) => tool.name === 'linear_getProjectIssues');
+
+    expect(getProjectIssuesTool?.input_schema).toMatchObject({
+      required: ['projectId'],
+      properties: {
+        limit: { type: 'integer', minimum: 1 },
+        states: { type: 'array', items: { type: 'string' } },
+        assigneeId: { type: 'string' },
+        labelIds: { type: 'array', items: { type: 'string' } },
+        cycleId: { type: 'string' },
+        projectMilestoneId: { type: 'string' },
+        includeCompleted: { type: 'boolean' },
+        orderBy: { type: 'string', enum: ['createdAt', 'updatedAt'] },
+      },
+    });
+
+    expect(getProjectIssuesTool?.output_schema.items.properties).toMatchObject({
+      labels: { type: 'array' },
+      cycle: { type: ['object', 'null'] },
+      projectMilestone: { type: ['object', 'null'] },
+      createdAt: { type: 'string' },
+      updatedAt: { type: 'string' },
+    });
   });
 
   it('routes createProjectUpdate calls to the linear service', async () => {
@@ -76,6 +103,37 @@ describe('project update and archive MCP tools', () => {
     expect(getProjectUpdates).toHaveBeenCalledWith('project-1', 10);
   });
 
+  it('routes getProjectIssues filters to the linear service', async () => {
+    const getProjectIssues = jest.fn().mockResolvedValue([{ id: 'issue-1' }]);
+    const handlers = registerToolHandlers({ getProjectIssues } as unknown as LinearService);
+
+    await expect(
+      handlers.linear_getProjectIssues({
+        projectId: 'project-1',
+        limit: 10,
+        states: ['Todo', 'In Progress'],
+        assigneeId: 'user-1',
+        labelIds: ['label-1'],
+        cycleId: 'cycle-1',
+        projectMilestoneId: 'milestone-1',
+        includeCompleted: false,
+        orderBy: 'updatedAt',
+      }),
+    ).resolves.toEqual([{ id: 'issue-1' }]);
+
+    expect(getProjectIssues).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      limit: 10,
+      states: ['Todo', 'In Progress'],
+      assigneeId: 'user-1',
+      labelIds: ['label-1'],
+      cycleId: 'cycle-1',
+      projectMilestoneId: 'milestone-1',
+      includeCompleted: false,
+      orderBy: 'updatedAt',
+    });
+  });
+
   it('routes archiveProject calls to the linear service', async () => {
     const archiveProject = jest.fn().mockResolvedValue({ success: true });
     const handlers = registerToolHandlers({ archiveProject } as unknown as LinearService);
@@ -128,5 +186,26 @@ describe('project update and archive MCP tools', () => {
     await expect(handlers.linear_archiveProject({})).rejects.toThrow(
       'Invalid arguments for archiveProject',
     );
+
+    await expect(
+      handlers.linear_getProjectIssues({
+        projectId: 'project-1',
+        limit: 1.5,
+      }),
+    ).rejects.toThrow('Invalid arguments for getProjectIssues');
+
+    await expect(
+      handlers.linear_getProjectIssues({
+        projectId: 'project-1',
+        states: ['Todo', 1],
+      }),
+    ).rejects.toThrow('Invalid arguments for getProjectIssues');
+
+    await expect(
+      handlers.linear_getProjectIssues({
+        projectId: 'project-1',
+        orderBy: 'priority',
+      }),
+    ).rejects.toThrow('Invalid arguments for getProjectIssues');
   });
 });

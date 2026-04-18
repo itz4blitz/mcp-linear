@@ -1,5 +1,80 @@
 import { MCPToolDefinition } from '../../types.js';
 
+const positiveLimitSchema = {
+  type: 'integer',
+  minimum: 1,
+};
+
+const issueOrderBySchema = {
+  type: 'string',
+  enum: ['createdAt', 'updatedAt'],
+};
+
+const issueSummaryOutputSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    identifier: { type: 'string' },
+    title: { type: 'string' },
+    description: { type: ['string', 'null'] },
+    state: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        color: { type: ['string', 'null'] },
+        type: { type: ['string', 'null'] },
+      },
+    },
+    priority: { type: 'number' },
+    estimate: { type: ['number', 'null'] },
+    dueDate: { type: ['string', 'null'] },
+    team: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    assignee: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    cycle: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    projectMilestone: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    labels: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          color: { type: 'string' },
+        },
+      },
+    },
+    sortOrder: { type: 'number' },
+    createdAt: { type: 'string' },
+    updatedAt: { type: 'string' },
+    url: { type: 'string' },
+  },
+};
+
 /**
  * Tool definition for getting all cycles
  */
@@ -14,7 +89,7 @@ export const getCyclesToolDefinition: MCPToolDefinition = {
         description: 'ID of the team to get cycles for (optional)',
       },
       limit: {
-        type: 'number',
+        ...positiveLimitSchema,
         description: 'Maximum number of cycles to return (default: 25)',
       },
     },
@@ -80,6 +155,53 @@ export const getActiveCycleToolDefinition: MCPToolDefinition = {
       progress: { type: 'number' },
       issueCount: { type: 'number' },
       completedIssueCount: { type: 'number' },
+    },
+  },
+};
+
+export const getCycleIssuesToolDefinition: MCPToolDefinition = {
+  name: 'linear_getCycleIssues',
+  description: 'Get issues in a cycle, with PM-friendly filters like state, assignee, labels, and completion status',
+  input_schema: {
+    type: 'object',
+    properties: {
+      cycleId: {
+        type: 'string',
+        description: 'ID of the cycle to get issues for',
+      },
+      limit: {
+        ...positiveLimitSchema,
+        description: 'Maximum number of issues to return (default: 25)',
+      },
+      states: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Filter cycle issues by workflow state names',
+      },
+      assigneeId: {
+        type: 'string',
+        description: 'Filter cycle issues by assignee ID',
+      },
+      labelIds: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Filter cycle issues by label IDs',
+      },
+      includeCompleted: {
+        type: 'boolean',
+        description: 'Include completed issues in the result set (default: true)',
+      },
+      orderBy: {
+        ...issueOrderBySchema,
+        description: 'Sort issues by created or updated date',
+      },
+    },
+    required: ['cycleId'],
+  },
+  output_schema: {
+    type: 'array',
+    items: {
+      ...issueSummaryOutputSchema,
     },
   },
 };

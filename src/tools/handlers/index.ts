@@ -71,6 +71,7 @@ import {
   // Cycle Management handlers
   handleGetCycles,
   handleGetActiveCycle,
+  handleGetCycleIssues,
   handleAddIssueToCycle,
   handleRemoveIssueFromCycle,
 } from './cycle-handlers.js';
@@ -145,6 +146,7 @@ export function registerToolHandlers(linearService: LinearService) {
     // Cycle Management tools
     linear_getCycles: handleGetCycles(linearService),
     linear_getActiveCycle: handleGetActiveCycle(linearService),
+    linear_getCycleIssues: handleGetCycleIssues(linearService),
     linear_addIssueToCycle: handleAddIssueToCycle(linearService),
     linear_removeIssueFromCycle: handleRemoveIssueFromCycle(linearService),
 
@@ -261,6 +263,7 @@ export {
   // Cycle Management handlers
   handleGetCycles,
   handleGetActiveCycle,
+  handleGetCycleIssues,
   handleAddIssueToCycle,
   handleRemoveIssueFromCycle,
 

@@ -180,7 +180,7 @@ export function handleGetProjectIssues(linearService: LinearService) {
         throw new Error('Invalid arguments for getProjectIssues');
       }
 
-      return await linearService.getProjectIssues(args.projectId, args.limit);
+      return await linearService.getProjectIssues(args);
     } catch (error) {
       logError('Error getting project issues', error);
       throw error;

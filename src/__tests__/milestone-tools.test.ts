@@ -38,6 +38,12 @@ describe('milestone MCP tools', () => {
       type: 'integer',
       minimum: 1,
     });
+    expect(getMilestonesTool?.input_schema.properties).toMatchObject({
+      projectId: { type: 'string' },
+      teamId: { type: 'string' },
+      status: { type: 'string', enum: ['done', 'next', 'overdue', 'unstarted'] },
+      orderBy: { type: 'string', enum: ['createdAt', 'updatedAt'] },
+    });
     expect(getMilestonesTool?.output_schema.items.properties).toMatchObject({
       description: { type: ['string', 'null'] },
       targetDate: { type: ['string', 'null'] },
@@ -73,10 +79,21 @@ describe('milestone MCP tools', () => {
     await expect(
       handlers.linear_getMilestones({
         includeArchived: true,
+        projectId: 'project-1',
+        teamId: 'team-1',
+        status: 'next',
         limit: 10,
+        orderBy: 'updatedAt',
       }),
     ).resolves.toEqual([{ id: 'milestone-1' }]);
-    expect(getMilestones).toHaveBeenCalledWith({ includeArchived: true, limit: 10 });
+    expect(getMilestones).toHaveBeenCalledWith({
+      includeArchived: true,
+      projectId: 'project-1',
+      teamId: 'team-1',
+      status: 'next',
+      limit: 10,
+      orderBy: 'updatedAt',
+    });
     await expect(handlers.linear_getMilestones(null)).resolves.toEqual([{ id: 'milestone-1' }]);
     expect(getMilestones).toHaveBeenCalledWith({});
 
@@ -134,6 +151,12 @@ describe('milestone MCP tools', () => {
       'Invalid arguments for getMilestones',
     );
     await expect(handlers.linear_getMilestones([])).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ status: 'active' })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ orderBy: 'priority' })).rejects.toThrow(
       'Invalid arguments for getMilestones',
     );
 
