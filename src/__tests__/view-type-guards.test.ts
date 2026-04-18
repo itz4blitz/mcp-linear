@@ -1,6 +1,8 @@
 import {
+  isAddToFavoritesArgs,
   isGetFavoriteViewsArgs,
   isGetSavedViewsArgs,
+  isRemoveFromFavoritesArgs,
   isUpdateSavedViewArgs,
 } from '../tools/type-guards.js';
 
@@ -34,5 +36,17 @@ describe('saved view type guards', () => {
         description: null,
       }),
     ).toBe(true);
+  });
+
+  it('validates favorite mutation arguments', () => {
+    expect(isAddToFavoritesArgs({ entityId: 'view-1' })).toBe(true);
+    expect(isAddToFavoritesArgs({})).toBe(false);
+    expect(isAddToFavoritesArgs({ entityId: 1 })).toBe(false);
+
+    expect(isRemoveFromFavoritesArgs({ favoriteId: 'favorite-1' })).toBe(true);
+    expect(isRemoveFromFavoritesArgs({ entityId: 'view-1' })).toBe(true);
+    expect(isRemoveFromFavoritesArgs({ favoriteId: 'favorite-1', entityId: 'view-1' })).toBe(true);
+    expect(isRemoveFromFavoritesArgs({})).toBe(false);
+    expect(isRemoveFromFavoritesArgs({ favoriteId: 1 })).toBe(false);
   });
 });

@@ -53,10 +53,12 @@ import {
   updateMilestoneToolDefinition,
 } from './milestone-tools.js';
 import {
+  addToFavoritesToolDefinition,
   createSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
   getFavoriteViewsToolDefinition,
   getSavedViewsToolDefinition,
+  removeFromFavoritesToolDefinition,
   updateSavedViewToolDefinition,
 } from './view-tools.js';
 import { getTeamsToolDefinition, getWorkflowStatesToolDefinition } from './team-tools.js';
@@ -117,6 +119,8 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   updateSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
   getFavoriteViewsToolDefinition,
+  addToFavoritesToolDefinition,
+  removeFromFavoritesToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,
@@ -221,6 +225,8 @@ export {
   updateSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
   getFavoriteViewsToolDefinition,
+  addToFavoritesToolDefinition,
+  removeFromFavoritesToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,

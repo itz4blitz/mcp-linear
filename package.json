@@ -44,6 +44,8 @@
       "linear_updateSavedView",
       "linear_deleteSavedView",
       "linear_getFavoriteViews",
+      "linear_addToFavorites",
+      "linear_removeFromFavorites",
       "linear_getRoadmaps",
       "linear_getRoadmapById",
       "linear_createRoadmap",

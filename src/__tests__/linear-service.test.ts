@@ -176,6 +176,144 @@ function createGetCustomFieldsRequestMock(options?: {
   });
 }
 
+function createFavoriteMutationRequestMock(options?: {
+  mode?: 'add' | 'remove';
+  idField?: 'entityId' | 'favoriteId' | 'id';
+  useInputObject?: boolean;
+  mutationResult?: Record<string, unknown>;
+}) {
+  const mode = options?.mode ?? 'add';
+  const mutationFieldName = mode === 'add' ? 'addFavorite' : 'removeFavorite';
+  const inputTypeName = mode === 'add' ? 'AddFavoriteInput' : 'RemoveFavoriteInput';
+  const idField = options?.idField ?? (mode === 'add' ? 'entityId' : 'favoriteId');
+  const useInputObject = options?.useInputObject ?? true;
+  const mutationResult = options?.mutationResult ?? {
+    success: true,
+    favorite: {
+      id: 'favorite-1',
+      type: 'customView',
+      sortOrder: 1,
+      customView: {
+        id: 'view-1',
+        name: 'My saved view',
+        slugId: 'my-saved-view',
+        shared: true,
+      },
+      predefinedViewType: null,
+      predefinedViewTeam: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-02T00:00:00.000Z',
+      url: 'https://linear.app/view-1',
+    },
+  };
+
+  return jest.fn(async (query: string, variables?: Record<string, unknown>) => {
+    if (variables?.name === 'Mutation') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Mutation',
+          fields: [
+            {
+              name: mutationFieldName,
+              description:
+                mode === 'add' ? 'Add an item to favorites' : 'Remove an item from favorites',
+              args: useInputObject
+                ? [
+                    {
+                      name: 'input',
+                      type: nonNullType(namedType('INPUT_OBJECT', inputTypeName)),
+                    },
+                  ]
+                : [{ name: idField, type: nonNullType(namedType('SCALAR', 'String')) }],
+              type: nonNullType(namedType('OBJECT', `${inputTypeName}Payload`)),
+            },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === inputTypeName && useInputObject) {
+      return {
+        __type: {
+          kind: 'INPUT_OBJECT',
+          name: inputTypeName,
+          inputFields: [{ name: idField, type: nonNullType(namedType('SCALAR', 'String')) }],
+        },
+      };
+    }
+
+    if (variables?.name === `${inputTypeName}Payload`) {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: `${inputTypeName}Payload`,
+          fields: [
+            { name: 'success', args: [], type: namedType('SCALAR', 'Boolean') },
+            { name: 'favorite', args: [], type: namedType('OBJECT', 'Favorite') },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'Favorite') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Favorite',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'type', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'sortOrder', args: [], type: namedType('SCALAR', 'Float') },
+            { name: 'createdAt', args: [], type: namedType('SCALAR', 'DateTime') },
+            { name: 'updatedAt', args: [], type: namedType('SCALAR', 'DateTime') },
+            { name: 'url', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'customView', args: [], type: namedType('OBJECT', 'CustomView') },
+            { name: 'predefinedViewType', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'predefinedViewTeam', args: [], type: namedType('OBJECT', 'Team') },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'CustomView') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'CustomView',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'slugId', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'shared', args: [], type: namedType('SCALAR', 'Boolean') },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'Team') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Team',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+          ],
+        },
+      };
+    }
+
+    if (query.includes(`mutation ${mode === 'add' ? 'LinearAddToFavorites' : 'LinearRemoveFromFavorites'}`)) {
+      return {
+        [mutationFieldName]: mutationResult,
+      };
+    }
+
+    throw new Error(`Unexpected GraphQL request: ${query}`);
+  });
+}
+
 function createGetIssueCustomFieldsRequestMock(options?: { includeIssueField?: boolean }) {
   const includeIssueField = options?.includeIssueField ?? true;
 
@@ -711,6 +849,133 @@ describe('LinearService optional field sanitization', () => {
         url: 'https://linear.app/predefined-view',
       },
     ]);
+  });
+
+  it('adds an entity to favorites through the schema-driven GraphQL mutation', async () => {
+    const request = createFavoriteMutationRequestMock({ mode: 'add', idField: 'entityId' });
+    const service = new LinearService({ client: { request } } as never);
+
+    const result = await service.addToFavorites({ entityId: 'view-1' });
+
+    expect(result).toEqual({
+      success: true,
+      id: 'favorite-1',
+      entityId: null,
+      favorite: {
+        id: 'favorite-1',
+        type: 'customView',
+        sortOrder: 1,
+        customView: {
+          id: 'view-1',
+          name: 'My saved view',
+          slugId: 'my-saved-view',
+          shared: true,
+        },
+        predefinedViewType: null,
+        predefinedViewTeam: null,
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+        url: 'https://linear.app/view-1',
+      },
+    });
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining('mutation LinearAddToFavorites'),
+      expect.objectContaining({
+        input: {
+          entityId: 'view-1',
+        },
+      }),
+    );
+  });
+
+  it('adds an entity to favorites through a direct id argument mutation', async () => {
+    const request = createFavoriteMutationRequestMock({
+      mode: 'add',
+      idField: 'id',
+      useInputObject: false,
+    });
+    const service = new LinearService({ client: { request } } as never);
+
+    const result = await service.addToFavorites({ entityId: 'view-1' });
+
+    expect(result.success).toBe(true);
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining('mutation LinearAddToFavorites'),
+      expect.objectContaining({
+        id: 'view-1',
+      }),
+    );
+    expect(request).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        input: expect.anything(),
+      }),
+    );
+  });
+
+  it('removes a favorite by favoriteId through the schema-driven GraphQL mutation', async () => {
+    const request = createFavoriteMutationRequestMock({
+      mode: 'remove',
+      idField: 'favoriteId',
+      mutationResult: { success: true },
+    });
+    const service = new LinearService({ client: { request } } as never);
+
+    const result = await service.removeFromFavorites({ favoriteId: 'favorite-1' });
+
+    expect(result).toEqual({
+      success: true,
+      id: null,
+      entityId: null,
+      favorite: null,
+    });
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining('mutation LinearRemoveFromFavorites'),
+      expect.objectContaining({
+        input: {
+          favoriteId: 'favorite-1',
+        },
+      }),
+    );
+  });
+
+  it('removes a favorite by entityId when the schema supports entity-based removal', async () => {
+    const request = createFavoriteMutationRequestMock({
+      mode: 'remove',
+      idField: 'entityId',
+      mutationResult: { success: true },
+    });
+    const service = new LinearService({ client: { request } } as never);
+
+    const result = await service.removeFromFavorites({ entityId: 'view-1' });
+
+    expect(result).toEqual({
+      success: true,
+      id: null,
+      entityId: null,
+      favorite: null,
+    });
+    expect(request).toHaveBeenCalledWith(
+      expect.stringContaining('mutation LinearRemoveFromFavorites'),
+      expect.objectContaining({
+        input: {
+          entityId: 'view-1',
+        },
+      }),
+    );
+  });
+
+  it('throws when removing by entityId but schema only supports favorite identifiers', async () => {
+    const request = createFavoriteMutationRequestMock({
+      mode: 'remove',
+      idField: 'favoriteId',
+      mutationResult: { success: true },
+    });
+    const service = new LinearService({ client: { request } } as never);
+
+    await expect(service.removeFromFavorites({ entityId: 'view-1' })).rejects.toThrow(
+      'The favorite removal mutation does not expose an entity identifier argument; use favoriteId for this schema',
+    );
   });
 });
 

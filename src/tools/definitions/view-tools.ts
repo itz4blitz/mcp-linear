@@ -286,3 +286,81 @@ export const getFavoriteViewsToolDefinition: MCPToolDefinition = {
     },
   },
 };
+
+const favoriteOutputItemSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    type: { type: 'string' },
+    sortOrder: { type: ['number', 'null'] },
+    customView: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        slugId: nullableStringSchema,
+        shared: { type: 'boolean' },
+      },
+    },
+    predefinedViewType: nullableStringSchema,
+    predefinedViewTeam: {
+      type: ['object', 'null'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    },
+    createdAt: { type: ['string', 'null'] },
+    updatedAt: { type: ['string', 'null'] },
+    url: nullableStringSchema,
+  },
+};
+
+const favoriteMutationOutputSchema = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean' },
+    id: nullableStringSchema,
+    entityId: nullableStringSchema,
+    favorite: {
+      ...favoriteOutputItemSchema,
+      type: ['object', 'null'],
+    },
+  },
+};
+
+export const addToFavoritesToolDefinition: MCPToolDefinition = {
+  name: 'linear_addToFavorites',
+  description: 'Add an entity to the current user\'s Linear favorites',
+  input_schema: {
+    type: 'object',
+    properties: {
+      entityId: {
+        type: 'string',
+        description: 'ID of the Linear entity to add to favorites',
+      },
+    },
+    required: ['entityId'],
+  },
+  output_schema: favoriteMutationOutputSchema,
+};
+
+export const removeFromFavoritesToolDefinition: MCPToolDefinition = {
+  name: 'linear_removeFromFavorites',
+  description: 'Remove an entity or favorite entry from the current user\'s Linear favorites',
+  input_schema: {
+    type: 'object',
+    properties: {
+      favoriteId: {
+        type: 'string',
+        description: 'Favorite entry ID to remove when available from a favorites query',
+      },
+      entityId: {
+        type: 'string',
+        description: 'Entity ID to remove from favorites when the workspace schema supports it',
+      },
+    },
+    anyOf: [{ required: ['favoriteId'] }, { required: ['entityId'] }],
+  },
+  output_schema: favoriteMutationOutputSchema,
+};

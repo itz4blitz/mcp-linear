@@ -52,10 +52,12 @@ import {
   handleUpdateMilestone,
 } from './milestone-handlers.js';
 import {
+  handleAddToFavorites,
   handleCreateSavedView,
   handleDeleteSavedView,
   handleGetFavoriteViews,
   handleGetSavedViews,
+  handleRemoveFromFavorites,
   handleUpdateSavedView,
 } from './view-handlers.js';
 import { handleGetTeams, handleGetWorkflowStates } from './team-handlers.js';
@@ -137,6 +139,8 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_updateSavedView: handleUpdateSavedView(linearService),
     linear_deleteSavedView: handleDeleteSavedView(linearService),
     linear_getFavoriteViews: handleGetFavoriteViews(linearService),
+    linear_addToFavorites: handleAddToFavorites(linearService),
+    linear_removeFromFavorites: handleRemoveFromFavorites(linearService),
 
     // Cycle Management tools
     linear_getCycles: handleGetCycles(linearService),
@@ -251,6 +255,8 @@ export {
   handleUpdateSavedView,
   handleDeleteSavedView,
   handleGetFavoriteViews,
+  handleAddToFavorites,
+  handleRemoveFromFavorites,
 
   // Cycle Management handlers
   handleGetCycles,
