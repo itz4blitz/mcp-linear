@@ -28,6 +28,18 @@ The following tools are currently implemented and available in the MCP Linear:
 | `linear_getProjects`   | Get a list of projects from Linear | ✅ Implemented |
 | `linear_createProject` | Create a new project in Linear     | ✅ Implemented |
 
+### Milestone Tools
+
+Linear exposes milestones as `ProjectMilestone` in the SDK/API. Archiving is implemented via the SDK's `deleteProjectMilestone` mutation.
+
+| Tool Name                    | Description                                  | Status         |
+| ---------------------------- | -------------------------------------------- | -------------- |
+| `linear_getMilestones`       | Get a list of project milestones             | ✅ Implemented |
+| `linear_getMilestoneById`    | Get details of a specific project milestone  | ✅ Implemented |
+| `linear_createMilestone`     | Create a new project milestone               | ✅ Implemented |
+| `linear_updateMilestone`     | Update an existing project milestone         | ✅ Implemented |
+| `linear_archiveMilestone`    | Archive a project milestone                  | ✅ Implemented |
+
 ### Issue Tools
 
 | Tool Name                 | Description                                              | Status         |
@@ -163,11 +175,6 @@ The following tools are recommended for future implementation to enhance the cap
 
 | Tool Name                           | Description                              | Priority | Status     |
 | ----------------------------------- | ---------------------------------------- | -------- | ---------- |
-| `linear_getMilestones`              | Get a list of milestones                 | Medium   | 📝 Planned |
-| `linear_getMilestoneById`           | Get details of a specific milestone      | Medium   | 📝 Planned |
-| `linear_createMilestone`            | Create a new milestone                   | Medium   | 📝 Planned |
-| `linear_updateMilestone`            | Update an existing milestone             | Low      | 📝 Planned |
-| `linear_archiveMilestone`           | Archive a milestone                      | Low      | 📝 Planned |
 | `linear_getMilestoneProjects`       | Get projects associated with a milestone | Medium   | 📝 Planned |
 | `linear_addProjectToMilestone`      | Add a project to a milestone             | Medium   | 📝 Planned |
 | `linear_removeProjectFromMilestone` | Remove a project from a milestone        | Low      | 📝 Planned |
