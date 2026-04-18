@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/linear-app-icon.png" alt="Linear App Icon" width="250" height="250">
+  <img src="docs/linear-app-icon.png" alt="Linear App Icon" width="250" height="250">
 </p>
 
 # MCP Linear
@@ -43,30 +43,25 @@ To use MCP Linear, you'll need a Linear API token. Here's how to get one:
 6. Give your key a name (e.g., `MCP Linear Integration`)
 7. Copy the generated API token and store it securely - you won't be able to see it again!
 
-### Installing via Smithery (Recommended)
-
-- To install MCP Linear for Cursor:
+### Installing from This Fork
 
 ```bash
-npx -y @smithery/cli install @tacticlaunch/mcp-linear --client cursor
-```
-
-- To install MCP Linear for Claude Desktop:
-
-```bash
-npx -y @smithery/cli install @tacticlaunch/mcp-linear --client claude
+git clone https://github.com/itz4blitz/mcp-linear.git
+cd mcp-linear
+npm install
+npm run build
+npm link
 ```
 
 ### Manual Configuration
 
-Add the following to your MCP settings file:
+After running `npm link`, add the following to your MCP settings file:
 
 ```json
 {
   "mcpServers": {
     "linear": {
-      "command": "npx",
-      "args": ["-y", "@tacticlaunch/mcp-linear"],
+      "command": "mcp-linear",
       "env": {
         "LINEAR_API_TOKEN": "<YOUR_TOKEN>"
       }
@@ -91,13 +86,11 @@ Prerequisites
 - Linear API token
 
 ```bash
-# Install globally
-npm install -g @tacticlaunch/mcp-linear
-
-# Or clone and install locally
+# Clone and install locally
 git clone https://github.com/itz4blitz/mcp-linear.git
 cd mcp-linear
 npm install
+npm run build
 npm link  # Makes the package available globally
 ```
 
@@ -123,10 +116,6 @@ See [TOOLS.md](./TOOLS.md) for a complete list of available tools and planned fe
 ## Development
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for more information on how to develop locally.
-
-## Links
-
-[tacticlaunch/cursor-memory-bank](https://github.com/tacticlaunch/cursor-memory-bank) - If you are a developer seeking to enhance your workflow with Cursor, consider giving it a try.
 
 ## License
 

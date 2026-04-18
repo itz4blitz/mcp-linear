@@ -31,6 +31,7 @@ import {
   getProjectUpdatesToolDefinition,
   archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
 import {
@@ -52,6 +53,7 @@ import {
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 } from './cycle-tools.js';
 import { initiativeToolDefinitions } from './initiative-tools.js';
 
@@ -78,6 +80,7 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   getProjectUpdatesToolDefinition,
   archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 
   // View tools
@@ -91,6 +94,7 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 
   // Initiative Management tools
   ...initiativeToolDefinitions,
@@ -160,6 +164,7 @@ export {
   getProjectUpdatesToolDefinition,
   archiveProjectToolDefinition,
   addIssueToProjectToolDefinition,
+  removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
 
   // View tools
@@ -173,4 +178,5 @@ export {
   getCyclesToolDefinition,
   getActiveCycleToolDefinition,
   addIssueToCycleToolDefinition,
+  removeIssueFromCycleToolDefinition,
 };

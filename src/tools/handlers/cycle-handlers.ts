@@ -1,4 +1,9 @@
-import { isAddIssueToCycleArgs, isGetActiveCycleArgs, isGetCyclesArgs } from '../type-guards.js';
+import {
+  isAddIssueToCycleArgs,
+  isGetActiveCycleArgs,
+  isGetCyclesArgs,
+  isRemoveIssueFromCycleArgs,
+} from '../type-guards.js';
 import { LinearService } from '../../services/linear-service.js';
 import { logError } from '../../utils/config.js';
 
@@ -51,6 +56,24 @@ export function handleAddIssueToCycle(linearService: LinearService) {
       return await linearService.addIssueToCycle(args.issueId, args.cycleId);
     } catch (error) {
       logError('Error adding issue to cycle', error);
+      throw error;
+    }
+  };
+}
+
+/**
+ * Handler for removing an issue from a cycle
+ */
+export function handleRemoveIssueFromCycle(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isRemoveIssueFromCycleArgs(args)) {
+        throw new Error('Invalid arguments for removeIssueFromCycle');
+      }
+
+      return await linearService.removeIssueFromCycle(args.issueId, args.cycleId);
+    } catch (error) {
+      logError('Error removing issue from cycle', error);
       throw error;
     }
   };

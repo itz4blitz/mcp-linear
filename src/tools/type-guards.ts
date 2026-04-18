@@ -509,6 +509,23 @@ export function isAddIssueToProjectArgs(args: unknown): args is {
 }
 
 /**
+ * Type guard for linear_removeIssueFromProject tool arguments
+ */
+export function isRemoveIssueFromProjectArgs(args: unknown): args is {
+  issueId: string;
+  projectId: string;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'issueId' in args &&
+    typeof (args as { issueId: string }).issueId === 'string' &&
+    'projectId' in args &&
+    typeof (args as { projectId: string }).projectId === 'string'
+  );
+}
+
+/**
  * Type guard for linear_getProjectUpdates tool arguments
  */
 export function isGetProjectUpdatesArgs(args: unknown): args is {
@@ -756,6 +773,23 @@ export function isGetActiveCycleArgs(args: unknown): args is {
  * Type guard for linear_addIssueToCycle tool arguments
  */
 export function isAddIssueToCycleArgs(args: unknown): args is {
+  issueId: string;
+  cycleId: string;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'issueId' in args &&
+    typeof (args as { issueId: string }).issueId === 'string' &&
+    'cycleId' in args &&
+    typeof (args as { cycleId: string }).cycleId === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_removeIssueFromCycle tool arguments
+ */
+export function isRemoveIssueFromCycleArgs(args: unknown): args is {
   issueId: string;
   cycleId: string;
 } {

@@ -5,6 +5,7 @@ import {
   isCreateProjectUpdateArgs,
   isGetProjectIssuesArgs,
   isGetProjectUpdatesArgs,
+  isRemoveIssueFromProjectArgs,
   isUpdateProjectArgs,
   isUpdateProjectUpdateArgs,
 } from '../type-guards.js';
@@ -128,6 +129,24 @@ export function handleAddIssueToProject(linearService: LinearService) {
       return await linearService.addIssueToProject(args.issueId, args.projectId);
     } catch (error) {
       logError('Error adding issue to project', error);
+      throw error;
+    }
+  };
+}
+
+/**
+ * Handler for removing an issue from a project
+ */
+export function handleRemoveIssueFromProject(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isRemoveIssueFromProjectArgs(args)) {
+        throw new Error('Invalid arguments for removeIssueFromProject');
+      }
+
+      return await linearService.removeIssueFromProject(args.issueId, args.projectId);
+    } catch (error) {
+      logError('Error removing issue from project', error);
       throw error;
     }
   };

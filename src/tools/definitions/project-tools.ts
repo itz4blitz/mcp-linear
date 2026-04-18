@@ -353,6 +353,49 @@ export const addIssueToProjectToolDefinition: MCPToolDefinition = {
 };
 
 /**
+ * Tool definition for removing an issue from a project
+ */
+export const removeIssueFromProjectToolDefinition: MCPToolDefinition = {
+  name: 'linear_removeIssueFromProject',
+  description: 'Remove an existing issue from a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      issueId: {
+        type: 'string',
+        description: 'ID or identifier of the issue to remove from the project',
+      },
+      projectId: {
+        type: 'string',
+        description: 'ID of the project to remove the issue from',
+      },
+    },
+    required: ['issueId', 'projectId'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      issue: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          identifier: { type: 'string' },
+          title: { type: 'string' },
+        },
+      },
+      project: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
+/**
  * Tool definition for getting issues in a project
  */
 export const getProjectIssuesToolDefinition: MCPToolDefinition = {

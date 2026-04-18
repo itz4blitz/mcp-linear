@@ -127,3 +127,47 @@ export const addIssueToCycleToolDefinition: MCPToolDefinition = {
     },
   },
 };
+
+/**
+ * Tool definition for removing an issue from a cycle
+ */
+export const removeIssueFromCycleToolDefinition: MCPToolDefinition = {
+  name: 'linear_removeIssueFromCycle',
+  description: 'Remove an issue from a cycle',
+  input_schema: {
+    type: 'object',
+    properties: {
+      issueId: {
+        type: 'string',
+        description: 'ID or identifier of the issue to remove from the cycle',
+      },
+      cycleId: {
+        type: 'string',
+        description: 'ID of the cycle to remove the issue from',
+      },
+    },
+    required: ['issueId', 'cycleId'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      issue: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          identifier: { type: 'string' },
+          title: { type: 'string' },
+        },
+      },
+      cycle: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          number: { type: 'number' },
+          name: { type: 'string' },
+        },
+      },
+    },
+  },
+};
