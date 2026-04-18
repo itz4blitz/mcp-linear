@@ -1277,14 +1277,14 @@ export class LinearService {
         throw new Error(`Issue with ID ${issueId} not found`);
       }
 
-      const project = await this.client.project(projectId);
-      if (!project) {
-        throw new Error(`Project with ID ${projectId} not found`);
-      }
-
       const currentProject = issue.project ? await issue.project : null;
       if (!currentProject || currentProject.id !== projectId) {
         throw new Error(`Issue ${issue.identifier} is not associated with project ${projectId}`);
+      }
+
+      const project = await this.client.project(projectId);
+      if (!project) {
+        throw new Error(`Project with ID ${projectId} not found`);
       }
 
       await this.client.updateIssue(issue.id, { projectId: null });
@@ -1533,14 +1533,14 @@ export class LinearService {
         throw new Error(`Issue with ID ${issueId} not found`);
       }
 
-      const cycle = await this.client.cycle(cycleId);
-      if (!cycle) {
-        throw new Error(`Cycle with ID ${cycleId} not found`);
-      }
-
       const currentCycle = issue.cycle ? await issue.cycle : null;
       if (!currentCycle || currentCycle.id !== cycleId) {
         throw new Error(`Issue ${issue.identifier} is not associated with cycle ${cycleId}`);
+      }
+
+      const cycle = await this.client.cycle(cycleId);
+      if (!cycle) {
+        throw new Error(`Cycle with ID ${cycleId} not found`);
       }
 
       await this.client.updateIssue(issue.id, { cycleId: null });

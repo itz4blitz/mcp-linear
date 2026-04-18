@@ -158,6 +158,63 @@ describe('LinearService issue unlink operations', () => {
     expect(updateIssue).toHaveBeenCalledWith('issue-1', { projectId: null });
   });
 
+  it('fails removing an issue from a project when the issue is not found', async () => {
+    const issue = jest.fn().mockResolvedValue(null);
+    const project = jest.fn();
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, project, updateIssue } as never);
+
+    await expect(service.removeIssueFromProject('ABC-123', 'project-1')).rejects.toThrow(
+      'Issue with ID ABC-123 not found',
+    );
+
+    expect(project).not.toHaveBeenCalled();
+    expect(updateIssue).not.toHaveBeenCalled();
+  });
+
+  it('fails removing an issue from a project when the issue is not associated with the project', async () => {
+    const issue = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      identifier: 'ABC-123',
+      title: 'Test issue',
+      project: Promise.resolve({
+        id: 'project-2',
+        name: 'Other',
+      }),
+    });
+    const project = jest.fn();
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, project, updateIssue } as never);
+
+    await expect(service.removeIssueFromProject('ABC-123', 'project-1')).rejects.toThrow(
+      'Issue ABC-123 is not associated with project project-1',
+    );
+
+    expect(project).not.toHaveBeenCalled();
+    expect(updateIssue).not.toHaveBeenCalled();
+  });
+
+  it('fails removing an issue from a project when the project does not exist', async () => {
+    const issue = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      identifier: 'ABC-123',
+      title: 'Test issue',
+      project: Promise.resolve({
+        id: 'project-1',
+        name: 'Roadmap',
+      }),
+    });
+    const project = jest.fn().mockResolvedValue(null);
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, project, updateIssue } as never);
+
+    await expect(service.removeIssueFromProject('ABC-123', 'project-1')).rejects.toThrow(
+      'Project with ID project-1 not found',
+    );
+
+    expect(updateIssue).not.toHaveBeenCalled();
+  });
+
   it('removes an issue from a cycle', async () => {
     const issue = jest
       .fn()
@@ -199,5 +256,64 @@ describe('LinearService issue unlink operations', () => {
     });
 
     expect(updateIssue).toHaveBeenCalledWith('issue-1', { cycleId: null });
+  });
+
+  it('fails removing an issue from a cycle when the issue is not found', async () => {
+    const issue = jest.fn().mockResolvedValue(null);
+    const cycle = jest.fn();
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, cycle, updateIssue } as never);
+
+    await expect(service.removeIssueFromCycle('ABC-123', 'cycle-1')).rejects.toThrow(
+      'Issue with ID ABC-123 not found',
+    );
+
+    expect(cycle).not.toHaveBeenCalled();
+    expect(updateIssue).not.toHaveBeenCalled();
+  });
+
+  it('fails removing an issue from a cycle when the issue is not associated with the cycle', async () => {
+    const issue = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      identifier: 'ABC-123',
+      title: 'Test issue',
+      cycle: Promise.resolve({
+        id: 'cycle-2',
+        number: 43,
+        name: 'Sprint 43',
+      }),
+    });
+    const cycle = jest.fn();
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, cycle, updateIssue } as never);
+
+    await expect(service.removeIssueFromCycle('ABC-123', 'cycle-1')).rejects.toThrow(
+      'Issue ABC-123 is not associated with cycle cycle-1',
+    );
+
+    expect(cycle).not.toHaveBeenCalled();
+    expect(updateIssue).not.toHaveBeenCalled();
+  });
+
+  it('fails removing an issue from a cycle when the cycle does not exist', async () => {
+    const issue = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      identifier: 'ABC-123',
+      title: 'Test issue',
+      cycle: Promise.resolve({
+        id: 'cycle-1',
+        number: 42,
+        name: 'Sprint 42',
+      }),
+    });
+    const cycle = jest.fn().mockResolvedValue(null);
+    const updateIssue = jest.fn();
+    const service = new LinearService({ issue, cycle, updateIssue } as never);
+
+    await expect(service.removeIssueFromCycle('ABC-123', 'cycle-1')).rejects.toThrow(
+      'Cycle with ID cycle-1 not found',
+    );
+
+    expect(updateIssue).not.toHaveBeenCalled();
   });
 });

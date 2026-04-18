@@ -42,7 +42,9 @@
       "linear_createComment",
       "linear_addIssueLabel",
       "linear_removeIssueLabel",
+      "linear_addIssueToProject",
       "linear_removeIssueFromProject",
+      "linear_addIssueToCycle",
       "linear_removeIssueFromCycle"
     ]
   },
