@@ -786,7 +786,12 @@ export class LinearService {
 
     const pending = this.requestGraphQL<GraphQLTypeQueryResult>(INTROSPECT_TYPE_QUERY, {
       name: typeName,
-    }).then((result) => result.__type);
+    })
+      .then((result) => result.__type)
+      .catch((error) => {
+        this.typeCache.delete(typeName);
+        throw error;
+      });
 
     this.typeCache.set(typeName, pending);
     return await pending;
@@ -891,6 +896,7 @@ export class LinearService {
     preferredFields: string[],
     depth = 2,
     visited = new Set<string>(),
+    nestedFieldPreferences: Record<string, string[]> = {},
   ): Promise<string> {
     const namedType = unwrapTypeRef(typeRef);
     if (!namedType.name || depth < 0) {
@@ -921,6 +927,7 @@ export class LinearService {
         preferredFields,
         depth - 1,
         new Set([...visited, namedType.name]),
+        nestedFieldPreferences,
       );
 
       return nodeSelection ? ` { nodes${nodeSelection} }` : '';
@@ -956,9 +963,10 @@ export class LinearService {
 
       const childSelection = await this.buildSelectionSet(
         field.type,
-        DEFAULT_NESTED_FIELDS,
+        nestedFieldPreferences[field.name] ?? DEFAULT_NESTED_FIELDS,
         depth - 1,
         new Set([...visited, namedType.name]),
+        nestedFieldPreferences,
       );
 
       if (childSelection) {
@@ -1606,9 +1614,16 @@ export class LinearService {
       'issue',
       'customFieldValue',
       'fieldValue',
+      'issueCustomField',
       'customField',
       'value',
-    ]);
+    ], 2, undefined, {
+      issue: ['id'],
+      customFieldValue: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      fieldValue: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      issueCustomField: ISSUE_CUSTOM_FIELD_VALUE_FIELDS,
+      customField: ['id'],
+    });
     const { variableDefinitions, invocationArgs, variables } =
       this.buildUpdateIssueCustomFieldMutationRequest(plan, args);
     const mutation = `

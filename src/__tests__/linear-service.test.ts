@@ -6,6 +6,11 @@ const nonNullType = (ofType: ReturnType<typeof namedType>) => ({
   name: null,
   ofType,
 });
+const listType = (ofType: ReturnType<typeof namedType>) => ({
+  kind: 'LIST',
+  name: null,
+  ofType,
+});
 
 function createCustomFieldRequestMock(options?: {
   valueType?: ReturnType<typeof namedType> | ReturnType<typeof nonNullType>;
@@ -64,6 +69,187 @@ function createCustomFieldRequestMock(options?: {
     if (query.includes('mutation LinearUpdateIssueCustomField')) {
       return {
         issueCustomFieldUpdate: mutationResult,
+      };
+    }
+
+    throw new Error(`Unexpected GraphQL request: ${query}`);
+  });
+}
+
+function createGetCustomFieldsRequestMock(options?: {
+  includeDefinitionsField?: boolean;
+  failQueryIntrospectionOnce?: boolean;
+}) {
+  const includeDefinitionsField = options?.includeDefinitionsField ?? true;
+  let queryIntrospectionFailures = options?.failQueryIntrospectionOnce ? 1 : 0;
+
+  return jest.fn(async (query: string, variables?: Record<string, unknown>) => {
+    if (variables?.name === 'Query') {
+      if (queryIntrospectionFailures > 0) {
+        queryIntrospectionFailures -= 1;
+        throw new Error('Transient introspection failure');
+      }
+
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Query',
+          fields: includeDefinitionsField
+            ? [
+                {
+                  name: 'customFields',
+                  description: 'List custom field definitions',
+                  args: [],
+                  type: listType(namedType('OBJECT', 'CustomFieldDefinition')),
+                },
+              ]
+            : [{ name: 'issues', description: 'List issues', args: [], type: namedType('OBJECT', 'IssueConnection') }],
+        },
+      };
+    }
+
+    if (variables?.name === 'CustomFieldDefinition') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'CustomFieldDefinition',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'description', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'type', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'required', args: [], type: namedType('SCALAR', 'Boolean') },
+            { name: 'team', args: [], type: namedType('OBJECT', 'Team') },
+            { name: 'options', args: [], type: listType(namedType('OBJECT', 'CustomFieldOption')) },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'Team') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Team',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'key', args: [], type: namedType('SCALAR', 'String') },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'CustomFieldOption') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'CustomFieldOption',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'color', args: [], type: namedType('SCALAR', 'String') },
+          ],
+        },
+      };
+    }
+
+    if (query.includes('query LinearGetCustomFields')) {
+      return {
+        customFields: {
+          nodes: [
+            {
+              id: 'field-1',
+              name: 'Severity',
+              description: 'Risk score',
+              type: 'enum',
+              required: true,
+              team: { id: 'team-1', name: 'Platform', key: 'PLAT' },
+              options: [{ id: 'opt-1', name: 'High', color: '#f00' }],
+            },
+          ],
+        },
+      };
+    }
+
+    throw new Error(`Unexpected GraphQL request: ${query}`);
+  });
+}
+
+function createGetIssueCustomFieldsRequestMock(options?: { includeIssueField?: boolean }) {
+  const includeIssueField = options?.includeIssueField ?? true;
+
+  return jest.fn(async (query: string, variables?: Record<string, unknown>) => {
+    if (variables?.name === 'Issue') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'Issue',
+          fields: includeIssueField
+            ? [
+                {
+                  name: 'customFieldValues',
+                  description: 'Issue custom field values',
+                  args: [],
+                  type: listType(namedType('OBJECT', 'IssueCustomFieldValue')),
+                },
+              ]
+            : [{ name: 'title', description: 'Issue title', args: [], type: namedType('SCALAR', 'String') }],
+        },
+      };
+    }
+
+    if (variables?.name === 'IssueCustomFieldValue') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'IssueCustomFieldValue',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'customFieldId', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'displayValue', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'value', args: [], type: namedType('SCALAR', 'JSONObject') },
+            { name: 'customField', args: [], type: namedType('OBJECT', 'CustomFieldDefinition') },
+          ],
+        },
+      };
+    }
+
+    if (variables?.name === 'CustomFieldDefinition') {
+      return {
+        __type: {
+          kind: 'OBJECT',
+          name: 'CustomFieldDefinition',
+          fields: [
+            { name: 'id', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'name', args: [], type: namedType('SCALAR', 'String') },
+            { name: 'type', args: [], type: namedType('SCALAR', 'String') },
+          ],
+        },
+      };
+    }
+
+    if (query.includes('query LinearGetIssueCustomFields')) {
+      return {
+        issue: {
+          id: 'issue-1',
+          identifier: 'ABC-1',
+          customFieldValues: {
+            nodes: [
+              {
+                id: 'value-1',
+                customFieldId: 'field-1',
+                displayValue: 'High',
+                value: { rank: 10 },
+                customField: {
+                  id: 'field-1',
+                  name: 'Severity',
+                  type: 'enum',
+                },
+              },
+            ],
+          },
+        },
       };
     }
 
@@ -252,6 +438,81 @@ describe('LinearService custom field updates', () => {
       }),
     ).rejects.toThrow(
       'The custom field mutation does not expose a value argument that matches the provided data',
+    );
+  });
+});
+
+describe('LinearService custom field discovery', () => {
+  it('returns normalized custom fields from schema-discovered definitions query', async () => {
+    const request = createGetCustomFieldsRequestMock();
+    const service = new LinearService({ client: { request } } as never);
+
+    const customFields = await service.getCustomFields();
+
+    expect(customFields).toHaveLength(1);
+    expect(customFields[0]).toEqual(
+      expect.objectContaining({
+        id: 'field-1',
+        name: 'Severity',
+        description: 'Risk score',
+        type: 'enum',
+        required: true,
+        team: { id: 'team-1', name: 'Platform', key: 'PLAT' },
+        options: [{ id: 'opt-1', name: 'High', color: '#f00', raw: expect.any(Object) }],
+      }),
+    );
+  });
+
+  it('retries type discovery after transient introspection errors', async () => {
+    const request = createGetCustomFieldsRequestMock({ failQueryIntrospectionOnce: true });
+    const service = new LinearService({ client: { request } } as never);
+
+    await expect(service.getCustomFields()).rejects.toThrow('Transient introspection failure');
+    await expect(service.getCustomFields()).resolves.toEqual(expect.any(Array));
+  });
+
+  it('fails when schema does not expose a custom field definitions query', async () => {
+    const request = createGetCustomFieldsRequestMock({ includeDefinitionsField: false });
+    const service = new LinearService({ client: { request } } as never);
+
+    await expect(service.getCustomFields()).rejects.toThrow(
+      'The authenticated Linear schema does not expose a custom field definitions query',
+    );
+  });
+
+  it('returns normalized custom field values for an issue', async () => {
+    const request = createGetIssueCustomFieldsRequestMock();
+    const service = new LinearService({ client: { request } } as never);
+
+    const result = await service.getIssueCustomFields('issue-1');
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        issueId: 'issue-1',
+        identifier: 'ABC-1',
+        customFields: [
+          expect.objectContaining({
+            id: 'value-1',
+            customFieldId: 'field-1',
+            displayValue: 'High',
+            value: { rank: 10 },
+            customField: expect.objectContaining({
+              id: 'field-1',
+              name: 'Severity',
+              type: 'enum',
+            }),
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('fails when schema does not expose custom field values on Issue', async () => {
+    const request = createGetIssueCustomFieldsRequestMock({ includeIssueField: false });
+    const service = new LinearService({ client: { request } } as never);
+
+    await expect(service.getIssueCustomFields('issue-1')).rejects.toThrow(
+      'The authenticated Linear schema does not expose issue custom field values on Issue',
     );
   });
 });

@@ -65,7 +65,9 @@ function isJSONValue(value: unknown): value is JSONGuardValue {
 /**
  * Type guard for linear_getCustomFields tool arguments
  */
-export function isGetCustomFieldsArgs(args: unknown): args is Record<string, never> {
+export function isGetCustomFieldsArgs(
+  args: unknown,
+): args is Record<string, never> | undefined {
   return args === undefined || (isPlainObject(args) && Object.keys(args).length === 0);
 }
 
