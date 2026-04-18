@@ -38,6 +38,13 @@ import {
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
 import {
+  archiveMilestoneToolDefinition,
+  createMilestoneToolDefinition,
+  getMilestoneByIdToolDefinition,
+  getMilestonesToolDefinition,
+  updateMilestoneToolDefinition,
+} from './milestone-tools.js';
+import {
   createSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
   getFavoriteViewsToolDefinition,
@@ -85,6 +92,13 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+
+  // Milestone tools
+  getMilestonesToolDefinition,
+  getMilestoneByIdToolDefinition,
+  createMilestoneToolDefinition,
+  updateMilestoneToolDefinition,
+  archiveMilestoneToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,
@@ -175,6 +189,13 @@ export {
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+
+  // Milestone tools
+  getMilestonesToolDefinition,
+  getMilestoneByIdToolDefinition,
+  createMilestoneToolDefinition,
+  updateMilestoneToolDefinition,
+  archiveMilestoneToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,

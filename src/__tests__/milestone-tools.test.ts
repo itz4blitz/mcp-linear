@@ -1,0 +1,113 @@
+import { LinearService } from '../services/linear-service.js';
+import { allToolDefinitions } from '../tools/definitions/index.js';
+import { registerToolHandlers } from '../tools/handlers/index.js';
+
+describe('milestone MCP tools', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('registers the milestone tool definitions', () => {
+    const toolNames = allToolDefinitions.map((tool) => tool.name);
+
+    expect(toolNames).toEqual(
+      expect.arrayContaining([
+        'linear_getMilestones',
+        'linear_getMilestoneById',
+        'linear_createMilestone',
+        'linear_updateMilestone',
+        'linear_archiveMilestone',
+      ]),
+    );
+  });
+
+  it('routes milestone handlers to the linear service', async () => {
+    const getMilestones = jest.fn().mockResolvedValue([{ id: 'milestone-1' }]);
+    const getMilestoneById = jest.fn().mockResolvedValue({ id: 'milestone-1' });
+    const createMilestone = jest.fn().mockResolvedValue({ id: 'milestone-1' });
+    const updateMilestone = jest.fn().mockResolvedValue({ id: 'milestone-1' });
+    const archiveMilestone = jest.fn().mockResolvedValue({ success: true });
+    const handlers = registerToolHandlers({
+      getMilestones,
+      getMilestoneById,
+      createMilestone,
+      updateMilestone,
+      archiveMilestone,
+    } as unknown as LinearService);
+
+    await expect(
+      handlers.linear_getMilestones({
+        includeArchived: true,
+        limit: 10,
+      }),
+    ).resolves.toEqual([{ id: 'milestone-1' }]);
+    expect(getMilestones).toHaveBeenCalledWith({ includeArchived: true, limit: 10 });
+
+    await expect(handlers.linear_getMilestoneById({ id: 'milestone-1' })).resolves.toEqual({
+      id: 'milestone-1',
+    });
+    expect(getMilestoneById).toHaveBeenCalledWith('milestone-1');
+
+    await expect(
+      handlers.linear_createMilestone({
+        name: 'Beta',
+        projectId: 'project-1',
+        description: 'Ship beta',
+      }),
+    ).resolves.toEqual({ id: 'milestone-1' });
+    expect(createMilestone).toHaveBeenCalledWith({
+      name: 'Beta',
+      projectId: 'project-1',
+      description: 'Ship beta',
+    });
+
+    await expect(
+      handlers.linear_updateMilestone({
+        id: 'milestone-1',
+        targetDate: '2026-05-01',
+      }),
+    ).resolves.toEqual({ id: 'milestone-1' });
+    expect(updateMilestone).toHaveBeenCalledWith({
+      id: 'milestone-1',
+      targetDate: '2026-05-01',
+    });
+
+    await expect(handlers.linear_archiveMilestone({ id: 'milestone-1' })).resolves.toEqual({
+      success: true,
+    });
+    expect(archiveMilestone).toHaveBeenCalledWith('milestone-1');
+  });
+
+  it('rejects invalid milestone arguments', async () => {
+    const handlers = registerToolHandlers({} as unknown as LinearService);
+
+    await expect(handlers.linear_getMilestones({ limit: '10' })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+
+    await expect(handlers.linear_getMilestoneById({})).rejects.toThrow(
+      'Invalid arguments for getMilestoneById',
+    );
+
+    await expect(
+      handlers.linear_createMilestone({
+        name: 'Beta',
+      }),
+    ).rejects.toThrow('Invalid arguments for createMilestone');
+
+    await expect(
+      handlers.linear_updateMilestone({
+        id: 'milestone-1',
+        sortOrder: '1',
+      }),
+    ).rejects.toThrow('Invalid arguments for updateMilestone');
+
+    await expect(handlers.linear_archiveMilestone({})).rejects.toThrow(
+      'Invalid arguments for archiveMilestone',
+    );
+  });
+});

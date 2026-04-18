@@ -654,6 +654,97 @@ export function isArchiveProjectArgs(args: unknown): args is {
 }
 
 /**
+ * Type guard for linear_getMilestones tool arguments
+ */
+export function isGetMilestonesArgs(args: unknown): args is {
+  includeArchived?: boolean;
+  limit?: number;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
+    (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+  );
+}
+
+/**
+ * Type guard for linear_getMilestoneById tool arguments
+ */
+export function isGetMilestoneByIdArgs(args: unknown): args is {
+  id: string;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_createMilestone tool arguments
+ */
+export function isCreateMilestoneArgs(args: unknown): args is {
+  name: string;
+  projectId: string;
+  description?: string;
+  targetDate?: string;
+  sortOrder?: number;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'name' in args &&
+    typeof (args as { name: string }).name === 'string' &&
+    'projectId' in args &&
+    typeof (args as { projectId: string }).projectId === 'string' &&
+    (!('description' in args) || typeof (args as { description: string }).description === 'string') &&
+    (!('targetDate' in args) || typeof (args as { targetDate: string }).targetDate === 'string') &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: number }).sortOrder === 'number')
+  );
+}
+
+/**
+ * Type guard for linear_updateMilestone tool arguments
+ */
+export function isUpdateMilestoneArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  projectId?: string;
+  description?: string;
+  targetDate?: string;
+  sortOrder?: number;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string' &&
+    (!('name' in args) || typeof (args as { name: string }).name === 'string') &&
+    (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
+    (!('description' in args) || typeof (args as { description: string }).description === 'string') &&
+    (!('targetDate' in args) || typeof (args as { targetDate: string }).targetDate === 'string') &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: number }).sortOrder === 'number')
+  );
+}
+
+/**
+ * Type guard for linear_archiveMilestone tool arguments
+ */
+export function isArchiveMilestoneArgs(args: unknown): args is {
+  id: string;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string'
+  );
+}
+
+/**
  * Type guard for linear_getInitiativeById tool arguments
  */
 export function isGetInitiativeByIdArgs(args: unknown): args is {
