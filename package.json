@@ -17,7 +17,9 @@
     "build": "tsc",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest --passWithNoTests",
+    "test": "npm run test:unit && npm run test:mcp-smoke",
+    "test:unit": "jest --passWithNoTests",
+    "test:mcp-smoke": "npm run build && node scripts/mcp-smoke-test.mjs",
     "test:watch": "jest --watch",
     "prepare": "npm run build",
     "postinstall": "node -e \"try { require('fs').chmodSync('./dist/index.js', '755') } catch (e) {}\""

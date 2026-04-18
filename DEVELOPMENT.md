@@ -14,6 +14,24 @@ npm install
 npm run dev -- --token YOUR_LINEAR_API_TOKEN
 ```
 
+### Validation
+
+Use the following checks before merging or publishing:
+
+```bash
+# Full validation: Jest plus black-box MCP registration smoke test
+npm test
+
+# TypeScript build
+npm run build
+
+# Jest only
+npm run test:unit
+
+# MCP SDK smoke test against the built stdio server
+npm run test:mcp-smoke
+```
+
 ### Inspecting the server
 
 To inspect the server by @modelcontextprotocol/inspector:
