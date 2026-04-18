@@ -29,6 +29,13 @@ import {
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
 } from './project-tools.js';
+import {
+  createSavedViewToolDefinition,
+  deleteSavedViewToolDefinition,
+  getFavoriteViewsToolDefinition,
+  getSavedViewsToolDefinition,
+  updateSavedViewToolDefinition,
+} from './view-tools.js';
 import { getTeamsToolDefinition, getWorkflowStatesToolDefinition } from './team-tools.js';
 import {
   getViewerToolDefinition,
@@ -64,6 +71,13 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   updateProjectToolDefinition,
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
+
+  // View tools
+  getSavedViewsToolDefinition,
+  createSavedViewToolDefinition,
+  updateSavedViewToolDefinition,
+  deleteSavedViewToolDefinition,
+  getFavoriteViewsToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,
@@ -135,6 +149,13 @@ export {
   updateProjectToolDefinition,
   addIssueToProjectToolDefinition,
   getProjectIssuesToolDefinition,
+
+  // View tools
+  getSavedViewsToolDefinition,
+  createSavedViewToolDefinition,
+  updateSavedViewToolDefinition,
+  deleteSavedViewToolDefinition,
+  getFavoriteViewsToolDefinition,
 
   // Cycle Management tools
   getCyclesToolDefinition,

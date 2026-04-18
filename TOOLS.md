@@ -92,6 +92,18 @@ The following tools are currently implemented and available in the MCP Linear:
 | `linear_addProjectToInitiative`      | Add a project to an initiative                                      | ✅ Implemented |
 | `linear_removeProjectFromInitiative` | Remove a project from an initiative                                 | ✅ Implemented |
 
+### Views and Filters
+
+Linear calls these "saved views" in the product UI. The GraphQL API and SDK expose the same feature as `CustomView`.
+
+| Tool Name                 | Description                                                                     | Status         |
+| ------------------------- | ------------------------------------------------------------------------------- | -------------- |
+| `linear_getSavedViews`    | Get Linear saved views (`CustomView` in the API/SDK)                            | ✅ Implemented |
+| `linear_createSavedView`  | Create a new Linear saved view (`createCustomView` in the API/SDK)              | ✅ Implemented |
+| `linear_updateSavedView`  | Update a Linear saved view (`updateCustomView` in the API/SDK)                  | ✅ Implemented |
+| `linear_deleteSavedView`  | Delete a Linear saved view (`deleteCustomView` in the API/SDK)                  | ✅ Implemented |
+| `linear_getFavoriteViews` | Get favorite views, including both saved/custom views and predefined Linear views | ✅ Implemented |
+
 ## Recommended Future Tools
 
 The following tools are recommended for future implementation to enhance the capabilities of the MCP Linear:
@@ -250,16 +262,6 @@ The following tools are recommended for future implementation to enhance the cap
 | `linear_updateUserPreferences` | Update user preferences          | Low      | 📝 Planned |
 | `linear_getUserSettings`       | Get user application settings    | Low      | 📝 Planned |
 | `linear_updateUserSettings`    | Update user application settings | Low      | 📝 Planned |
-
-### Views and Filters
-
-| Tool Name                 | Description               | Priority | Status     |
-| ------------------------- | ------------------------- | -------- | ---------- |
-| `linear_getSavedViews`    | Get user's saved views    | Medium   | 📝 Planned |
-| `linear_createSavedView`  | Create a new saved view   | Medium   | 📝 Planned |
-| `linear_updateSavedView`  | Update a saved view       | Low      | 📝 Planned |
-| `linear_deleteSavedView`  | Delete a saved view       | Low      | 📝 Planned |
-| `linear_getFavoriteViews` | Get user's favorite views | Medium   | 📝 Planned |
 
 ### Metrics and Reporting
 
