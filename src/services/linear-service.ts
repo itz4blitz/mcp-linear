@@ -1,4 +1,4 @@
-import { CustomView, LinearClient, LinearDocument, LinearFetch, Team, User } from '@linear/sdk';
+import { CustomView, LinearClient, LinearDocument, LinearFetch, Roadmap, Team, User } from '@linear/sdk';
 
 type JsonObject = Record<string, unknown>;
 
@@ -834,6 +834,49 @@ export class LinearService {
       : null;
   }
 
+  private async assertRoadmapsEnabled() {
+    const organization = await this.client.organization;
+
+    if (!organization.roadmapEnabled) {
+      throw new Error(`Roadmaps are not enabled for organization ${organization.name}`);
+    }
+
+    return organization;
+  }
+
+  private async normalizeRoadmap(roadmap: Roadmap, includeProjects = false) {
+    const [owner, creator, projects] = await Promise.all([
+      this.normalizeUserReference(roadmap.owner),
+      this.normalizeUserReference(roadmap.creator),
+      includeProjects
+        ? roadmap.projects().then((connection) =>
+            connection.nodes.map((project) => ({
+              id: project.id,
+              name: project.name,
+              state: project.state,
+              url: project.url,
+            })),
+          )
+        : Promise.resolve(undefined),
+    ]);
+
+    return {
+      id: roadmap.id,
+      name: roadmap.name,
+      description: roadmap.description,
+      color: roadmap.color,
+      slugId: roadmap.slugId,
+      sortOrder: roadmap.sortOrder,
+      owner,
+      creator,
+      createdAt: roadmap.createdAt,
+      updatedAt: roadmap.updatedAt,
+      archivedAt: roadmap.archivedAt,
+      url: roadmap.url,
+      ...(includeProjects ? { projects: projects ?? [] } : {}),
+    };
+  }
+
   // Linear calls these saved views in the product UI, but the SDK/API surface uses CustomView.
   private async normalizeSavedView(view: CustomView) {
     const [team, owner, creator] = await Promise.all([
@@ -1296,6 +1339,114 @@ export class LinearService {
         };
       }),
     );
+  }
+
+  async getRoadmaps(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    await this.assertRoadmapsEnabled();
+
+    const roadmaps = await this.client.roadmaps(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    return Promise.all(roadmaps.nodes.map((roadmap) => this.normalizeRoadmap(roadmap)));
+  }
+
+  async getRoadmapById(id: string) {
+    await this.assertRoadmapsEnabled();
+
+    const roadmap = await this.client.roadmap(id);
+    if (!roadmap) {
+      throw new Error(`Roadmap with ID ${id} not found`);
+    }
+
+    return this.normalizeRoadmap(roadmap, true);
+  }
+
+  async createRoadmap(args: {
+    name: string;
+    description?: string;
+    color?: string;
+    ownerId?: string;
+    sortOrder?: number;
+  }) {
+    await this.assertRoadmapsEnabled();
+
+    const createdRoadmap = await this.client.createRoadmap(
+      this.compactObject({
+        name: args.name,
+        description: this.nonEmptyString(args.description),
+        color: this.nonEmptyString(args.color),
+        ownerId: this.nonEmptyString(args.ownerId),
+        sortOrder: args.sortOrder,
+      }),
+    );
+
+    if (!createdRoadmap.success || !createdRoadmap.roadmap) {
+      throw new Error('Failed to create roadmap');
+    }
+
+    return this.normalizeRoadmap(await createdRoadmap.roadmap, true);
+  }
+
+  async updateRoadmap(args: {
+    id: string;
+    name?: string;
+    description?: string;
+    color?: string;
+    ownerId?: string;
+    sortOrder?: number;
+  }) {
+    await this.assertRoadmapsEnabled();
+
+    const roadmap = await this.client.roadmap(args.id);
+    if (!roadmap) {
+      throw new Error(`Roadmap with ID ${args.id} not found`);
+    }
+
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      description: this.nonEmptyString(args.description),
+      color: this.nonEmptyString(args.color),
+      ownerId: this.nonEmptyString(args.ownerId),
+      sortOrder: args.sortOrder,
+    });
+
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one roadmap field must be provided');
+    }
+
+    const updatedRoadmap = await this.client.updateRoadmap(args.id, updateInput);
+
+    if (!updatedRoadmap.success || !updatedRoadmap.roadmap) {
+      throw new Error(`Failed to update roadmap ${args.id}`);
+    }
+
+    return this.normalizeRoadmap(await updatedRoadmap.roadmap, true);
+  }
+
+  async archiveRoadmap(roadmapId: string) {
+    await this.assertRoadmapsEnabled();
+
+    const roadmap = await this.client.roadmap(roadmapId);
+    if (!roadmap) {
+      throw new Error(`Roadmap with ID ${roadmapId} not found`);
+    }
+
+    const archivePayload = await roadmap.archive();
+    if (!archivePayload.success) {
+      throw new Error(`Failed to archive roadmap ${roadmapId}`);
+    }
+
+    const archivedRoadmap = archivePayload.entity ? await archivePayload.entity : null;
+
+    return {
+      success: true,
+      roadmap: await this.normalizeRoadmap(archivedRoadmap ?? roadmap),
+    };
   }
 
   async getSavedViews(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {

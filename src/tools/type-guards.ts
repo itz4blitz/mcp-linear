@@ -649,7 +649,105 @@ export function isArchiveProjectArgs(args: unknown): args is {
     typeof args === 'object' &&
     args !== null &&
     'projectId' in args &&
-    typeof (args as { projectId: string }).projectId === 'string'
+      typeof (args as { projectId: string }).projectId === 'string'
+  );
+}
+
+/**
+ * Type guard for roadmap list tool arguments
+ */
+export function isGetRoadmapsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isSavedViewOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+/**
+ * Type guard for roadmap by ID tool arguments
+ */
+export function isGetRoadmapByIdArgs(args: unknown): args is { id: string } {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for roadmap create tool arguments
+ */
+export function isCreateRoadmapArgs(args: unknown): args is {
+  name: string;
+  description?: string;
+  color?: string;
+  ownerId?: string;
+  sortOrder?: number;
+} {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'name' in args &&
+    typeof (args as { name: string }).name === 'string' &&
+    (!('description' in args) ||
+      typeof (args as { description: string }).description === 'string') &&
+    (!('color' in args) || typeof (args as { color: string }).color === 'string') &&
+    (!('ownerId' in args) || typeof (args as { ownerId: string }).ownerId === 'string') &&
+    (!('sortOrder' in args) ||
+      typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+/**
+ * Type guard for roadmap update tool arguments
+ */
+export function isUpdateRoadmapArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  description?: string;
+  color?: string;
+  ownerId?: string;
+  sortOrder?: number;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+
+  const hasUpdateField = ['name', 'description', 'color', 'ownerId', 'sortOrder'].some(
+    (key) => key in args && (args as Record<string, unknown>)[key] !== undefined,
+  );
+
+  return (
+    'id' in args &&
+    typeof (args as { id: string }).id === 'string' &&
+    hasUpdateField &&
+    (!('name' in args) || typeof (args as { name: string }).name === 'string') &&
+    (!('description' in args) ||
+      typeof (args as { description: string }).description === 'string') &&
+    (!('color' in args) || typeof (args as { color: string }).color === 'string') &&
+    (!('ownerId' in args) || typeof (args as { ownerId: string }).ownerId === 'string') &&
+    (!('sortOrder' in args) ||
+      typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+/**
+ * Type guard for roadmap archive tool arguments
+ */
+export function isArchiveRoadmapArgs(args: unknown): args is { roadmapId: string } {
+  return (
+    typeof args === 'object' &&
+    args !== null &&
+    'roadmapId' in args &&
+    typeof (args as { roadmapId: string }).roadmapId === 'string'
   );
 }
 

@@ -38,6 +38,13 @@ import {
   handleGetProjectIssues,
 } from './project-handlers.js';
 import {
+  handleArchiveRoadmap,
+  handleCreateRoadmap,
+  handleGetRoadmapById,
+  handleGetRoadmaps,
+  handleUpdateRoadmap,
+} from './roadmap-handlers.js';
+import {
   handleCreateSavedView,
   handleDeleteSavedView,
   handleGetFavoriteViews,
@@ -102,6 +109,13 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_addIssueToProject: handleAddIssueToProject(linearService),
     linear_removeIssueFromProject: handleRemoveIssueFromProject(linearService),
     linear_getProjectIssues: handleGetProjectIssues(linearService),
+
+    // Roadmap tools
+    linear_getRoadmaps: handleGetRoadmaps(linearService),
+    linear_getRoadmapById: handleGetRoadmapById(linearService),
+    linear_createRoadmap: handleCreateRoadmap(linearService),
+    linear_updateRoadmap: handleUpdateRoadmap(linearService),
+    linear_archiveRoadmap: handleArchiveRoadmap(linearService),
 
     // View tools
     linear_getSavedViews: handleGetSavedViews(linearService),
@@ -192,6 +206,13 @@ export {
 
   // Comment Management handlers
   handleGetComments,
+
+  // Roadmap handlers
+  handleGetRoadmaps,
+  handleGetRoadmapById,
+  handleCreateRoadmap,
+  handleUpdateRoadmap,
+  handleArchiveRoadmap,
 
   // Project Management handlers
   handleUpdateProject,
