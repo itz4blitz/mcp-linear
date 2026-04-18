@@ -7,8 +7,10 @@ import {
   isCreateIssueArgs,
   isCreateIssueRelationArgs,
   isDuplicateIssueArgs,
+  isGetCustomFieldsArgs,
   isGetCommentsArgs,
   isGetIssueByIdArgs,
+  isGetIssueCustomFieldsArgs,
   isGetIssueHistoryArgs,
   isGetIssuesArgs,
   isRemoveIssueLabelArgs,
@@ -17,6 +19,7 @@ import {
   isSubscribeToIssueArgs,
   isTransferIssueArgs,
   isUpdateIssueArgs,
+  isUpdateIssueCustomFieldArgs,
 } from '../type-guards.js';
 import { LinearService } from '../../services/linear-service.js';
 import { logError } from '../../utils/config.js';
@@ -63,17 +66,67 @@ export function handleGetIssueById(linearService: LinearService) {
 export function handleSearchIssues(linearService: LinearService) {
   return async (args: unknown) => {
     try {
-      console.log('searchIssues args:', JSON.stringify(args, null, 2));
-
       if (!isSearchIssuesArgs(args)) {
-        console.error('Invalid arguments for searchIssues');
         throw new Error('Invalid arguments for searchIssues');
       }
 
-      console.log('Arguments validated successfully');
       return await linearService.searchIssues(args);
     } catch (error) {
       logError('Error searching issues', error);
+      throw error;
+    }
+  };
+}
+
+/**
+ * Handler for getting custom field definitions
+ */
+export function handleGetCustomFields(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isGetCustomFieldsArgs(args)) {
+        throw new Error('Invalid arguments for getCustomFields');
+      }
+
+      return await linearService.getCustomFields();
+    } catch (error) {
+      logError('Error getting custom fields', error);
+      throw error;
+    }
+  };
+}
+
+/**
+ * Handler for getting custom field values for an issue
+ */
+export function handleGetIssueCustomFields(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isGetIssueCustomFieldsArgs(args)) {
+        throw new Error('Invalid arguments for getIssueCustomFields');
+      }
+
+      return await linearService.getIssueCustomFields(args.issueId);
+    } catch (error) {
+      logError('Error getting issue custom fields', error);
+      throw error;
+    }
+  };
+}
+
+/**
+ * Handler for updating a custom field value on an issue
+ */
+export function handleUpdateIssueCustomField(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isUpdateIssueCustomFieldArgs(args)) {
+        throw new Error('Invalid arguments for updateIssueCustomField');
+      }
+
+      return await linearService.updateIssueCustomField(args);
+    } catch (error) {
+      logError('Error updating issue custom field', error);
       throw error;
     }
   };

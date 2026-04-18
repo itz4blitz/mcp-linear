@@ -55,6 +55,14 @@ The following tools are currently implemented and available in the MCP Linear:
 | `linear_duplicateIssue`        | Duplicate an issue                                            | ✅ Implemented |
 | `linear_getIssueHistory`       | Get the history of changes made to an issue                   | ✅ Implemented |
 
+### Custom Field Tools
+
+| Tool Name                       | Description                                                                              | Status         |
+| ------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
+| `linear_getCustomFields`        | Get the custom field definitions exposed by the authenticated Linear schema              | ✅ Implemented |
+| `linear_getIssueCustomFields`   | Get the custom field values currently set on an issue                                    | ✅ Implemented |
+| `linear_updateIssueCustomField` | Update or clear a custom field value on an issue with JSON-compatible input and null clearing | ✅ Implemented |
+
 ### Comment Management Tools
 
 | Tool Name            | Description                   | Status         |
@@ -179,11 +187,11 @@ The following tools are recommended for future implementation to enhance the cap
 
 | Tool Name                       | Description                              | Priority | Status     |
 | ------------------------------- | ---------------------------------------- | -------- | ---------- |
-| `linear_getCustomFields`        | Get a list of custom fields              | Medium   | 📝 Planned |
+| `linear_getCustomFields`        | Get a list of custom fields              | Medium   | ✅ Implemented |
 | `linear_createCustomField`      | Create a new custom field                | Low      | 📝 Planned |
 | `linear_updateCustomField`      | Update a custom field                    | Low      | 📝 Planned |
-| `linear_getIssueCustomFields`   | Get custom field values for an issue     | Medium   | 📝 Planned |
-| `linear_updateIssueCustomField` | Update a custom field value for an issue | Medium   | 📝 Planned |
+| `linear_getIssueCustomFields`   | Get custom field values for an issue     | Medium   | ✅ Implemented |
+| `linear_updateIssueCustomField` | Update a custom field value for an issue | Medium   | ✅ Implemented |
 | `linear_getTeamCustomFields`    | Get custom fields for a specific team    | Medium   | 📝 Planned |
 | `linear_deleteCustomField`      | Delete a custom field                    | Low      | 📝 Planned |
 
