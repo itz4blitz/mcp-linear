@@ -5,13 +5,14 @@ import { MCPToolDefinition } from './types.js';
  * Convert MCPToolDefinition to the MCP SDK Tool format
  */
 export function convertToolDefinition(toolDef: MCPToolDefinition): Tool {
+  const { type: _type, ...schemaPropertiesWithoutType } = toolDef.input_schema;
+
   return {
     name: toolDef.name,
     description: toolDef.description,
     inputSchema: {
-      ...toolDef.input_schema,
       type: 'object',
-      properties: toolDef.input_schema.properties,
+      ...schemaPropertiesWithoutType,
     },
   };
 }

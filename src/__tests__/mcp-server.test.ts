@@ -3,6 +3,8 @@ import { removeFromFavoritesToolDefinition } from '../tools/definitions/view-too
 
 describe('convertToolDefinition', () => {
   it('preserves schema composition keywords like anyOf in inputSchema', () => {
+    expect(removeFromFavoritesToolDefinition.input_schema.anyOf).toBeDefined();
+
     const converted = convertToolDefinition(removeFromFavoritesToolDefinition);
 
     expect(converted.inputSchema).toEqual(
