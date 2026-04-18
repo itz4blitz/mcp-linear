@@ -105,6 +105,18 @@ describe('roadmap MCP tools', () => {
     expect(archiveRoadmap).toHaveBeenCalledWith('roadmap-1');
   });
 
+  it('allows getRoadmaps to be called with null args', async () => {
+    const getRoadmaps = jest.fn().mockResolvedValue([{ id: 'roadmap-1' }]);
+    const handlers = registerToolHandlers(
+      {
+        getRoadmaps,
+      } as unknown as LinearService,
+    );
+
+    await expect(handlers.linear_getRoadmaps(null)).resolves.toEqual([{ id: 'roadmap-1' }]);
+    expect(getRoadmaps).toHaveBeenCalledWith(undefined);
+  });
+
   it('rejects invalid roadmap arguments', async () => {
     const handlers = registerToolHandlers({} as unknown as LinearService);
 

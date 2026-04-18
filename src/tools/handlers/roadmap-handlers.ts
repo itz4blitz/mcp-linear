@@ -11,11 +11,18 @@ import { logError } from '../../utils/config.js';
 export function handleGetRoadmaps(linearService: LinearService) {
   return async (args: unknown) => {
     try {
-      if (args !== undefined && !isGetRoadmapsArgs(args)) {
+      if (args != null && !isGetRoadmapsArgs(args)) {
         throw new Error('Invalid arguments for getRoadmaps');
       }
 
-      return await linearService.getRoadmaps(args as { limit?: number; includeArchived?: boolean; orderBy?: string } | undefined);
+      const roadmapArgs =
+        args === null
+          ? undefined
+          : (args as { limit?: number; includeArchived?: boolean; orderBy?: string } | undefined);
+
+      return await linearService.getRoadmaps(
+        roadmapArgs,
+      );
     } catch (error) {
       logError('Error getting roadmaps', error);
       throw error;
