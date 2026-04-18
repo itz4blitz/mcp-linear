@@ -661,11 +661,10 @@ export function isGetMilestonesArgs(args: unknown): args is {
   limit?: number;
 } {
   return (
-    typeof args === 'object' &&
-    args !== null &&
+    isJsonObject(args) &&
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
-    (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+    (!('limit' in args) || isPositiveInteger((args as { limit: number }).limit))
   );
 }
 

@@ -25,6 +25,30 @@ describe('milestone MCP tools', () => {
     );
   });
 
+  it('defines milestone schemas for valid pagination and nullable fields', () => {
+    const getMilestonesTool = allToolDefinitions.find((tool) => tool.name === 'linear_getMilestones');
+    const getMilestoneByIdTool = allToolDefinitions.find(
+      (tool) => tool.name === 'linear_getMilestoneById',
+    );
+
+    expect(getMilestonesTool?.input_schema.properties?.limit).toMatchObject({
+      type: 'integer',
+      minimum: 1,
+    });
+    expect(getMilestonesTool?.output_schema.items.properties).toMatchObject({
+      description: { type: ['string', 'null'] },
+      targetDate: { type: ['string', 'null'] },
+      archivedAt: { type: ['string', 'null'] },
+      project: { type: ['object', 'null'] },
+    });
+    expect(getMilestoneByIdTool?.output_schema.properties).toMatchObject({
+      description: { type: ['string', 'null'] },
+      targetDate: { type: ['string', 'null'] },
+      archivedAt: { type: ['string', 'null'] },
+      project: { type: ['object', 'null'] },
+    });
+  });
+
   it('routes milestone handlers to the linear service', async () => {
     const getMilestones = jest.fn().mockResolvedValue([{ id: 'milestone-1' }]);
     const getMilestoneById = jest.fn().mockResolvedValue({ id: 'milestone-1' });
@@ -86,6 +110,21 @@ describe('milestone MCP tools', () => {
     const handlers = registerToolHandlers({} as unknown as LinearService);
 
     await expect(handlers.linear_getMilestones({ limit: '10' })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ limit: -1 })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ limit: 1.5 })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ limit: Number.NaN })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones({ limit: Number.POSITIVE_INFINITY })).rejects.toThrow(
+      'Invalid arguments for getMilestones',
+    );
+    await expect(handlers.linear_getMilestones([])).rejects.toThrow(
       'Invalid arguments for getMilestones',
     );
 

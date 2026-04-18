@@ -12,7 +12,8 @@ export const getMilestonesToolDefinition: MCPToolDefinition = {
         default: false,
       },
       limit: {
-        type: 'number',
+        type: 'integer',
+        minimum: 1,
         description: 'Maximum number of milestones to return',
         default: 50,
       },
@@ -25,16 +26,16 @@ export const getMilestonesToolDefinition: MCPToolDefinition = {
       properties: {
         id: { type: 'string' },
         name: { type: 'string' },
-        description: { type: 'string' },
+        description: { type: ['string', 'null'] },
         status: { type: 'string' },
         progress: { type: 'number' },
         sortOrder: { type: 'number' },
-        targetDate: { type: 'string' },
+        targetDate: { type: ['string', 'null'] },
         createdAt: { type: 'string' },
         updatedAt: { type: 'string' },
-        archivedAt: { type: 'string' },
+        archivedAt: { type: ['string', 'null'] },
         project: {
-          type: 'object',
+          type: ['object', 'null'],
           properties: {
             id: { type: 'string' },
             name: { type: 'string' },
@@ -63,16 +64,16 @@ export const getMilestoneByIdToolDefinition: MCPToolDefinition = {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      description: { type: 'string' },
+      description: { type: ['string', 'null'] },
       status: { type: 'string' },
       progress: { type: 'number' },
       sortOrder: { type: 'number' },
-      targetDate: { type: 'string' },
+      targetDate: { type: ['string', 'null'] },
       createdAt: { type: 'string' },
       updatedAt: { type: 'string' },
-      archivedAt: { type: 'string' },
+      archivedAt: { type: ['string', 'null'] },
       project: {
-        type: 'object',
+        type: ['object', 'null'],
         properties: {
           id: { type: 'string' },
           name: { type: 'string' },
@@ -116,16 +117,16 @@ export const createMilestoneToolDefinition: MCPToolDefinition = {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      description: { type: 'string' },
+      description: { type: ['string', 'null'] },
       status: { type: 'string' },
       progress: { type: 'number' },
       sortOrder: { type: 'number' },
-      targetDate: { type: 'string' },
+      targetDate: { type: ['string', 'null'] },
       createdAt: { type: 'string' },
       updatedAt: { type: 'string' },
-      archivedAt: { type: 'string' },
+      archivedAt: { type: ['string', 'null'] },
       project: {
-        type: 'object',
+        type: ['object', 'null'],
         properties: {
           id: { type: 'string' },
           name: { type: 'string' },
@@ -173,16 +174,16 @@ export const updateMilestoneToolDefinition: MCPToolDefinition = {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      description: { type: 'string' },
+      description: { type: ['string', 'null'] },
       status: { type: 'string' },
       progress: { type: 'number' },
       sortOrder: { type: 'number' },
-      targetDate: { type: 'string' },
+      targetDate: { type: ['string', 'null'] },
       createdAt: { type: 'string' },
       updatedAt: { type: 'string' },
-      archivedAt: { type: 'string' },
+      archivedAt: { type: ['string', 'null'] },
       project: {
-        type: 'object',
+        type: ['object', 'null'],
         properties: {
           id: { type: 'string' },
           name: { type: 'string' },
