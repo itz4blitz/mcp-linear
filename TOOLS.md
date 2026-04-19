@@ -1,10 +1,41 @@
 # MCP Linear Tools
 
-This document provides an overview of all tools implemented in the MCP Linear, as well as recommendations for future development.
+This document provides an overview of all implemented MCP Linear tools, plus the additional MCP-native resources and prompts exposed by the server.
 
 ## Implemented Tools
 
 The following tools are currently implemented and available in the MCP Linear:
+
+### MCP Resources
+
+These are read-only MCP resources exposed by the server for higher-value Linear context retrieval.
+
+| Resource URI Pattern                  | Description                                            | Status         |
+| ------------------------------------- | ------------------------------------------------------ | -------------- |
+| `linear://viewer`                     | Authenticated viewer profile                           | ✅ Implemented |
+| `linear://organization`               | Current Linear organization                            | ✅ Implemented |
+| `linear://teams`                      | Team list                                              | ✅ Implemented |
+| `linear://projects`                   | Project list                                           | ✅ Implemented |
+| `linear://rate-limit`                 | Shared MCP-side rate-limit status snapshot             | ✅ Implemented |
+| `linear://resource-guide`             | Dynamic resource URI guide                             | ✅ Implemented |
+| `linear://project/{id}`               | Project details                                        | ✅ Implemented |
+| `linear://project/{id}/issues?...`    | Filtered project issue summaries                       | ✅ Implemented |
+| `linear://project/{id}/documents?...` | Filtered project documents                             | ✅ Implemented |
+| `linear://issue/{id}`                 | Issue details                                          | ✅ Implemented |
+| `linear://document/{id}`              | Document details                                       | ✅ Implemented |
+| `linear://roadmap/{id}`               | Roadmap details                                        | ✅ Implemented |
+| `linear://milestone/{id}`             | Milestone details                                      | ✅ Implemented |
+
+### MCP Prompts
+
+These are reusable MCP prompt templates exposed by the server for PM-oriented Linear workflows.
+
+| Prompt Name                   | Description                                                     | Status         |
+| ---------------------------- | --------------------------------------------------------------- | -------------- |
+| `summarize-project-status`   | Summarize project health using project, issue, and document context | ✅ Implemented |
+| `draft-project-update`       | Draft a project update from current project state               | ✅ Implemented |
+| `triage-issue`               | Triage an issue using canonical issue context                   | ✅ Implemented |
+| `summarize-document`         | Summarize a document and relate it to surrounding project context | ✅ Implemented |
 
 ### User & Organization Tools
 
@@ -20,6 +51,12 @@ The following tools are currently implemented and available in the MCP Linear:
 | Tool Name         | Description                     | Status         |
 | ----------------- | ------------------------------- | -------------- |
 | `linear_getTeams` | Get a list of teams from Linear | ✅ Implemented |
+
+### Workflow Tools
+
+| Tool Name                    | Description                             | Status         |
+| ---------------------------- | --------------------------------------- | -------------- |
+| `linear_getWorkflowStates`   | Get all workflow states for a team      | ✅ Implemented |
 
 ### Project Tools
 
@@ -83,9 +120,9 @@ These are MCP-server observability helpers for tool-only clients.
 | Tool Name                      | Description                                                   | Status         |
 | ------------------------------ | ------------------------------------------------------------- | -------------- |
 | `linear_assignIssue`           | Assign an issue to a user                                     | ✅ Implemented |
-| `linear_subscribeToIssue`      | Subscribe to issue updates                                    | 🔄 In Progress |
+| `linear_subscribeToIssue`      | Subscribe to issue updates                                    | ✅ Implemented |
 | `linear_convertIssueToSubtask` | Convert an issue to a subtask                                 | ✅ Implemented |
-| `linear_createIssueRelation`   | Create relations between issues (blocks, is blocked by, etc.) | 🔄 In Progress |
+| `linear_createIssueRelation`   | Create relations between issues (blocks, is blocked by, etc.) | ✅ Implemented |
 | `linear_archiveIssue`          | Archive an issue                                              | ✅ Implemented |
 | `linear_setIssuePriority`      | Set the priority of an issue                                  | ✅ Implemented |
 | `linear_transferIssue`         | Transfer an issue to another team                             | ✅ Implemented |
@@ -215,13 +252,12 @@ The following tools are recommended for future implementation to enhance the cap
 
 ### Workflow Management
 
-| Tool Name                      | Description                             | Priority | Status         |
-| ------------------------------ | --------------------------------------- | -------- | -------------- |
-| `linear_getWorkflowStates`     | Get all workflow states                 | Medium   | ✅ Implemented |
-| `linear_createWorkflowState`   | Create a new workflow state             | Low      | 📝 Planned     |
-| `linear_updateWorkflowState`   | Update a workflow state                 | Low      | 📝 Planned     |
-| `linear_getTeamStates`         | Get workflow states for a specific team | Medium   | 📝 Planned     |
-| `linear_reorderWorkflowStates` | Change the order of workflow states     | Low      | 📝 Planned     |
+| Tool Name                      | Description                             | Priority | Status     |
+| ------------------------------ | --------------------------------------- | -------- | ---------- |
+| `linear_createWorkflowState`   | Create a new workflow state             | Low      | 📝 Planned |
+| `linear_updateWorkflowState`   | Update a workflow state                 | Low      | 📝 Planned |
+| `linear_getTeamStates`         | Get workflow states for a specific team | Medium   | 📝 Planned |
+| `linear_reorderWorkflowStates` | Change the order of workflow states     | Low      | 📝 Planned |
 
 ### Team Management
 
@@ -316,7 +352,6 @@ The following tools are recommended for future implementation to enhance the cap
 | Tool Name                           | Description                                 | Priority | Status     |
 | ----------------------------------- | ------------------------------------------- | -------- | ---------- |
 | `linear_getTeamCycles`              | Get information about team cycles           | Medium   | 📝 Planned |
-| `linear_getCycleIssues`             | Get issues for a specific cycle             | Medium   | 📝 Planned |
 | `linear_getTeamMetrics`             | Get performance metrics for a team          | Low      | 📝 Planned |
 | `linear_getIssueAnalytics`          | Get analytics for issues (cycle time, etc.) | Medium   | 📝 Planned |
 | `linear_generateReport`             | Generate a custom report                    | Low      | 📝 Planned |
