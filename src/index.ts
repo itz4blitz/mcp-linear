@@ -6,6 +6,7 @@ import { runMCPServer } from './mcp-server.js';
 import { LinearService } from './services/linear-service.js';
 import { allToolDefinitions } from './tools/definitions/index.js';
 import { registerToolHandlers } from './tools/handlers/index.js';
+import { installLinearRateLimitHandling } from './utils/linear-rate-limit.js';
 import { getLinearApiToken, logInfo, logError } from './utils/config.js';
 import pkg from '../package.json' with { type: 'json' }; // Import package.json to access version
 
@@ -30,6 +31,7 @@ async function runServer() {
 
     // Initialize Linear client and service
     const linearClient = new LinearClient({ apiKey: linearApiToken });
+    installLinearRateLimitHandling(linearClient);
     const linearService = new LinearService(linearClient);
 
     // Start the MCP server

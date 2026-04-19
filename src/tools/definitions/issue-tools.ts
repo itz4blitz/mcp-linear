@@ -82,6 +82,7 @@ export const getIssuesToolDefinition: MCPToolDefinition = {
         assignee: { type: 'object' },
         project: { type: 'object' },
         cycle: { type: 'object' },
+        projectMilestone: { type: 'object' },
         parent: { type: 'object' },
         labels: {
           type: 'array',
@@ -134,6 +135,7 @@ export const getIssueByIdToolDefinition: MCPToolDefinition = {
       assignee: { type: 'object' },
       project: { type: 'object' },
       cycle: { type: 'object' },
+      projectMilestone: { type: 'object' },
       parent: { type: 'object' },
       labels: {
         type: 'array',
@@ -293,6 +295,7 @@ export const searchIssuesToolDefinition: MCPToolDefinition = {
         assignee: { type: 'object' },
         project: { type: 'object' },
         cycle: { type: 'object' },
+        projectMilestone: { type: 'object' },
         parent: { type: 'object' },
         labels: {
           type: 'array',
@@ -347,6 +350,10 @@ export const createIssueToolDefinition: MCPToolDefinition = {
       projectId: {
         type: 'string',
         description: 'ID of the project the issue belongs to',
+      },
+      projectMilestoneId: {
+        type: 'string',
+        description: 'ID of the project milestone the issue belongs to',
       },
       cycleId: {
         type: 'string',
@@ -433,6 +440,10 @@ export const updateIssueToolDefinition: MCPToolDefinition = {
       projectId: {
         type: 'string',
         description: 'ID of the project to move the issue to',
+      },
+      projectMilestoneId: {
+        type: 'string',
+        description: 'ID of the project milestone to assign to the issue',
       },
       assigneeId: {
         type: 'string',

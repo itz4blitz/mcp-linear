@@ -462,6 +462,57 @@ describe('LinearService optional field sanitization', () => {
     });
   });
 
+  it('forwards project milestone assignment when creating an issue', async () => {
+    const createIssue = jest.fn().mockResolvedValue({
+      success: true,
+      issue: Promise.resolve({
+        id: 'issue-1',
+        title: 'Test issue',
+        description: 'Body',
+        url: 'https://linear.app/issue-1',
+      }),
+    });
+    const service = new LinearService({ createIssue } as never);
+
+    await service.createIssue({
+      title: 'Test issue',
+      teamId: 'team-1',
+      projectId: 'project-1',
+      projectMilestoneId: 'milestone-1',
+    });
+
+    expect(createIssue).toHaveBeenCalledWith({
+      title: 'Test issue',
+      teamId: 'team-1',
+      projectId: 'project-1',
+      projectMilestoneId: 'milestone-1',
+    });
+  });
+
+  it('forwards project milestone assignment when updating an issue', async () => {
+    const updateIssue = jest.fn().mockResolvedValue({
+      success: true,
+      issue: Promise.resolve({
+        id: 'issue-1',
+        title: 'Updated issue',
+        description: 'Updated body',
+        url: 'https://linear.app/issue-1',
+      }),
+    });
+    const service = new LinearService({ updateIssue } as never);
+
+    await service.updateIssue({
+      id: 'issue-1',
+      projectId: 'project-1',
+      projectMilestoneId: 'milestone-1',
+    });
+
+    expect(updateIssue).toHaveBeenCalledWith('issue-1', {
+      projectId: 'project-1',
+      projectMilestoneId: 'milestone-1',
+    });
+  });
+
   it('prefers incremental label changes when provided for issue updates', async () => {
     const updateIssue = jest.fn().mockResolvedValue({
       success: true,

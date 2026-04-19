@@ -2309,6 +2309,7 @@ export class LinearService {
         const assigneeData = issue.assignee ? await issue.assignee : null;
         const projectData = issue.project ? await issue.project : null;
         const cycleData = issue.cycle ? await issue.cycle : null;
+        const projectMilestoneData = issue.projectMilestone ? await issue.projectMilestone : null;
         const parentData = issue.parent ? await issue.parent : null;
 
         // Get labels
@@ -2351,6 +2352,12 @@ export class LinearService {
                 name: cycleData.name,
               }
             : null,
+          projectMilestone: projectMilestoneData
+            ? {
+                id: projectMilestoneData.id,
+                name: projectMilestoneData.name,
+              }
+            : null,
           parent: parentData
             ? {
                 id: parentData.id,
@@ -2379,6 +2386,7 @@ export class LinearService {
     const assigneeData = issue.assignee ? await issue.assignee : null;
     const projectData = issue.project ? await issue.project : null;
     const cycleData = issue.cycle ? await issue.cycle : null;
+    const projectMilestoneData = issue.projectMilestone ? await issue.projectMilestone : null;
     const parentData = issue.parent ? await issue.parent : null;
 
     // Get comments
@@ -2439,6 +2447,12 @@ export class LinearService {
         ? {
             id: cycleData.id,
             name: cycleData.name,
+          }
+        : null,
+      projectMilestone: projectMilestoneData
+        ? {
+            id: projectMilestoneData.id,
+            name: projectMilestoneData.name,
           }
         : null,
       parent: parentData
@@ -2548,6 +2562,7 @@ export class LinearService {
           const assigneeData = issue.assignee ? await issue.assignee : null;
           const projectData = issue.project ? await issue.project : null;
           const cycleData = issue.cycle ? await issue.cycle : null;
+          const projectMilestoneData = issue.projectMilestone ? await issue.projectMilestone : null;
           const parentData = issue.parent ? await issue.parent : null;
 
           // Get labels
@@ -2600,6 +2615,12 @@ export class LinearService {
                   name: cycleData.name,
                 }
               : null,
+            projectMilestone: projectMilestoneData
+              ? {
+                  id: projectMilestoneData.id,
+                  name: projectMilestoneData.name,
+                }
+              : null,
             parent: parentData
               ? {
                   id: parentData.id,
@@ -2627,6 +2648,7 @@ export class LinearService {
     assigneeId?: string;
     priority?: number;
     projectId?: string;
+    projectMilestoneId?: string;
     cycleId?: string;
     estimate?: number;
     dueDate?: string;
@@ -2644,6 +2666,7 @@ export class LinearService {
       assigneeId: args.assigneeId,
       priority: args.priority,
       projectId: args.projectId,
+      projectMilestoneId: args.projectMilestoneId,
       cycleId: args.cycleId,
       estimate: args.estimate,
       dueDate: args.dueDate,
@@ -2676,6 +2699,7 @@ export class LinearService {
     stateId?: string;
     priority?: number;
     projectId?: string;
+    projectMilestoneId?: string;
     assigneeId?: string;
     cycleId?: string;
     estimate?: number;
@@ -2694,6 +2718,7 @@ export class LinearService {
       stateId: args.stateId,
       priority: args.priority,
       projectId: args.projectId,
+      projectMilestoneId: args.projectMilestoneId,
       assigneeId: args.assigneeId,
       cycleId: args.cycleId,
       estimate: args.estimate,

@@ -180,6 +180,7 @@ export function isCreateIssueArgs(args: unknown): args is {
   assigneeId?: string;
   priority?: number;
   projectId?: string;
+  projectMilestoneId?: string;
   cycleId?: string;
   estimate?: number;
   dueDate?: string;
@@ -200,6 +201,8 @@ export function isCreateIssueArgs(args: unknown): args is {
     (!('assigneeId' in args) || typeof (args as { assigneeId: string }).assigneeId === 'string') &&
     (!('priority' in args) || typeof (args as { priority: number }).priority === 'number') &&
     (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
+    (!('projectMilestoneId' in args) ||
+      typeof (args as { projectMilestoneId: string }).projectMilestoneId === 'string') &&
     (!('cycleId' in args) || typeof (args as { cycleId: string }).cycleId === 'string') &&
     (!('estimate' in args) || typeof (args as { estimate: number }).estimate === 'number') &&
     (!('dueDate' in args) || typeof (args as { dueDate: string }).dueDate === 'string') &&
@@ -223,6 +226,7 @@ export function isUpdateIssueArgs(args: unknown): args is {
   stateId?: string;
   priority?: number;
   projectId?: string;
+  projectMilestoneId?: string;
   assigneeId?: string;
   cycleId?: string;
   estimate?: number;
@@ -246,6 +250,8 @@ export function isUpdateIssueArgs(args: unknown): args is {
     (!('stateId' in args) || typeof (args as { stateId: string }).stateId === 'string') &&
     (!('priority' in args) || typeof (args as { priority: number }).priority === 'number') &&
     (!('projectId' in args) || typeof (args as { projectId: string }).projectId === 'string') &&
+    (!('projectMilestoneId' in args) ||
+      typeof (args as { projectMilestoneId: string }).projectMilestoneId === 'string') &&
     (!('assigneeId' in args) || typeof (args as { assigneeId: string }).assigneeId === 'string') &&
     (!('cycleId' in args) || typeof (args as { cycleId: string }).cycleId === 'string') &&
     (!('estimate' in args) || typeof (args as { estimate: number }).estimate === 'number') &&
