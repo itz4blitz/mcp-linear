@@ -1,52 +1,114 @@
 <p align="center">
-  <img src="docs/linear-app-icon.png" alt="Linear App Icon" width="250" height="250">
+  <img src="docs/linear-app-icon.png" alt="Linear App Icon" width="220" height="220">
 </p>
 
 # MCP Linear
 
-`mcp-linear` is a Model Context Protocol server for Linear that exposes a practical project-management surface for AI assistants.
+`mcp-linear` is a Linear-focused Model Context Protocol server built for real project-management workflows, not just basic issue CRUD.
 
-It is designed for real workflow use, not just raw CRUD. The current surface includes:
+This version goes well beyond the earlier baseline by adding:
 
-- tools for issue management, project updates, milestones, roadmaps, initiatives, saved views, favorites, custom fields, documents, cycles, and PM-oriented issue queries
-- MCP resources for high-value Linear read paths like viewer, organization, projects, issues, documents, milestones, roadmaps, and rate-limit state
-- MCP prompts for common PM workflows like project status summaries, issue triage, and project update drafting
+- a much broader Linear tool surface
+- MCP-native resources and prompts
+- PM-oriented read paths for projects, cycles, milestones, docs, and saved views
+- document management and project update workflows
+- custom field, template, notification, session, audit, and integration reads
+- server observability and rate-limit visibility
+- stronger validation with an official MCP SDK smoke test
 
-![MCP Linear](https://img.shields.io/badge/MCP-Linear-blue)
+## Why this version exists
 
-## Highlights
+The original baseline was useful, but too narrow for the way real teams use Linear with AI agents.
 
-- Read and update issues, projects, cycles, milestones, roadmaps, and initiatives
-- Create project updates and manage project planning objects
-- Work with saved views and favorites
-- Read and update issue custom fields
-- Read, search, and manage Linear documents
-- Use PM-oriented queries like project issue filters and cycle issue filters
-- Expose MCP resources and prompts in addition to tools
-- Validate the built server with an MCP SDK smoke test as part of the default test flow
+This version is designed for workflows like:
 
-## Example prompts
+- planning a project from issues, milestones, cycles, docs, and saved views
+- drafting project updates from live Linear state
+- managing templates, custom fields, favorites, and PM read models
+- reading notifications, subscriptions, sessions, and audits without leaving MCP
+- running read-heavy multi-project planning sessions without constantly tripping over brittle wrapper behavior
 
-Once connected, you can use prompts like:
+In short: this is intended to be a **practical Linear operations server** for AI assistants, not just a thin GraphQL wrapper.
 
-- "Show me all my Linear issues"
-- "Create a new issue titled 'Fix login bug' in the Frontend team"
-- "Change the status of issue FE-123 to 'In Progress'"
-- "Show issues in project OrdelloTS that are Todo or In Progress"
-- "Get cycle issues for the current sprint, excluding completed work"
-- "Create a project update for OrdelloTS summarizing this week's progress"
+## What this version adds
 
-## Getting a Linear API token
+### Broader tool coverage
 
-To use MCP Linear, you need a Linear API token:
+Compared to the earlier baseline, this version now includes support for:
 
-1. Log in to [linear.app](https://linear.app)
-2. Open your workspace settings
-3. Go to **Security & access**
-4. Create a **Personal API Key**
-5. Copy the token and store it securely
+- milestones, roadmaps, initiatives, project updates, and project members
+- saved views and favorite mutations
+- Linear documents and document history
+- PM-oriented project issue and cycle issue queries
+- comment updates/deletes
+- cycle CRUD and cycle stats
+- workflow state creation/update
+- team settings, memberships, labels, and membership management
+- issue templates and create-from-template flows
+- webhooks and attachments
+- notifications, subscriptions, and unread helpers
+- authentication session reads and logout helpers
+- organization and user audit reads
+- integration listing
 
-## Local installation
+See [`TOOLS.md`](./TOOLS.md) for the full inventory.
+
+### MCP-native features
+
+This server is not tools-only anymore.
+
+It now exposes:
+
+#### MCP Resources
+
+Read-only resources for high-value context, including:
+
+- `linear://viewer`
+- `linear://organization`
+- `linear://teams`
+- `linear://projects`
+- `linear://project/{id}`
+- `linear://project/{id}/issues?...`
+- `linear://project/{id}/documents?...`
+- `linear://issue/{id}`
+- `linear://document/{id}`
+- `linear://roadmap/{id}`
+- `linear://milestone/{id}`
+- `linear://rate-limit`
+
+#### MCP Prompts
+
+Reusable PM-oriented prompts, including:
+
+- `summarize-project-status`
+- `draft-project-update`
+- `triage-issue`
+- `summarize-document`
+
+These make the server feel like a real MCP-native integration instead of a tools-only wrapper.
+
+### Better operational behavior
+
+This version also improves the server itself:
+
+- central Linear API rate-limit tracking and retry/cooldown handling
+- explicit `linear_getRateLimitStatus` and `linear_getServerStatus` tools
+- stdio safety hardening for the MCP runtime
+- runtime diagnostics for uncaught exceptions and disconnect debugging
+- narrower custom GraphQL queries where SDK-generated queries were stale or too chatty
+
+## High-value use cases
+
+Once connected, this server works well for prompts like:
+
+- "Show me the current status of this Linear project, including issues, docs, and milestones."
+- "Draft a weekly project update for OrdelloTS."
+- "Show all open issues in this project grouped by milestone and cycle."
+- "Find the newest documents related to Premier and summarize the key decisions."
+- "Show notifications and unread subscription context for current work."
+- "Inspect rate-limit/server health before running a big planning session."
+
+## Installation
 
 ### Clone and build
 
@@ -128,24 +190,7 @@ Common config locations:
 - Claude VSCode Extension: `~/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 - GoMCP: `~/.config/gomcp/config.yaml`
 
-## Available tools
-
-See [`TOOLS.md`](./TOOLS.md) for the full inventory.
-
-Especially useful current tool groups:
-
-- issue management
-- project management and project updates
-- cycle management
-- milestone management
-- roadmap management
-- initiative management
-- saved views and favorites
-- custom fields
-
-## Development
-
-See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for local development details.
+## Validation and quality bar
 
 The default validation path is:
 
@@ -154,10 +199,40 @@ npm test
 npm run build
 ```
 
-`npm test` runs both:
+`npm test` includes:
 
 - Jest unit tests
-- an official MCP SDK smoke test against the built stdio server, including tools, resources, and prompts
+- an official MCP SDK smoke test against the built stdio server
+
+The smoke test validates:
+
+- tool registration
+- resource registration
+- prompt registration
+- host-compatible MCP schema emission
+
+This is especially important for an MCP server because many failures only show up at runtime or during tool/resource registration.
+
+## Development
+
+See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for local development details.
+
+The repo is organized around:
+
+- `src/services/linear-service.ts` for SDK and GraphQL integration
+- `src/tools/definitions/*.ts` for MCP tool contracts
+- `src/tools/handlers/*.ts` for MCP handlers
+- `src/tools/type-guards.ts` for runtime validation
+- `src/mcp-resources.ts` and `src/mcp-prompts.ts` for MCP-native surface area
+
+## Tool inventory
+
+Use [`TOOLS.md`](./TOOLS.md) for the current inventory of:
+
+- implemented tools
+- MCP resources
+- MCP prompts
+- future roadmap items that are actually realistic for the current Linear SDK
 
 ## License
 
