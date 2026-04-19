@@ -138,6 +138,59 @@ const FAVORITE_VIEWS_QUERY = `
   }
 `;
 
+const ISSUE_SUMMARY_FIELDS = `
+  id
+  identifier
+  title
+  description
+  priority
+  estimate
+  dueDate
+  sortOrder
+  createdAt
+  updatedAt
+  url
+  state {
+    id
+    name
+    color
+    type
+  }
+  team {
+    id
+    name
+  }
+  assignee {
+    id
+    name
+  }
+  cycle {
+    id
+    name
+  }
+  projectMilestone {
+    id
+    name
+  }
+  labels(first: 10) {
+    nodes {
+      id
+      name
+      color
+    }
+  }
+`;
+
+const ISSUE_SUMMARIES_QUERY = `
+  query IssueSummaries($first: Int, $orderBy: PaginationOrderBy, $filter: IssueFilter) {
+    issues(first: $first, orderBy: $orderBy, filter: $filter) {
+      nodes {
+        ${ISSUE_SUMMARY_FIELDS}
+      }
+    }
+  }
+`;
+
 type JSONPrimitive = string | number | boolean | null;
 type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
 
@@ -1287,6 +1340,59 @@ export class LinearService {
           }
         : null,
       labels: labelsList,
+      sortOrder: issue.sortOrder,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      url: issue.url,
+    };
+  }
+
+  private normalizeIssueSummaryNode(issue: any) {
+    return {
+      id: issue.id,
+      identifier: issue.identifier,
+      title: issue.title,
+      description: issue.description,
+      state: issue.state
+        ? {
+            id: issue.state.id,
+            name: issue.state.name,
+            color: issue.state.color,
+            type: issue.state.type,
+          }
+        : null,
+      priority: issue.priority,
+      estimate: issue.estimate,
+      dueDate: issue.dueDate,
+      team: issue.team
+        ? {
+            id: issue.team.id,
+            name: issue.team.name,
+          }
+        : null,
+      assignee: issue.assignee
+        ? {
+            id: issue.assignee.id,
+            name: issue.assignee.name,
+          }
+        : null,
+      cycle: issue.cycle
+        ? {
+            id: issue.cycle.id,
+            name: issue.cycle.name,
+          }
+        : null,
+      projectMilestone: issue.projectMilestone
+        ? {
+            id: issue.projectMilestone.id,
+            name: issue.projectMilestone.name,
+          }
+        : null,
+      labels: (issue.labels?.nodes ?? []).map((label: any) => ({
+        id: label.id,
+        name: label.name,
+        color: label.color,
+      })),
       sortOrder: issue.sortOrder,
       createdAt: issue.createdAt,
       updatedAt: issue.updatedAt,
@@ -3679,20 +3785,18 @@ export class LinearService {
    */
   async getProjectIssues(args: ProjectIssueQueryArgs) {
     try {
-      const project = await this.client.project(args.projectId);
-      if (!project) {
-        throw new Error(`Project with ID ${args.projectId} not found`);
-      }
+      const filter = this.compactObject({
+        ...this.buildPMIssueFilter(args),
+        project: { id: { eq: args.projectId } },
+      });
 
-      const issues = await project.issues(
-        this.compactObject({
-          first: args.limit ?? 25,
-          orderBy: this.normalizePaginationOrderBy(args.orderBy),
-          filter: this.buildPMIssueFilter(args),
-        }),
-      );
+      const result = await this.requestGraphQL<{ issues: { nodes: any[] } }>(ISSUE_SUMMARIES_QUERY, {
+        first: args.limit ?? 25,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter,
+      });
 
-      return await Promise.all(issues.nodes.map((issue) => this.normalizeIssueSummary(issue)));
+      return result.issues.nodes.map((issue) => this.normalizeIssueSummaryNode(issue));
     } catch (error) {
       console.error('Error getting project issues:', error);
       throw error;
@@ -3751,21 +3855,19 @@ export class LinearService {
 
   async getCycleIssues(args: CycleIssueQueryArgs) {
     try {
-      const cycle = await this.client.cycle(args.cycleId);
-      if (!cycle) {
-        throw new Error(`Cycle with ID ${args.cycleId} not found`);
-      }
+      const { cycleId, ...filterArgs } = args;
+      const filter = this.compactObject({
+        ...this.buildPMIssueFilter(filterArgs),
+        cycle: { id: { eq: cycleId } },
+      });
 
-      const { cycleId: _cycleId, ...filterArgs } = args;
-      const issues = await cycle.issues(
-        this.compactObject({
-          first: args.limit ?? 25,
-          orderBy: this.normalizePaginationOrderBy(args.orderBy),
-          filter: this.buildPMIssueFilter(filterArgs),
-        }),
-      );
+      const result = await this.requestGraphQL<{ issues: { nodes: any[] } }>(ISSUE_SUMMARIES_QUERY, {
+        first: args.limit ?? 25,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter,
+      });
 
-      return await Promise.all(issues.nodes.map((issue) => this.normalizeIssueSummary(issue)));
+      return result.issues.nodes.map((issue) => this.normalizeIssueSummaryNode(issue));
     } catch (error) {
       console.error('Error getting cycle issues:', error);
       throw error;
