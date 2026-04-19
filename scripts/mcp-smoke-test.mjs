@@ -66,7 +66,30 @@ async function main() {
       assert.ok(actualToolNames.includes(toolName), `Expected tool ${toolName} to be registered.`);
     }
 
-    console.log(`MCP smoke test passed for ${actualToolNames.length} tools.`);
+    const { resources } = await client.listResources();
+    const resourceUris = resources.map((resource) => resource.uri);
+    assert.ok(resourceUris.includes('linear://viewer'), 'Expected linear://viewer resource to be registered.');
+    assert.ok(resourceUris.includes('linear://rate-limit'), 'Expected linear://rate-limit resource to be registered.');
+
+    const guideResource = await client.readResource({ uri: 'linear://resource-guide' });
+    assert.ok(guideResource.contents[0].text.includes('linear://project/{id}'));
+
+    const rateLimitResource = await client.readResource({ uri: 'linear://rate-limit' });
+    assert.ok(rateLimitResource.contents[0].text.includes('"isBlocked"'));
+
+    const { prompts } = await client.listPrompts();
+    const promptNames = prompts.map((prompt) => prompt.name);
+    assert.ok(promptNames.includes('summarize-project-status'));
+
+    const prompt = await client.getPrompt({
+      name: 'summarize-project-status',
+      arguments: { projectId: 'project-1', focus: 'risks' },
+    });
+    assert.ok(prompt.messages[0].content.text.includes('linear://project/project-1'));
+
+    console.log(
+      `MCP smoke test passed for ${actualToolNames.length} tools, ${resources.length} resources, and ${prompts.length} prompts.`,
+    );
   } finally {
     await transport.close().catch(() => {});
   }

@@ -3,10 +3,12 @@
 import { LinearClient } from '@linear/sdk';
 import { runMCPServer } from './mcp-server.js';
 
+import { getLinearPrompt, getLinearPromptDefinitions } from './mcp-prompts.js';
+import { getLinearResourceDefinitions, readLinearResource } from './mcp-resources.js';
 import { LinearService } from './services/linear-service.js';
 import { allToolDefinitions } from './tools/definitions/index.js';
 import { registerToolHandlers } from './tools/handlers/index.js';
-import { installLinearRateLimitHandling } from './utils/linear-rate-limit.js';
+import { getLinearRateLimitSnapshot, installLinearRateLimitHandling } from './utils/linear-rate-limit.js';
 import { getLinearApiToken, logInfo, logError } from './utils/config.js';
 import pkg from '../package.json' with { type: 'json' }; // Import package.json to access version
 
@@ -43,6 +45,14 @@ async function runServer() {
           tools: allToolDefinitions,
         };
       },
+      listResources: async () => getLinearResourceDefinitions(),
+      readResource: async (uri: string) =>
+        readLinearResource(uri, {
+          linearService,
+          getRateLimitSnapshot: () => getLinearRateLimitSnapshot(linearClient),
+        }),
+      listPrompts: async () => getLinearPromptDefinitions(),
+      getPrompt: async (name: string, args?: Record<string, string>) => getLinearPrompt(name, args),
       handleRequest: async (req: { name: string; args: unknown }) => {
         const handlers = registerToolHandlers(linearService);
         const toolName = req.name;

@@ -1812,6 +1812,28 @@ export class LinearService {
     );
   }
 
+  async getProjectById(id: string) {
+    const project = await this.client.project(id);
+    if (!project) {
+      throw new Error(`Project with ID ${id} not found`);
+    }
+
+    const teams = await project.teams();
+
+    return {
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      content: project.content,
+      state: project.state,
+      url: project.url,
+      teams: teams.nodes.map((team) => ({
+        id: team.id,
+        name: team.name,
+      })),
+    };
+  }
+
   async getMilestones(args: MilestoneQueryArgs = {}) {
     const limit = args.limit ?? 50;
     const includeArchived = args.includeArchived ?? false;

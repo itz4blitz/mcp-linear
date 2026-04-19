@@ -3,6 +3,17 @@ import { logInfo } from './config.js';
 
 type RetryState = {
   blockedUntil: number;
+  lastRateLimitedAt?: number;
+  lastDelayMs?: number;
+  lastOperation?: string;
+};
+
+export type LinearRateLimitSnapshot = {
+  blockedUntil: number;
+  isBlocked: boolean;
+  lastRateLimitedAt: number | null;
+  lastDelayMs: number | null;
+  lastOperation: string | null;
 };
 
 type RateLimitDeps = {
@@ -121,6 +132,9 @@ async function withRateLimitRetry<T>(
 
       const delayMs = getRetryDelayMs(error, attempt, deps);
       state.blockedUntil = deps.now() + delayMs;
+      state.lastRateLimitedAt = deps.now();
+      state.lastDelayMs = delayMs;
+      state.lastOperation = operationName;
       deps.log(`Linear API rate limited during ${operationName}; retrying in ${delayMs}ms.`);
       await deps.sleep(delayMs);
     }
@@ -132,6 +146,7 @@ async function withRateLimitRetry<T>(
 export function installLinearRateLimitHandling(client: LinearClient, deps: Partial<RateLimitDeps> = {}) {
   const graphClient = client.client as LinearClient['client'] & {
     __mcpLinearRateLimitWrapped?: boolean;
+    __mcpLinearRateLimitState?: RetryState;
   };
 
   if (graphClient.__mcpLinearRateLimitWrapped) {
@@ -165,5 +180,21 @@ export function installLinearRateLimitHandling(client: LinearClient, deps: Parti
   }) as typeof graphClient.rawRequest;
 
   graphClient.__mcpLinearRateLimitWrapped = true;
+  graphClient.__mcpLinearRateLimitState = state;
   return client;
+}
+
+export function getLinearRateLimitSnapshot(client: LinearClient, now = Date.now()): LinearRateLimitSnapshot {
+  const graphClient = client.client as LinearClient['client'] & {
+    __mcpLinearRateLimitState?: RetryState;
+  };
+  const state = graphClient.__mcpLinearRateLimitState ?? { blockedUntil: 0 };
+
+  return {
+    blockedUntil: state.blockedUntil,
+    isBlocked: state.blockedUntil > now,
+    lastRateLimitedAt: state.lastRateLimitedAt ?? null,
+    lastDelayMs: state.lastDelayMs ?? null,
+    lastOperation: state.lastOperation ?? null,
+  };
 }

@@ -32,6 +32,8 @@ npm run test:unit
 npm run test:mcp-smoke
 ```
 
+The smoke test verifies that the built server successfully exposes its registered tools, resources, and prompts over stdio.
+
 ### Inspecting the server
 
 To inspect the server by @modelcontextprotocol/inspector:

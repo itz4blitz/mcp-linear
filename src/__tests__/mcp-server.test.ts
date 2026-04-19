@@ -1,4 +1,6 @@
 import { convertToolDefinition } from '../tool-schema.js';
+import { getLinearPromptDefinitions } from '../mcp-prompts.js';
+import { getLinearResourceDefinitions } from '../mcp-resources.js';
 import { allToolDefinitions } from '../tools/definitions/index.js';
 import { removeFromFavoritesToolDefinition } from '../tools/definitions/view-tools.js';
 
@@ -39,5 +41,13 @@ describe('convertToolDefinition', () => {
         expect(converted.inputSchema).not.toHaveProperty(key);
       }
     }
+  });
+
+  it('exposes MCP-native resources and prompts', () => {
+    const resources = getLinearResourceDefinitions();
+    const prompts = getLinearPromptDefinitions();
+
+    expect(resources.length).toBeGreaterThan(0);
+    expect(prompts.length).toBeGreaterThan(0);
   });
 });

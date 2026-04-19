@@ -6,7 +6,11 @@
 
 `mcp-linear` is a Model Context Protocol server for Linear that exposes a practical project-management surface for AI assistants.
 
-It is designed for real workflow use, not just raw CRUD. The current tool surface covers issue management, project updates, milestones, roadmaps, initiatives, saved views, favorites, custom fields, cycles, and PM-oriented issue queries.
+It is designed for real workflow use, not just raw CRUD. The current surface includes:
+
+- tools for issue management, project updates, milestones, roadmaps, initiatives, saved views, favorites, custom fields, documents, cycles, and PM-oriented issue queries
+- MCP resources for high-value Linear read paths like viewer, organization, projects, issues, documents, milestones, roadmaps, and rate-limit state
+- MCP prompts for common PM workflows like project status summaries, issue triage, and project update drafting
 
 ![MCP Linear](https://img.shields.io/badge/MCP-Linear-blue)
 
@@ -16,7 +20,9 @@ It is designed for real workflow use, not just raw CRUD. The current tool surfac
 - Create project updates and manage project planning objects
 - Work with saved views and favorites
 - Read and update issue custom fields
+- Read, search, and manage Linear documents
 - Use PM-oriented queries like project issue filters and cycle issue filters
+- Expose MCP resources and prompts in addition to tools
 - Validate the built server with an MCP SDK smoke test as part of the default test flow
 
 ## Example prompts
@@ -151,7 +157,7 @@ npm run build
 `npm test` runs both:
 
 - Jest unit tests
-- an official MCP SDK smoke test against the built stdio server
+- an official MCP SDK smoke test against the built stdio server, including tools, resources, and prompts
 
 ## License
 
