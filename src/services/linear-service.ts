@@ -2332,6 +2332,7 @@ export class LinearService {
         const projectData = issue.project ? await issue.project : null;
         const cycleData = issue.cycle ? await issue.cycle : null;
         const projectMilestoneData = issue.projectMilestone ? await issue.projectMilestone : null;
+        const stateData = issue.state ? await issue.state : null;
         const parentData = issue.parent ? await issue.parent : null;
 
         // Get labels
@@ -2346,7 +2347,14 @@ export class LinearService {
           id: issue.id,
           title: issue.title,
           description: issue.description,
-          state: issue.state,
+          state: stateData
+            ? {
+                id: stateData.id,
+                name: stateData.name,
+                color: stateData.color,
+                type: stateData.type,
+              }
+            : null,
           priority: issue.priority,
           estimate: issue.estimate,
           dueDate: issue.dueDate,
@@ -2409,6 +2417,7 @@ export class LinearService {
     const projectData = issue.project ? await issue.project : null;
     const cycleData = issue.cycle ? await issue.cycle : null;
     const projectMilestoneData = issue.projectMilestone ? await issue.projectMilestone : null;
+    const stateData = issue.state ? await issue.state : null;
     const parentData = issue.parent ? await issue.parent : null;
 
     // Get comments
@@ -2443,7 +2452,14 @@ export class LinearService {
       id: issue.id,
       title: issue.title,
       description: issue.description,
-      state: issue.state,
+      state: stateData
+        ? {
+            id: stateData.id,
+            name: stateData.name,
+            color: stateData.color,
+            type: stateData.type,
+          }
+        : null,
       priority: issue.priority,
       estimate: issue.estimate,
       dueDate: issue.dueDate,

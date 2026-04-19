@@ -1934,3 +1934,86 @@ describe('LinearService document workflows', () => {
     });
   });
 });
+
+describe('LinearService issue state normalization', () => {
+  it('resolves workflow state objects in getIssueById', async () => {
+    const issue = jest.fn().mockResolvedValue({
+      id: 'issue-1',
+      title: 'Issue',
+      description: 'Body',
+      priority: 1,
+      estimate: 2,
+      dueDate: null,
+      team: Promise.resolve({ id: 'team-1', name: 'Premier Studio' }),
+      assignee: undefined,
+      project: Promise.resolve({ id: 'project-1', name: 'Premier Product Parity Completion' }),
+      cycle: undefined,
+      projectMilestone: undefined,
+      state: Promise.resolve({
+        id: 'state-1',
+        name: 'In Progress',
+        color: '#f2c94c',
+        type: 'started',
+      }),
+      parent: undefined,
+      labels: jest.fn().mockResolvedValue({ nodes: [] }),
+      comments: jest.fn().mockResolvedValue({ nodes: [] }),
+      sortOrder: 1,
+      createdAt: new Date('2026-04-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+      url: 'https://linear.app/issue-1',
+    });
+    const service = new LinearService({ issue } as never);
+
+    const result = await service.getIssueById('issue-1');
+
+    expect(result.state).toEqual({
+      id: 'state-1',
+      name: 'In Progress',
+      color: '#f2c94c',
+      type: 'started',
+    });
+  });
+
+  it('resolves workflow state objects in getIssues', async () => {
+    const issues = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'issue-1',
+          title: 'Issue',
+          description: 'Body',
+          priority: 1,
+          estimate: 2,
+          dueDate: null,
+          team: Promise.resolve({ id: 'team-1', name: 'Premier Studio' }),
+          assignee: undefined,
+          project: undefined,
+          cycle: undefined,
+          projectMilestone: undefined,
+          state: Promise.resolve({
+            id: 'state-1',
+            name: 'Todo',
+            color: '#888',
+            type: 'unstarted',
+          }),
+          parent: undefined,
+          labels: jest.fn().mockResolvedValue({ nodes: [] }),
+          sortOrder: 1,
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          url: 'https://linear.app/issue-1',
+        },
+      ],
+    });
+    const service = new LinearService({ issues } as never);
+
+    const result = await service.getIssues(1);
+
+    expect(result[0].state).toEqual({
+      id: 'state-1',
+      name: 'Todo',
+      color: '#888',
+      type: 'unstarted',
+    });
+  });
+});
