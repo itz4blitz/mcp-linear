@@ -542,6 +542,58 @@ export const createCommentToolDefinition: MCPToolDefinition = {
   },
 };
 
+export const updateCommentToolDefinition: MCPToolDefinition = {
+  name: 'linear_updateComment',
+  description: 'Update an existing comment',
+  input_schema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', description: 'ID of the comment to update' },
+      body: { type: 'string', description: 'Updated comment body' },
+      quotedText: { type: 'string', description: 'Optional quoted text for inline comments' },
+      resolvingCommentId: { type: 'string', description: 'Optional resolving comment ID' },
+      resolvingUserId: { type: 'string', description: 'Optional resolving user ID' },
+      subscriberIds: { type: 'array', items: { type: 'string' }, description: 'Optional subscriber IDs' },
+      doNotSubscribeToIssue: { type: 'boolean', description: 'Prevent auto subscription on update' },
+    },
+    required: ['id'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      body: { type: ['string', 'null'] },
+      createdAt: { type: 'string' },
+      updatedAt: { type: 'string' },
+      editedAt: { type: ['string', 'null'] },
+      quotedText: { type: ['string', 'null'] },
+      url: { type: 'string' },
+      issue: { type: ['object', 'null'] },
+      parent: { type: ['object', 'null'] },
+      user: { type: ['object', 'null'] },
+    },
+  },
+};
+
+export const deleteCommentToolDefinition: MCPToolDefinition = {
+  name: 'linear_deleteComment',
+  description: 'Delete a comment',
+  input_schema: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', description: 'ID of the comment to delete' },
+    },
+    required: ['id'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      id: { type: 'string' },
+    },
+  },
+};
+
 /**
  * Tool definition for adding a label to an issue
  */

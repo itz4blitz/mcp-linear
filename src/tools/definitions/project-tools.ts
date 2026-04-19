@@ -111,6 +111,76 @@ export const getProjectsToolDefinition: MCPToolDefinition = {
   },
 };
 
+export const getProjectMembersToolDefinition: MCPToolDefinition = {
+  name: 'linear_getProjectMembers',
+  description: 'Get members assigned to a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: { type: 'string', description: 'ID of the project to inspect' },
+      limit: { ...positiveLimitSchema, description: 'Maximum number of members to return (default: 25)' },
+      includeArchived: { type: 'boolean', description: 'Include archived members' },
+      includeDisabled: { type: 'boolean', description: 'Include disabled users' },
+      orderBy: { ...issueOrderBySchema, description: 'Sort members by created or updated date when supported' },
+    },
+    required: ['projectId'],
+  },
+  output_schema: {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        email: { type: ['string', 'null'] },
+        displayName: { type: ['string', 'null'] },
+      },
+    },
+  },
+};
+
+export const addProjectMemberToolDefinition: MCPToolDefinition = {
+  name: 'linear_addProjectMember',
+  description: 'Add a member to a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: { type: 'string', description: 'ID of the project to update' },
+      userId: { type: 'string', description: 'ID of the user to add' },
+    },
+    required: ['projectId', 'userId'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      projectId: { type: 'string' },
+      userId: { type: 'string' },
+    },
+  },
+};
+
+export const removeProjectMemberToolDefinition: MCPToolDefinition = {
+  name: 'linear_removeProjectMember',
+  description: 'Remove a member from a project',
+  input_schema: {
+    type: 'object',
+    properties: {
+      projectId: { type: 'string', description: 'ID of the project to update' },
+      userId: { type: 'string', description: 'ID of the user to remove' },
+    },
+    required: ['projectId', 'userId'],
+  },
+  output_schema: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean' },
+      projectId: { type: 'string' },
+      userId: { type: 'string' },
+    },
+  },
+};
+
 /**
  * Tool definition for creating a project
  */

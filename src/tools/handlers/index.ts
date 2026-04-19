@@ -9,6 +9,8 @@ import {
   handleUpdateIssue,
   handleUpdateIssueCustomField,
   handleCreateComment,
+  handleUpdateComment,
+  handleDeleteComment,
   handleAddIssueLabel,
   handleRemoveIssueLabel,
   // New Issue Management handlers
@@ -36,6 +38,9 @@ import {
   handleAddIssueToProject,
   handleRemoveIssueFromProject,
   handleGetProjectIssues,
+  handleGetProjectMembers,
+  handleAddProjectMember,
+  handleRemoveProjectMember,
 } from './project-handlers.js';
 import {
   handleArchiveRoadmap,
@@ -64,6 +69,25 @@ import {
 } from './document-handlers.js';
 import { handleGetRateLimitStatus, handleGetServerStatus } from './server-handlers.js';
 import {
+  handleGetWebhooks,
+  handleCreateWebhook,
+  handleDeleteWebhook,
+  handleGetAttachments,
+  handleAddAttachment,
+  handleGetNotifications,
+  handleMarkNotificationAsRead,
+  handleGetSubscriptions,
+  handleMarkAllNotificationsAsRead,
+  handleGetUnreadNotificationCount,
+  handleGetAuthenticationSessions,
+  handleLogoutSession,
+  handleLogoutOtherSessions,
+  handleLogoutAllSessions,
+  handleGetOrganizationAuditEvents,
+  handleGetUserAuditEvents,
+  handleGetIntegrations,
+} from './ops-handlers.js';
+import {
   handleAddToFavorites,
   handleCreateSavedView,
   handleDeleteSavedView,
@@ -72,7 +96,21 @@ import {
   handleRemoveFromFavorites,
   handleUpdateSavedView,
 } from './view-handlers.js';
-import { handleGetTeams, handleGetWorkflowStates } from './team-handlers.js';
+import {
+  handleGetTeams,
+  handleGetWorkflowStates,
+  handleCreateWorkflowState,
+  handleUpdateWorkflowState,
+  handleUpdateTeam,
+  handleGetTeamMemberships,
+  handleCreateTeam,
+  handleArchiveTeam,
+  handleAddUserToTeam,
+  handleRemoveUserFromTeam,
+  handleUpdateTeamMembership,
+  handleGetTeamLabels,
+  handleCreateTeamLabel,
+} from './team-handlers.js';
 import {
   handleGetViewer,
   handleGetOrganization,
@@ -82,11 +120,25 @@ import {
 import {
   // Cycle Management handlers
   handleGetCycles,
+  handleGetCycleById,
+  handleCreateCycle,
+  handleUpdateCycle,
+  handleCompleteCycle,
+  handleGetCycleStats,
   handleGetActiveCycle,
   handleGetCycleIssues,
   handleAddIssueToCycle,
   handleRemoveIssueFromCycle,
 } from './cycle-handlers.js';
+import {
+  handleGetIssueTemplates,
+  handleGetIssueTemplateById,
+  handleCreateIssueTemplate,
+  handleUpdateIssueTemplate,
+  handleCreateIssueFromTemplate,
+  handleGetTeamTemplates,
+  handleArchiveTemplate,
+} from './template-handlers.js';
 import {
   // Initiative Management handlers
   getInitiativesHandler,
@@ -120,6 +172,25 @@ export function registerToolHandlers(
     linear_getRateLimitStatus: handleGetRateLimitStatus(options.getRateLimitStatus),
     linear_getServerStatus: handleGetServerStatus(options.getServerStatus),
 
+    // Ops tools
+    linear_getWebhooks: handleGetWebhooks(linearService),
+    linear_createWebhook: handleCreateWebhook(linearService),
+    linear_deleteWebhook: handleDeleteWebhook(linearService),
+    linear_getAttachments: handleGetAttachments(linearService),
+    linear_addAttachment: handleAddAttachment(linearService),
+    linear_getNotifications: handleGetNotifications(linearService),
+    linear_markNotificationAsRead: handleMarkNotificationAsRead(linearService),
+    linear_getSubscriptions: handleGetSubscriptions(linearService),
+    linear_markAllNotificationsAsRead: handleMarkAllNotificationsAsRead(linearService),
+    linear_getUnreadNotificationCount: handleGetUnreadNotificationCount(linearService),
+    linear_getAuthenticationSessions: handleGetAuthenticationSessions(linearService),
+    linear_logoutSession: handleLogoutSession(linearService),
+    linear_logoutOtherSessions: handleLogoutOtherSessions(linearService),
+    linear_logoutAllSessions: handleLogoutAllSessions(linearService),
+    linear_getOrganizationAuditEvents: handleGetOrganizationAuditEvents(linearService),
+    linear_getUserAuditEvents: handleGetUserAuditEvents(linearService),
+    linear_getIntegrations: handleGetIntegrations(linearService),
+
     // User tools
     linear_getViewer: handleGetViewer(linearService),
     linear_getOrganization: handleGetOrganization(linearService),
@@ -129,6 +200,17 @@ export function registerToolHandlers(
     // Team tools
     linear_getTeams: handleGetTeams(linearService),
     linear_getWorkflowStates: handleGetWorkflowStates(linearService),
+    linear_createWorkflowState: handleCreateWorkflowState(linearService),
+    linear_updateWorkflowState: handleUpdateWorkflowState(linearService),
+    linear_updateTeam: handleUpdateTeam(linearService),
+    linear_getTeamMemberships: handleGetTeamMemberships(linearService),
+    linear_createTeam: handleCreateTeam(linearService),
+    linear_archiveTeam: handleArchiveTeam(linearService),
+    linear_addUserToTeam: handleAddUserToTeam(linearService),
+    linear_removeUserFromTeam: handleRemoveUserFromTeam(linearService),
+    linear_updateTeamMembership: handleUpdateTeamMembership(linearService),
+    linear_getTeamLabels: handleGetTeamLabels(linearService),
+    linear_createTeamLabel: handleCreateTeamLabel(linearService),
 
     // Project tools
     linear_getProjects: handleGetProjects(linearService),
@@ -136,6 +218,9 @@ export function registerToolHandlers(
 
     // Project Management tools
     linear_updateProject: handleUpdateProject(linearService),
+    linear_getProjectMembers: handleGetProjectMembers(linearService),
+    linear_addProjectMember: handleAddProjectMember(linearService),
+    linear_removeProjectMember: handleRemoveProjectMember(linearService),
     linear_createProjectUpdate: handleCreateProjectUpdate(linearService),
     linear_updateProjectUpdate: handleUpdateProjectUpdate(linearService),
     linear_getProjectUpdates: handleGetProjectUpdates(linearService),
@@ -180,6 +265,11 @@ export function registerToolHandlers(
 
     // Cycle Management tools
     linear_getCycles: handleGetCycles(linearService),
+    linear_getCycleById: handleGetCycleById(linearService),
+    linear_createCycle: handleCreateCycle(linearService),
+    linear_updateCycle: handleUpdateCycle(linearService),
+    linear_completeCycle: handleCompleteCycle(linearService),
+    linear_getCycleStats: handleGetCycleStats(linearService),
     linear_getActiveCycle: handleGetActiveCycle(linearService),
     linear_getCycleIssues: handleGetCycleIssues(linearService),
     linear_addIssueToCycle: handleAddIssueToCycle(linearService),
@@ -207,8 +297,19 @@ export function registerToolHandlers(
     linear_updateIssue: handleUpdateIssue(linearService),
     linear_updateIssueCustomField: handleUpdateIssueCustomField(linearService),
     linear_createComment: handleCreateComment(linearService),
+    linear_updateComment: handleUpdateComment(linearService),
+    linear_deleteComment: handleDeleteComment(linearService),
     linear_addIssueLabel: handleAddIssueLabel(linearService),
     linear_removeIssueLabel: handleRemoveIssueLabel(linearService),
+
+    // Template tools
+    linear_getIssueTemplates: handleGetIssueTemplates(linearService),
+    linear_getIssueTemplateById: handleGetIssueTemplateById(linearService),
+    linear_createIssueTemplate: handleCreateIssueTemplate(linearService),
+    linear_updateIssueTemplate: handleUpdateIssueTemplate(linearService),
+    linear_createIssueFromTemplate: handleCreateIssueFromTemplate(linearService),
+    linear_getTeamTemplates: handleGetTeamTemplates(linearService),
+    linear_archiveTemplate: handleArchiveTemplate(linearService),
 
     // New Issue Management tools
     linear_assignIssue: handleAssignIssue(linearService),
@@ -237,12 +338,25 @@ export {
   handleUpdateIssue,
   handleUpdateIssueCustomField,
   handleCreateComment,
+  handleUpdateComment,
+  handleDeleteComment,
   handleAddIssueLabel,
   handleRemoveIssueLabel,
   handleGetProjects,
   handleCreateProject,
   handleGetTeams,
   handleGetWorkflowStates,
+  handleCreateWorkflowState,
+  handleUpdateWorkflowState,
+  handleUpdateTeam,
+  handleGetTeamMemberships,
+  handleCreateTeam,
+  handleArchiveTeam,
+  handleAddUserToTeam,
+  handleRemoveUserFromTeam,
+  handleUpdateTeamMembership,
+  handleGetTeamLabels,
+  handleCreateTeamLabel,
   handleGetViewer,
   handleGetOrganization,
   handleGetUsers,
@@ -278,6 +392,9 @@ export {
   handleAddIssueToProject,
   handleRemoveIssueFromProject,
   handleGetProjectIssues,
+  handleGetProjectMembers,
+  handleAddProjectMember,
+  handleRemoveProjectMember,
 
   // Milestone handlers
   handleGetMilestones,
@@ -300,6 +417,23 @@ export {
   // Server handlers
   handleGetRateLimitStatus,
   handleGetServerStatus,
+  handleGetWebhooks,
+  handleCreateWebhook,
+  handleDeleteWebhook,
+  handleGetAttachments,
+  handleAddAttachment,
+  handleGetNotifications,
+  handleMarkNotificationAsRead,
+  handleGetSubscriptions,
+  handleMarkAllNotificationsAsRead,
+  handleGetUnreadNotificationCount,
+  handleGetAuthenticationSessions,
+  handleLogoutSession,
+  handleLogoutOtherSessions,
+  handleLogoutAllSessions,
+  handleGetOrganizationAuditEvents,
+  handleGetUserAuditEvents,
+  handleGetIntegrations,
 
   // View handlers
   handleGetSavedViews,
@@ -312,10 +446,24 @@ export {
 
   // Cycle Management handlers
   handleGetCycles,
+  handleGetCycleById,
+  handleCreateCycle,
+  handleUpdateCycle,
+  handleCompleteCycle,
+  handleGetCycleStats,
   handleGetActiveCycle,
   handleGetCycleIssues,
   handleAddIssueToCycle,
   handleRemoveIssueFromCycle,
+
+  // Template handlers
+  handleGetIssueTemplates,
+  handleGetIssueTemplateById,
+  handleCreateIssueTemplate,
+  handleUpdateIssueTemplate,
+  handleCreateIssueFromTemplate,
+  handleGetTeamTemplates,
+  handleArchiveTemplate,
 
   // Initiative Management handlers
   getInitiativesHandler,

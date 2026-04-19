@@ -6,6 +6,7 @@ import {
   LinearFetch,
   ProjectMilestone,
   Roadmap,
+  Template,
   Team,
   User,
 } from '@linear/sdk';
@@ -1047,6 +1048,377 @@ export class LinearService {
       : null;
   }
 
+  private normalizeSimpleUser(user: { id: string; name: string; email?: string | null; displayName?: string | null }) {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email ?? null,
+      displayName: user.displayName ?? null,
+    };
+  }
+
+  private async normalizeComment(comment: any) {
+    const user = comment.user ? await comment.user : null;
+    const issue = comment.issue ? await comment.issue : null;
+    const parent = comment.parent ? await comment.parent : null;
+
+    return {
+      id: comment.id,
+      body: comment.body,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt ?? comment.createdAt,
+      editedAt: comment.editedAt ?? null,
+      quotedText: comment.quotedText ?? null,
+      url: comment.url,
+      issue: issue
+        ? {
+            id: issue.id,
+            identifier: issue.identifier,
+            title: issue.title,
+          }
+        : null,
+      parent: parent
+        ? {
+            id: parent.id,
+          }
+        : null,
+      user: user
+        ? {
+            id: user.id,
+            name: user.name,
+            displayName: user.displayName,
+            email: user.email,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeTeam(team: any) {
+    return {
+      id: team.id,
+      name: team.name,
+      key: team.key,
+      description: team.description,
+      color: team.color ?? null,
+      icon: team.icon ?? null,
+      private: team.private ?? false,
+      timezone: team.timezone ?? null,
+      archivedAt: team.archivedAt ?? null,
+    };
+  }
+
+  private async normalizeCycle(cycle: any) {
+    const team = cycle.team ? await cycle.team : null;
+
+    return {
+      id: cycle.id,
+      number: cycle.number,
+      name: cycle.name,
+      description: cycle.description,
+      startsAt: cycle.startsAt,
+      endsAt: cycle.endsAt,
+      completedAt: cycle.completedAt ?? null,
+      progress: typeof cycle.progress === 'number' ? Math.round(cycle.progress * 100) / 100 : null,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+    };
+  }
+
+  private normalizeCycleStats(cycle: any, issueCount: number, completedIssueCount: number) {
+    return {
+      id: cycle.id,
+      number: cycle.number,
+      name: cycle.name,
+      progress: issueCount > 0 ? Math.round((completedIssueCount / issueCount) * 10000) / 100 : 0,
+      issueCount,
+      completedIssueCount,
+      scopeHistory: cycle.scopeHistory ?? [],
+      completedScopeHistory: cycle.completedScopeHistory ?? [],
+      completedIssueCountHistory: cycle.completedIssueCountHistory ?? [],
+      issueCountHistory: cycle.issueCountHistory ?? [],
+    };
+  }
+
+  private async normalizeTemplate(template: Template) {
+    const team = template.team ? await template.team : null;
+    const creator = template.creator ? await template.creator : null;
+
+    return {
+      id: template.id,
+      name: template.name,
+      description: template.description ?? null,
+      sortOrder: template.sortOrder,
+      type: template.type,
+      archivedAt: template.archivedAt ?? null,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt,
+      templateData: template.templateData,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+      creator: creator
+        ? {
+            id: creator.id,
+            name: creator.name,
+            email: creator.email,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeTeamMembership(membership: any) {
+    const [team, user] = await Promise.all([
+      membership.team ? membership.team : Promise.resolve(null),
+      membership.user ? membership.user : Promise.resolve(null),
+    ]);
+
+    return {
+      id: membership.id,
+      owner: membership.owner ?? false,
+      sortOrder: membership.sortOrder ?? null,
+      createdAt: membership.createdAt,
+      updatedAt: membership.updatedAt,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+      user: user ? this.normalizeSimpleUser(user) : null,
+    };
+  }
+
+  private async normalizeIssueLabel(label: any) {
+    const [team, parent] = await Promise.all([
+      label.team ? label.team : Promise.resolve(null),
+      label.parent ? label.parent : Promise.resolve(null),
+    ]);
+
+    return {
+      id: label.id,
+      name: label.name,
+      color: label.color,
+      description: label.description ?? null,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+      parent: parent
+        ? {
+            id: parent.id,
+            name: parent.name,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeWorkflowState(state: any) {
+    const team = state.team ? await state.team : null;
+    return {
+      id: state.id,
+      name: state.name,
+      type: state.type,
+      position: state.position,
+      color: state.color,
+      description: state.description ?? null,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeWebhook(webhook: any) {
+    const team = webhook.team ? await webhook.team : null;
+    const creator = webhook.creator ? await webhook.creator : null;
+
+    return {
+      id: webhook.id,
+      label: webhook.label ?? null,
+      url: webhook.url ?? null,
+      enabled: webhook.enabled,
+      allPublicTeams: webhook.allPublicTeams,
+      resourceTypes: webhook.resourceTypes,
+      createdAt: webhook.createdAt,
+      updatedAt: webhook.updatedAt,
+      archivedAt: webhook.archivedAt ?? null,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+      creator: creator
+        ? {
+            id: creator.id,
+            name: creator.name,
+            email: creator.email,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeAttachment(attachment: any) {
+    const issue = attachment.issue ? await attachment.issue : null;
+
+    return {
+      id: attachment.id,
+      title: attachment.title,
+      subtitle: attachment.subtitle ?? null,
+      url: attachment.url,
+      metadata: attachment.metadata ?? {},
+      sourceType: attachment.sourceType ?? null,
+      createdAt: attachment.createdAt,
+      updatedAt: attachment.updatedAt,
+      issue: issue
+        ? {
+            id: issue.id,
+            identifier: issue.identifier,
+            title: issue.title,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeNotification(notification: any) {
+    const actor = notification.actor ? await notification.actor : null;
+
+    return {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      subtitle: notification.subtitle,
+      url: notification.url,
+      readAt: notification.readAt ?? null,
+      snoozedUntilAt: notification.snoozedUntilAt ?? null,
+      createdAt: notification.createdAt,
+      updatedAt: notification.updatedAt,
+      actor: actor
+        ? {
+            id: actor.id,
+            name: actor.name,
+            email: actor.email,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeNotificationSubscription(subscription: any) {
+    const [team, project, cycle, label, initiative, customView, subscriber] = await Promise.all([
+      this.normalizeTeamReference(subscription.team),
+      this.normalizeNamedReference(subscription.project),
+      this.normalizeNamedReference(subscription.cycle),
+      this.normalizeNamedReference(subscription.label),
+      this.normalizeNamedReference(subscription.initiative),
+      this.normalizeNamedReference(subscription.customView),
+      this.normalizeUserReference(subscription.subscriber ? Promise.resolve(subscription.subscriber) as any : undefined),
+    ]);
+
+    return {
+      id: subscription.id,
+      active: subscription.active,
+      notificationSubscriptionTypes: subscription.notificationSubscriptionTypes ?? [],
+      contextViewType: subscription.contextViewType ?? null,
+      userContextViewType: subscription.userContextViewType ?? null,
+      createdAt: subscription.createdAt,
+      updatedAt: subscription.updatedAt,
+      team,
+      project,
+      cycle,
+      label,
+      initiative,
+      customView,
+      subscriber,
+    };
+  }
+
+  private normalizeAuthenticationSession(session: any) {
+    return {
+      id: session.id,
+      name: session.name,
+      client: session.client ?? null,
+      browserType: session.browserType ?? null,
+      operatingSystem: session.operatingSystem ?? null,
+      ip: session.ip ?? null,
+      location: session.location ?? null,
+      isCurrentSession: session.isCurrentSession,
+      countryCodes: session.countryCodes ?? [],
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      lastActiveAt: session.lastActiveAt ?? null,
+      type: session.type,
+    };
+  }
+
+  private async normalizeAuditEntry(entry: any) {
+    const actor = entry.actor ? await entry.actor : null;
+
+    return {
+      id: entry.id,
+      type: entry.type,
+      actorId: entry.actorId ?? null,
+      countryCode: entry.countryCode ?? null,
+      ip: entry.ip ?? null,
+      metadata: entry.metadata ?? null,
+      requestInformation: entry.requestInformation ?? null,
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt,
+      actor: actor
+        ? {
+            id: actor.id,
+            name: actor.name,
+            email: actor.email,
+          }
+        : null,
+    };
+  }
+
+  private async normalizeIntegration(integration: any) {
+    const [creator, team] = await Promise.all([
+      integration.creator ? integration.creator : Promise.resolve(null),
+      integration.team ? integration.team : Promise.resolve(null),
+    ]);
+
+    return {
+      id: integration.id,
+      service: integration.service,
+      createdAt: integration.createdAt,
+      updatedAt: integration.updatedAt,
+      archivedAt: integration.archivedAt ?? null,
+      creator: creator
+        ? {
+            id: creator.id,
+            name: creator.name,
+            email: creator.email,
+          }
+        : null,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            key: team.key,
+          }
+        : null,
+    };
+  }
+
   private async assertRoadmapsEnabled() {
     const organization = await this.client.organization;
 
@@ -1896,6 +2268,233 @@ export class LinearService {
     }));
   }
 
+  async createTeam(args: {
+    name: string;
+    key?: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    timezone?: string;
+    parentId?: string;
+    private?: boolean;
+  }) {
+    const payload = await this.client.createTeam(this.compactObject({
+      name: args.name,
+      key: this.nonEmptyString(args.key),
+      description: this.nonEmptyString(args.description),
+      color: this.nonEmptyString(args.color),
+      icon: this.nonEmptyString(args.icon),
+      timezone: this.nonEmptyString(args.timezone),
+      parentId: this.nonEmptyString(args.parentId),
+      private: args.private,
+    }));
+    if (!payload.success || !payload.team) {
+      throw new Error('Failed to create team');
+    }
+
+    return this.normalizeTeam(await payload.team);
+  }
+
+  async updateTeam(args: {
+    id: string;
+    name?: string;
+    key?: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    timezone?: string;
+    parentId?: string;
+    private?: boolean;
+  }) {
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      key: this.nonEmptyString(args.key),
+      description: this.nonEmptyString(args.description),
+      color: this.nonEmptyString(args.color),
+      icon: this.nonEmptyString(args.icon),
+      timezone: this.nonEmptyString(args.timezone),
+      parentId: this.nonEmptyString(args.parentId),
+      private: args.private,
+    });
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one team field must be provided');
+    }
+
+    const payload = await this.client.updateTeam(args.id, updateInput);
+    if (!payload.success || !payload.team) {
+      throw new Error(`Failed to update team ${args.id}`);
+    }
+
+    return this.normalizeTeam(await payload.team);
+  }
+
+  async archiveTeam(id: string) {
+    const payload = await this.client.deleteTeam(id);
+    if (!payload.success) {
+      throw new Error(`Failed to archive team ${id}`);
+    }
+
+    return { success: true, id: payload.entityId };
+  }
+
+  async getTeamMemberships(args: {
+    teamId: string;
+    limit?: number;
+    includeArchived?: boolean;
+    orderBy?: string;
+  }) {
+    const team = await this.client.team(args.teamId);
+    if (!team) {
+      throw new Error(`Team with ID ${args.teamId} not found`);
+    }
+
+    const memberships = await team.memberships(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    return Promise.all(memberships.nodes.map((membership) => this.normalizeTeamMembership(membership)));
+  }
+
+  async addUserToTeam(args: { teamId: string; userId: string; owner?: boolean; sortOrder?: number }) {
+    const payload = await this.client.createTeamMembership(this.compactObject(args));
+    if (!payload.success || !payload.teamMembership) {
+      throw new Error(`Failed to add user ${args.userId} to team ${args.teamId}`);
+    }
+
+    return this.normalizeTeamMembership(await payload.teamMembership);
+  }
+
+  async removeUserFromTeam(args: { teamId: string; userId: string; alsoLeaveParentTeams?: boolean }) {
+    const team = await this.client.team(args.teamId);
+    if (!team) {
+      throw new Error(`Team with ID ${args.teamId} not found`);
+    }
+
+    const memberships = await team.memberships({ first: 250 });
+    const matchingMembership = await Promise.all(memberships.nodes.map(async (membership) => ({
+      membership,
+      user: membership.user ? await membership.user : null,
+    }))).then((entries) => entries.find((entry) => entry.user?.id === args.userId)?.membership);
+
+    if (!matchingMembership) {
+      throw new Error(`User ${args.userId} is not a member of team ${args.teamId}`);
+    }
+
+    const payload = await this.client.deleteTeamMembership(
+      matchingMembership.id,
+      this.compactObject({ alsoLeaveParentTeams: args.alsoLeaveParentTeams }),
+    );
+    if (!payload.success) {
+      throw new Error(`Failed to remove user ${args.userId} from team ${args.teamId}`);
+    }
+
+    return { success: true, teamId: args.teamId, userId: args.userId };
+  }
+
+  async updateTeamMembership(args: { id: string; owner?: boolean; sortOrder?: number }) {
+    const updateInput = this.compactObject({ owner: args.owner, sortOrder: args.sortOrder });
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one team membership field must be provided');
+    }
+
+    const payload = await this.client.updateTeamMembership(args.id, updateInput);
+    if (!payload.success || !payload.teamMembership) {
+      throw new Error(`Failed to update team membership ${args.id}`);
+    }
+
+    return this.normalizeTeamMembership(await payload.teamMembership);
+  }
+
+  async getTeamLabels(args: { teamId: string; limit?: number; includeArchived?: boolean; orderBy?: string }) {
+    const team = await this.client.team(args.teamId);
+    if (!team) {
+      throw new Error(`Team with ID ${args.teamId} not found`);
+    }
+
+    const labels = await team.labels(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    return Promise.all(labels.nodes.map((label) => this.normalizeIssueLabel(label)));
+  }
+
+  async createTeamLabel(args: {
+    teamId: string;
+    name: string;
+    color?: string;
+    description?: string;
+    parentId?: string;
+  }) {
+    const payload = await this.client.createIssueLabel(this.compactObject({
+      teamId: args.teamId,
+      name: args.name,
+      color: this.nonEmptyString(args.color),
+      description: this.nonEmptyString(args.description),
+      parentId: this.nonEmptyString(args.parentId),
+    }));
+    if (!payload.success || !payload.issueLabel) {
+      throw new Error(`Failed to create label ${args.name}`);
+    }
+
+    return this.normalizeIssueLabel(await payload.issueLabel);
+  }
+
+  async createWorkflowState(args: {
+    name: string;
+    teamId: string;
+    type: string;
+    color: string;
+    description?: string;
+    position?: number;
+  }) {
+    const payload = await this.client.createWorkflowState(this.compactObject({
+      name: args.name,
+      teamId: args.teamId,
+      type: args.type,
+      color: args.color,
+      description: this.nonEmptyString(args.description),
+      position: args.position,
+    }));
+    if (!payload.success || !payload.workflowState) {
+      throw new Error(`Failed to create workflow state ${args.name}`);
+    }
+
+    return this.normalizeWorkflowState(await payload.workflowState);
+  }
+
+  async updateWorkflowState(args: {
+    id: string;
+    name?: string;
+    color?: string;
+    description?: string;
+    position?: number;
+  }) {
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      color: this.nonEmptyString(args.color),
+      description: this.nonEmptyString(args.description),
+      position: args.position,
+    });
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one workflow state field must be provided');
+    }
+
+    const payload = await this.client.updateWorkflowState(args.id, updateInput);
+    if (!payload.success || !payload.workflowState) {
+      throw new Error(`Failed to update workflow state ${args.id}`);
+    }
+
+    return this.normalizeWorkflowState(await payload.workflowState);
+  }
+
   async getProjects() {
     const projects = await this.client.projects();
     return Promise.all(
@@ -2052,6 +2651,195 @@ export class LinearService {
       totalCount: payload.totalCount,
       nodes: await Promise.all(payload.nodes.map((document) => this.normalizeDocumentSearchResult(document))),
     };
+  }
+
+  async getWebhooks(args: { teamId?: string; limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const source = async () => {
+      if (!args.teamId) {
+        return this.client.webhooks(this.compactObject({
+          first: args.limit ?? 25,
+          includeArchived: args.includeArchived ?? false,
+          orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        }));
+      }
+
+      const team = await this.client.team(args.teamId);
+      if (!team) {
+        throw new Error(`Team with ID ${args.teamId} not found`);
+      }
+
+      return team.webhooks(this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }));
+    };
+
+    const webhooks = await source();
+    return Promise.all(webhooks.nodes.map((webhook) => this.normalizeWebhook(webhook)));
+  }
+
+  async createWebhook(args: {
+    url: string;
+    resourceTypes: string[];
+    teamId?: string;
+    enabled?: boolean;
+    label?: string;
+    secret?: string;
+    allPublicTeams?: boolean;
+  }) {
+    const payload = await this.client.createWebhook(this.compactObject({
+      url: args.url,
+      resourceTypes: args.resourceTypes,
+      teamId: this.nonEmptyString(args.teamId),
+      enabled: args.enabled,
+      label: this.nonEmptyString(args.label),
+      secret: this.nonEmptyString(args.secret),
+      allPublicTeams: args.allPublicTeams,
+    }));
+    if (!payload.success || !payload.webhook) {
+      throw new Error('Failed to create webhook');
+    }
+
+    return this.normalizeWebhook(await payload.webhook);
+  }
+
+  async deleteWebhook(id: string) {
+    const payload = await this.client.deleteWebhook(id);
+    if (!payload.success) {
+      throw new Error(`Failed to delete webhook ${id}`);
+    }
+
+    return { success: true, id: payload.entityId };
+  }
+
+  async getAttachments(args: { issueId: string; limit?: number; includeArchived?: boolean; orderBy?: string }) {
+    const issue = await this.client.issue(args.issueId);
+    if (!issue) {
+      throw new Error(`Issue with ID ${args.issueId} not found`);
+    }
+
+    const attachments = await issue.attachments(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+    }));
+    return Promise.all(attachments.nodes.map((attachment) => this.normalizeAttachment(attachment)));
+  }
+
+  async addAttachment(args: {
+    issueId: string;
+    title: string;
+    url: string;
+    subtitle?: string;
+    iconUrl?: string;
+    metadata?: JsonObject;
+    commentBody?: string;
+    groupBySource?: boolean;
+  }) {
+    const payload = await this.client.createAttachment(this.compactObject({
+      issueId: args.issueId,
+      title: args.title,
+      url: args.url,
+      subtitle: this.nonEmptyString(args.subtitle),
+      iconUrl: this.nonEmptyString(args.iconUrl),
+      metadata: this.nonEmptyObject(args.metadata),
+      commentBody: this.nonEmptyString(args.commentBody),
+      groupBySource: args.groupBySource,
+    }));
+    if (!payload.success || !payload.attachment) {
+      throw new Error('Failed to add attachment');
+    }
+
+    return this.normalizeAttachment(await payload.attachment);
+  }
+
+  async getNotifications(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const notifications = await this.client.notifications(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+    }));
+    return Promise.all(notifications.nodes.map((notification) => this.normalizeNotification(notification)));
+  }
+
+  async markNotificationAsRead(id: string) {
+    const payload = await this.client.updateNotification(id, { readAt: new Date() });
+    if (!payload.success) {
+      throw new Error(`Failed to mark notification ${id} as read`);
+    }
+
+    return { success: true, id };
+  }
+
+  async getSubscriptions(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const subscriptions = await this.client.notificationSubscriptions(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+    }));
+    return Promise.all(subscriptions.nodes.map((subscription) => this.normalizeNotificationSubscription(subscription)));
+  }
+
+  async markAllNotificationsAsRead(limit = 100) {
+    const notifications = await this.client.notifications({ first: limit });
+    const unread = notifications.nodes.filter((notification) => !notification.readAt);
+    await Promise.all(unread.map((notification) => this.client.updateNotification(notification.id, { readAt: new Date() })));
+    return { success: true, count: unread.length };
+  }
+
+  async getUnreadNotificationCount(limit = 100) {
+    const notifications = await this.client.notifications({ first: limit });
+    return { count: notifications.nodes.filter((notification) => !notification.readAt).length };
+  }
+
+  async getAuthenticationSessions() {
+    const sessions = await this.client.authenticationSessions;
+    return sessions.map((session) => this.normalizeAuthenticationSession(session));
+  }
+
+  async logoutSession(sessionId: string) {
+    const payload = await this.client.logoutSession(sessionId);
+    return { success: payload.success };
+  }
+
+  async logoutOtherSessions() {
+    const payload = await this.client.logoutOtherSessions();
+    return { success: payload.success };
+  }
+
+  async logoutAllSessions() {
+    const payload = await this.client.logoutAllSessions();
+    return { success: payload.success };
+  }
+
+  async getOrganizationAuditEvents(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const entries = await this.client.auditEntries(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+    }));
+    return Promise.all(entries.nodes.map((entry) => this.normalizeAuditEntry(entry)));
+  }
+
+  async getUserAuditEvents(args: { userId: string; limit?: number; includeArchived?: boolean; orderBy?: string }) {
+    const entries = await this.client.auditEntries(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      filter: { actor: { id: { eq: args.userId } } },
+    }));
+    return Promise.all(entries.nodes.map((entry) => this.normalizeAuditEntry(entry)));
+  }
+
+  async getIntegrations(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
+    const organization = await this.client.organization;
+    const integrations = await organization.integrations(this.compactObject({
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+    }));
+    return Promise.all(integrations.nodes.map((integration) => this.normalizeIntegration(integration)));
   }
 
   async getDocumentContentHistory(id: string) {
@@ -3211,22 +3999,23 @@ export class LinearService {
    */
   async subscribeToIssue(issueId: string) {
     try {
-      // Get the issue
       const issue = await this.client.issue(issueId);
       if (!issue) {
         throw new Error(`Issue with ID ${issueId} not found`);
       }
 
-      // Get current user info
       const viewer = await this.client.viewer;
+      const subscribers = await issue.subscribers({ first: 250 });
+      const subscriberIds = subscribers.nodes.map((subscriber) => subscriber.id);
+      const nextSubscriberIds = subscriberIds.includes(viewer.id)
+        ? subscriberIds
+        : [...subscriberIds, viewer.id];
 
-      // For now, we'll just acknowledge the request with a success message
-      // The actual subscription logic would need to be implemented based on the Linear SDK specifics
-      // In a production environment, we should check the SDK documentation for the correct method
+      await this.client.updateIssue(issue.id, { subscriberIds: nextSubscriberIds });
 
       return {
         success: true,
-        message: `User ${viewer.name} (${viewer.id}) would be subscribed to issue ${issue.identifier}. (Note: Actual subscription API call implementation needed)`,
+        message: `User ${viewer.name} (${viewer.id}) is subscribed to issue ${issue.identifier}.`,
       };
     } catch (error) {
       console.error('Error subscribing to issue:', error);
@@ -3573,6 +4362,45 @@ export class LinearService {
     }
   }
 
+  async updateComment(args: {
+    id: string;
+    body?: string;
+    quotedText?: string;
+    resolvingCommentId?: string;
+    resolvingUserId?: string;
+    subscriberIds?: string[];
+    doNotSubscribeToIssue?: boolean;
+  }) {
+    const updateInput = this.compactObject({
+      body: this.nonEmptyString(args.body),
+      quotedText: this.nonEmptyString(args.quotedText),
+      resolvingCommentId: this.nonEmptyString(args.resolvingCommentId),
+      resolvingUserId: this.nonEmptyString(args.resolvingUserId),
+      subscriberIds: this.nonEmptyArray(args.subscriberIds),
+      doNotSubscribeToIssue: args.doNotSubscribeToIssue,
+    });
+
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one comment field must be provided');
+    }
+
+    const payload = await this.client.updateComment(args.id, updateInput);
+    if (!payload.success || !payload.comment) {
+      throw new Error(`Failed to update comment ${args.id}`);
+    }
+
+    return this.normalizeComment(await payload.comment);
+  }
+
+  async deleteComment(id: string) {
+    const payload = await this.client.deleteComment(id);
+    if (!payload.success) {
+      throw new Error(`Failed to delete comment ${id}`);
+    }
+
+    return { success: true, id: payload.entityId };
+  }
+
   /**
    * Update an existing project
    * @param args Project update data
@@ -3652,6 +4480,58 @@ export class LinearService {
       console.error('Error updating project:', error);
       throw error;
     }
+  }
+
+  async getProjectMembers(args: {
+    projectId: string;
+    limit?: number;
+    includeArchived?: boolean;
+    includeDisabled?: boolean;
+    orderBy?: string;
+  }) {
+    const project = await this.client.project(args.projectId);
+    if (!project) {
+      throw new Error(`Project with ID ${args.projectId} not found`);
+    }
+
+    const members = await project.members(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        includeDisabled: args.includeDisabled ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      }),
+    );
+
+    return members.nodes.map((user) => this.normalizeSimpleUser(user));
+  }
+
+  async addProjectMember(projectId: string, userId: string) {
+    const project = await this.client.project(projectId);
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+
+    const members = await project.members({ first: 250 });
+    const existingIds = members.nodes.map((member) => member.id);
+    const memberIds = existingIds.includes(userId) ? existingIds : [...existingIds, userId];
+    await this.updateProject({ id: projectId, memberIds });
+
+    return { success: true, projectId, userId };
+  }
+
+  async removeProjectMember(projectId: string, userId: string) {
+    const project = await this.client.project(projectId);
+    if (!project) {
+      throw new Error(`Project with ID ${projectId} not found`);
+    }
+
+    const members = await project.members({ first: 250 });
+    const existingIds = members.nodes.map((member) => member.id);
+    const memberIds = existingIds.filter((id) => id !== userId);
+    await this.updateProject({ id: projectId, memberIds });
+
+    return { success: true, projectId, userId };
   }
 
   async updateMilestone(args: {
@@ -3851,6 +4731,202 @@ export class LinearService {
       console.error('Error getting cycles:', error);
       throw error;
     }
+  }
+
+  async getCycleById(id: string) {
+    const cycle = await this.client.cycle(id);
+    if (!cycle) {
+      throw new Error(`Cycle with ID ${id} not found`);
+    }
+
+    return this.normalizeCycle(cycle);
+  }
+
+  async createCycle(args: {
+    teamId: string;
+    startsAt: string;
+    endsAt: string;
+    name?: string;
+    description?: string;
+    completedAt?: string;
+  }) {
+    const payload = await this.client.createCycle(this.compactObject({
+      teamId: args.teamId,
+      startsAt: new Date(args.startsAt),
+      endsAt: new Date(args.endsAt),
+      name: this.nonEmptyString(args.name),
+      description: this.nonEmptyString(args.description),
+      completedAt: this.nonEmptyString(args.completedAt) ? new Date(args.completedAt!) : undefined,
+    }));
+    if (!payload.success || !payload.cycle) {
+      throw new Error('Failed to create cycle');
+    }
+
+    return this.normalizeCycle(await payload.cycle);
+  }
+
+  async updateCycle(args: {
+    id: string;
+    startsAt?: string;
+    endsAt?: string;
+    name?: string;
+    description?: string;
+    completedAt?: string;
+  }) {
+    const updateInput = this.compactObject({
+      startsAt: this.nonEmptyString(args.startsAt) ? new Date(args.startsAt!) : undefined,
+      endsAt: this.nonEmptyString(args.endsAt) ? new Date(args.endsAt!) : undefined,
+      name: this.nonEmptyString(args.name),
+      description: this.nonEmptyString(args.description),
+      completedAt: this.nonEmptyString(args.completedAt) ? new Date(args.completedAt!) : undefined,
+    });
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one cycle field must be provided');
+    }
+
+    const payload = await this.client.updateCycle(args.id, updateInput);
+    if (!payload.success || !payload.cycle) {
+      throw new Error(`Failed to update cycle ${args.id}`);
+    }
+
+    return this.normalizeCycle(await payload.cycle);
+  }
+
+  async completeCycle(id: string) {
+    return this.updateCycle({ id, completedAt: new Date().toISOString() });
+  }
+
+  async getCycleStats(id: string) {
+    const cycle = await this.client.cycle(id);
+    if (!cycle) {
+      throw new Error(`Cycle with ID ${id} not found`);
+    }
+
+    const issues = await this.client.issues({ filter: { cycle: { id: { eq: id } } }, first: 100 });
+    const issueCount = issues.nodes.length;
+    const completedIssueCount = issues.nodes.filter((issue) => issue.completedAt).length;
+    return this.normalizeCycleStats(cycle, issueCount, completedIssueCount);
+  }
+
+  async getIssueTemplates(args: { limit?: number; includeArchived?: boolean; orderBy?: string }) {
+    const organization = await this.client.organization;
+    const templates = await organization.templates(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter: { type: { eq: 'issue' } },
+      }),
+    );
+
+    return Promise.all(templates.nodes.map((template) => this.normalizeTemplate(template)));
+  }
+
+  async getIssueTemplateById(id: string) {
+    const template = await this.client.template(id);
+    if (!template) {
+      throw new Error(`Template with ID ${id} not found`);
+    }
+
+    return this.normalizeTemplate(template);
+  }
+
+  async createIssueTemplate(args: {
+    name: string;
+    description?: string;
+    teamId?: string;
+    templateData: JsonObject;
+    sortOrder?: number;
+  }) {
+    const payload = await this.client.createTemplate(this.compactObject({
+      name: args.name,
+      description: this.nonEmptyString(args.description),
+      teamId: this.nonEmptyString(args.teamId),
+      templateData: args.templateData,
+      sortOrder: args.sortOrder,
+      type: 'issue',
+    }));
+    if (!payload.success || !payload.template) {
+      throw new Error('Failed to create issue template');
+    }
+
+    return this.normalizeTemplate(await payload.template);
+  }
+
+  async updateIssueTemplate(args: {
+    id: string;
+    name?: string;
+    description?: string | null;
+    teamId?: string | null;
+    templateData?: JsonObject;
+    sortOrder?: number;
+  }) {
+    const updateInput = this.compactObject({
+      name: this.nonEmptyString(args.name),
+      description: this.nullableNonEmptyString(args.description),
+      teamId: this.nullableNonEmptyString(args.teamId),
+      templateData: this.nonEmptyObject(args.templateData),
+      sortOrder: args.sortOrder,
+    });
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one template field must be provided');
+    }
+
+    const payload = await this.client.updateTemplate(args.id, updateInput);
+    if (!payload.success || !payload.template) {
+      throw new Error(`Failed to update issue template ${args.id}`);
+    }
+
+    return this.normalizeTemplate(await payload.template);
+  }
+
+  async createIssueFromTemplate(args: {
+    teamId: string;
+    templateId: string;
+    title?: string;
+    description?: string;
+    priority?: number;
+    projectId?: string;
+    projectMilestoneId?: string;
+    cycleId?: string;
+  }) {
+    return this.createIssue({
+      teamId: args.teamId,
+      templateId: args.templateId,
+      title: args.title ?? 'Template issue',
+      description: args.description,
+      priority: args.priority,
+      projectId: args.projectId,
+      projectMilestoneId: args.projectMilestoneId,
+      cycleId: args.cycleId,
+    });
+  }
+
+  async getTeamTemplates(args: { teamId: string; limit?: number; includeArchived?: boolean; orderBy?: string }) {
+    const team = await this.client.team(args.teamId);
+    if (!team) {
+      throw new Error(`Team with ID ${args.teamId} not found`);
+    }
+
+    const templates = await team.templates(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter: { type: { eq: 'issue' } },
+      }),
+    );
+
+    return Promise.all(templates.nodes.map((template) => this.normalizeTemplate(template)));
+  }
+
+  async archiveTemplate(id: string) {
+    const payload = await this.client.deleteTemplate(id);
+    if (!payload.success) {
+      throw new Error(`Failed to archive template ${id}`);
+    }
+
+    return { success: true, id: payload.entityId };
   }
 
   async getCycleIssues(args: CycleIssueQueryArgs) {

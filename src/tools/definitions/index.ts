@@ -9,6 +9,8 @@ import {
   updateIssueToolDefinition,
   updateIssueCustomFieldToolDefinition,
   createCommentToolDefinition,
+  updateCommentToolDefinition,
+  deleteCommentToolDefinition,
   addIssueLabelToolDefinition,
   removeIssueLabelToolDefinition,
   // New Issue Management tools
@@ -36,6 +38,9 @@ import {
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+  getProjectMembersToolDefinition,
+  addProjectMemberToolDefinition,
+  removeProjectMemberToolDefinition,
 } from './project-tools.js';
 import {
   archiveRoadmapToolDefinition,
@@ -65,6 +70,25 @@ import {
 } from './document-tools.js';
 import { getRateLimitStatusToolDefinition, getServerStatusToolDefinition } from './server-tools.js';
 import {
+  getWebhooksToolDefinition,
+  createWebhookToolDefinition,
+  deleteWebhookToolDefinition,
+  getAttachmentsToolDefinition,
+  addAttachmentToolDefinition,
+  getNotificationsToolDefinition,
+  markNotificationAsReadToolDefinition,
+  getSubscriptionsToolDefinition,
+  markAllNotificationsAsReadToolDefinition,
+  getUnreadNotificationCountToolDefinition,
+  getAuthenticationSessionsToolDefinition,
+  logoutSessionToolDefinition,
+  logoutOtherSessionsToolDefinition,
+  logoutAllSessionsToolDefinition,
+  getOrganizationAuditEventsToolDefinition,
+  getUserAuditEventsToolDefinition,
+  getIntegrationsToolDefinition,
+} from './ops-tools.js';
+import {
   addToFavoritesToolDefinition,
   createSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
@@ -73,7 +97,30 @@ import {
   removeFromFavoritesToolDefinition,
   updateSavedViewToolDefinition,
 } from './view-tools.js';
-import { getTeamsToolDefinition, getWorkflowStatesToolDefinition } from './team-tools.js';
+import {
+  getIssueTemplatesToolDefinition,
+  getIssueTemplateByIdToolDefinition,
+  createIssueTemplateToolDefinition,
+  updateIssueTemplateToolDefinition,
+  createIssueFromTemplateToolDefinition,
+  getTeamTemplatesToolDefinition,
+  archiveTemplateToolDefinition,
+} from './template-tools.js';
+import {
+  getTeamsToolDefinition,
+  getWorkflowStatesToolDefinition,
+  createWorkflowStateToolDefinition,
+  updateWorkflowStateToolDefinition,
+  updateTeamToolDefinition,
+  getTeamMembershipsToolDefinition,
+  createTeamToolDefinition,
+  archiveTeamToolDefinition,
+  addUserToTeamToolDefinition,
+  removeUserFromTeamToolDefinition,
+  updateTeamMembershipToolDefinition,
+  getTeamLabelsToolDefinition,
+  createTeamLabelToolDefinition,
+} from './team-tools.js';
 import {
   getViewerToolDefinition,
   getOrganizationToolDefinition,
@@ -83,6 +130,11 @@ import {
 import {
   // Cycle Management tools
   getCyclesToolDefinition,
+  getCycleByIdToolDefinition,
+  createCycleToolDefinition,
+  updateCycleToolDefinition,
+  completeCycleToolDefinition,
+  getCycleStatsToolDefinition,
   getActiveCycleToolDefinition,
   getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,
@@ -101,6 +153,17 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   // Team tools
   getTeamsToolDefinition,
   getWorkflowStatesToolDefinition,
+  createWorkflowStateToolDefinition,
+  updateWorkflowStateToolDefinition,
+  updateTeamToolDefinition,
+  getTeamMembershipsToolDefinition,
+  createTeamToolDefinition,
+  archiveTeamToolDefinition,
+  addUserToTeamToolDefinition,
+  removeUserFromTeamToolDefinition,
+  updateTeamMembershipToolDefinition,
+  getTeamLabelsToolDefinition,
+  createTeamLabelToolDefinition,
 
   // Project tools
   getProjectsToolDefinition,
@@ -115,6 +178,9 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+  getProjectMembersToolDefinition,
+  addProjectMemberToolDefinition,
+  removeProjectMemberToolDefinition,
 
   // Roadmap tools
   ...roadmapToolDefinitions,
@@ -141,6 +207,25 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   getRateLimitStatusToolDefinition,
   getServerStatusToolDefinition,
 
+  // Ops tools
+  getWebhooksToolDefinition,
+  createWebhookToolDefinition,
+  deleteWebhookToolDefinition,
+  getAttachmentsToolDefinition,
+  addAttachmentToolDefinition,
+  getNotificationsToolDefinition,
+  markNotificationAsReadToolDefinition,
+  getSubscriptionsToolDefinition,
+  markAllNotificationsAsReadToolDefinition,
+  getUnreadNotificationCountToolDefinition,
+  getAuthenticationSessionsToolDefinition,
+  logoutSessionToolDefinition,
+  logoutOtherSessionsToolDefinition,
+  logoutAllSessionsToolDefinition,
+  getOrganizationAuditEventsToolDefinition,
+  getUserAuditEventsToolDefinition,
+  getIntegrationsToolDefinition,
+
   // View tools
   getSavedViewsToolDefinition,
   createSavedViewToolDefinition,
@@ -152,6 +237,11 @@ export const allToolDefinitions: MCPToolDefinition[] = [
 
   // Cycle Management tools
   getCyclesToolDefinition,
+  getCycleByIdToolDefinition,
+  createCycleToolDefinition,
+  updateCycleToolDefinition,
+  completeCycleToolDefinition,
+  getCycleStatsToolDefinition,
   getActiveCycleToolDefinition,
   getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,
@@ -170,8 +260,19 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   updateIssueToolDefinition,
   updateIssueCustomFieldToolDefinition,
   createCommentToolDefinition,
+  updateCommentToolDefinition,
+  deleteCommentToolDefinition,
   addIssueLabelToolDefinition,
   removeIssueLabelToolDefinition,
+
+  // Template tools
+  getIssueTemplatesToolDefinition,
+  getIssueTemplateByIdToolDefinition,
+  createIssueTemplateToolDefinition,
+  updateIssueTemplateToolDefinition,
+  createIssueFromTemplateToolDefinition,
+  getTeamTemplatesToolDefinition,
+  archiveTemplateToolDefinition,
 
   // New Issue Management tools
   assignIssueToolDefinition,
@@ -199,12 +300,25 @@ export {
   updateIssueToolDefinition,
   updateIssueCustomFieldToolDefinition,
   createCommentToolDefinition,
+  updateCommentToolDefinition,
+  deleteCommentToolDefinition,
   addIssueLabelToolDefinition,
   removeIssueLabelToolDefinition,
   getProjectsToolDefinition,
   createProjectToolDefinition,
   getTeamsToolDefinition,
   getWorkflowStatesToolDefinition,
+  createWorkflowStateToolDefinition,
+  updateWorkflowStateToolDefinition,
+  updateTeamToolDefinition,
+  getTeamMembershipsToolDefinition,
+  createTeamToolDefinition,
+  archiveTeamToolDefinition,
+  addUserToTeamToolDefinition,
+  removeUserFromTeamToolDefinition,
+  updateTeamMembershipToolDefinition,
+  getTeamLabelsToolDefinition,
+  createTeamLabelToolDefinition,
   getViewerToolDefinition,
   getOrganizationToolDefinition,
   getUsersToolDefinition,
@@ -240,6 +354,9 @@ export {
   addIssueToProjectToolDefinition,
   removeIssueFromProjectToolDefinition,
   getProjectIssuesToolDefinition,
+  getProjectMembersToolDefinition,
+  addProjectMemberToolDefinition,
+  removeProjectMemberToolDefinition,
 
   // Milestone tools
   getMilestonesToolDefinition,
@@ -262,6 +379,23 @@ export {
   // Server tools
   getRateLimitStatusToolDefinition,
   getServerStatusToolDefinition,
+  getWebhooksToolDefinition,
+  createWebhookToolDefinition,
+  deleteWebhookToolDefinition,
+  getAttachmentsToolDefinition,
+  addAttachmentToolDefinition,
+  getNotificationsToolDefinition,
+  markNotificationAsReadToolDefinition,
+  getSubscriptionsToolDefinition,
+  markAllNotificationsAsReadToolDefinition,
+  getUnreadNotificationCountToolDefinition,
+  getAuthenticationSessionsToolDefinition,
+  logoutSessionToolDefinition,
+  logoutOtherSessionsToolDefinition,
+  logoutAllSessionsToolDefinition,
+  getOrganizationAuditEventsToolDefinition,
+  getUserAuditEventsToolDefinition,
+  getIntegrationsToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,
@@ -274,6 +408,11 @@ export {
 
   // Cycle Management tools
   getCyclesToolDefinition,
+  getCycleByIdToolDefinition,
+  createCycleToolDefinition,
+  updateCycleToolDefinition,
+  completeCycleToolDefinition,
+  getCycleStatsToolDefinition,
   getActiveCycleToolDefinition,
   getCycleIssuesToolDefinition,
   addIssueToCycleToolDefinition,

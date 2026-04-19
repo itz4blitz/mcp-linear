@@ -4,6 +4,7 @@ import {
   isAssignIssueArgs,
   isConvertIssueToSubtaskArgs,
   isCreateCommentArgs,
+  isDeleteCommentArgs,
   isCreateIssueArgs,
   isCreateIssueRelationArgs,
   isDuplicateIssueArgs,
@@ -18,6 +19,7 @@ import {
   isSetIssuePriorityArgs,
   isSubscribeToIssueArgs,
   isTransferIssueArgs,
+  isUpdateCommentArgs,
   isUpdateIssueArgs,
   isUpdateIssueCustomFieldArgs,
 } from '../type-guards.js';
@@ -181,6 +183,36 @@ export function handleCreateComment(linearService: LinearService) {
       return await linearService.createComment(args);
     } catch (error) {
       logError('Error creating comment', error);
+      throw error;
+    }
+  };
+}
+
+export function handleUpdateComment(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isUpdateCommentArgs(args)) {
+        throw new Error('Invalid arguments for updateComment');
+      }
+
+      return await linearService.updateComment(args);
+    } catch (error) {
+      logError('Error updating comment', error);
+      throw error;
+    }
+  };
+}
+
+export function handleDeleteComment(linearService: LinearService) {
+  return async (args: unknown) => {
+    try {
+      if (!isDeleteCommentArgs(args)) {
+        throw new Error('Invalid arguments for deleteComment');
+      }
+
+      return await linearService.deleteComment(args.id);
+    } catch (error) {
+      logError('Error deleting comment', error);
       throw error;
     }
   };

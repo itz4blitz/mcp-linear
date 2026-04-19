@@ -2019,3 +2019,217 @@ describe('LinearService issue state normalization', () => {
     });
   });
 });
+
+describe('LinearService future backlog batch coverage', () => {
+  it('updates and deletes comments through the SDK', async () => {
+    const updateComment = jest.fn().mockResolvedValue({
+      success: true,
+      comment: Promise.resolve({
+        id: 'comment-1',
+        body: 'Updated',
+        createdAt: new Date('2026-04-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+        editedAt: new Date('2026-04-02T00:00:00.000Z'),
+        quotedText: undefined,
+        url: 'https://linear.app/comment-1',
+        user: Promise.resolve({ id: 'user-1', name: 'Alex', displayName: 'Alex', email: 'alex@example.com' }),
+        issue: Promise.resolve({ id: 'issue-1', identifier: 'PS-1', title: 'Issue' }),
+        parent: undefined,
+      }),
+    });
+    const deleteComment = jest.fn().mockResolvedValue({ success: true, entityId: 'comment-1' });
+    const service = new LinearService({ updateComment, deleteComment } as never);
+
+    const updated = await service.updateComment({ id: 'comment-1', body: 'Updated' });
+    const deleted = await service.deleteComment('comment-1');
+
+    expect(updateComment).toHaveBeenCalledWith('comment-1', { body: 'Updated' });
+    expect(updated).toEqual(expect.objectContaining({ id: 'comment-1', body: 'Updated' }));
+    expect(deleteComment).toHaveBeenCalledWith('comment-1');
+    expect(deleted).toEqual({ success: true, id: 'comment-1' });
+  });
+
+  it('manages project membership via full memberIds replacement', async () => {
+    const members = jest.fn().mockResolvedValue({
+      nodes: [
+        { id: 'user-1', name: 'Alex', email: 'alex@example.com', displayName: 'Alex' },
+        { id: 'user-2', name: 'Sam', email: 'sam@example.com', displayName: 'Sam' },
+      ],
+    });
+    const project = jest.fn().mockResolvedValue({ id: 'project-1', members });
+    const service = new LinearService({ project } as never);
+    const updateProject = jest.spyOn(service, 'updateProject').mockResolvedValue({
+      id: 'project-1',
+      name: 'Project',
+      description: '',
+      content: undefined,
+      state: 'planned',
+      startDate: null,
+      targetDate: null,
+      lead: null,
+      icon: undefined,
+      color: '',
+      url: 'https://linear.app/project-1',
+    });
+
+    expect(await service.getProjectMembers({ projectId: 'project-1', limit: 10 })).toHaveLength(2);
+    await service.addProjectMember('project-1', 'user-3');
+    await service.removeProjectMember('project-1', 'user-2');
+
+    expect(updateProject).toHaveBeenNthCalledWith(1, { id: 'project-1', memberIds: ['user-1', 'user-2', 'user-3'] });
+    expect(updateProject).toHaveBeenNthCalledWith(2, { id: 'project-1', memberIds: ['user-1'] });
+  });
+
+  it('creates, updates, completes, and summarizes cycles', async () => {
+    const cycleRecord = {
+      id: 'cycle-1',
+      number: 13,
+      name: 'Cycle 13',
+      description: 'Planning',
+      startsAt: '2026-04-20T00:00:00.000Z',
+      endsAt: '2026-05-03T00:00:00.000Z',
+      completedAt: null,
+      progress: 40,
+      scopeHistory: [1, 2],
+      completedScopeHistory: [1],
+      completedIssueCountHistory: [1],
+      issueCountHistory: [2],
+      team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }),
+    };
+    const createCycle = jest.fn().mockResolvedValue({ success: true, cycle: Promise.resolve(cycleRecord) });
+    const updateCycle = jest.fn().mockResolvedValue({ success: true, cycle: Promise.resolve(cycleRecord) });
+    const cycle = jest.fn().mockResolvedValue(cycleRecord);
+    const issues = jest.fn().mockResolvedValue({ nodes: [{ completedAt: 'yes' }, { completedAt: null }] });
+    const service = new LinearService({ createCycle, updateCycle, cycle, issues } as never);
+
+    await service.createCycle({ teamId: 'team-1', startsAt: '2026-04-20', endsAt: '2026-05-03', name: 'Cycle 13' });
+    await service.updateCycle({ id: 'cycle-1', name: 'Cycle 13 updated' });
+    const completed = await service.completeCycle('cycle-1');
+    const stats = await service.getCycleStats('cycle-1');
+
+    expect(createCycle).toHaveBeenCalled();
+    expect(updateCycle).toHaveBeenCalled();
+    expect(completed).toEqual(expect.objectContaining({ id: 'cycle-1' }));
+    expect(stats).toEqual(expect.objectContaining({ id: 'cycle-1', issueCount: 2, completedIssueCount: 1 }));
+  });
+
+  it('manages issue templates and create-from-template issue creation', async () => {
+    const organization = {
+      templates: jest.fn().mockResolvedValue({
+        nodes: [
+          {
+            id: 'template-1',
+            name: 'Bug template',
+            description: 'Bug flow',
+            sortOrder: 1,
+            type: 'issue',
+            archivedAt: null,
+            createdAt: new Date('2026-04-01T00:00:00.000Z'),
+            updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+            templateData: { title: 'Bug' },
+            team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }),
+            creator: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }),
+          },
+        ],
+      }),
+    };
+    const template = jest.fn().mockResolvedValue(await organization.templates().then((x: any) => x.nodes[0]));
+    const createTemplate = jest.fn().mockResolvedValue({ success: true, template: Promise.resolve(await template('template-1')) });
+    const updateTemplate = jest.fn().mockResolvedValue({ success: true, template: Promise.resolve(await template('template-1')) });
+    const team = jest.fn().mockResolvedValue({ id: 'team-1', templates: organization.templates });
+    const createIssue = jest.fn().mockResolvedValue({ success: true, issue: Promise.resolve({ id: 'issue-1', title: 'Instantiated', description: null, url: 'https://linear.app/issue-1' }) });
+    const service = new LinearService({ organization, template, createTemplate, updateTemplate, team, createIssue } as never);
+
+    expect(await service.getIssueTemplates({ limit: 10 })).toHaveLength(1);
+    expect((await service.getIssueTemplateById('template-1')).id).toBe('template-1');
+    expect((await service.createIssueTemplate({ name: 'Bug template', templateData: { title: 'Bug' } })).id).toBe('template-1');
+    expect((await service.updateIssueTemplate({ id: 'template-1', description: 'Updated' })).id).toBe('template-1');
+    expect((await service.getTeamTemplates({ teamId: 'team-1', limit: 10 })).length).toBe(1);
+    await service.createIssueFromTemplate({ teamId: 'team-1', templateId: 'template-1', title: 'Instantiated' });
+    expect(createIssue).toHaveBeenCalledWith(expect.objectContaining({ teamId: 'team-1', templateId: 'template-1', title: 'Instantiated' }));
+  });
+
+  it('manages team/workflow entities and labels', async () => {
+    const workflowState = {
+      id: 'state-1',
+      name: 'Doing',
+      type: 'started',
+      position: 1,
+      color: '#ff00ff',
+      description: 'Doing work',
+      team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }),
+    };
+    const createWorkflowState = jest.fn().mockResolvedValue({ success: true, workflowState: Promise.resolve(workflowState) });
+    const updateWorkflowState = jest.fn().mockResolvedValue({ success: true, workflowState: Promise.resolve(workflowState) });
+    const teamObj = { id: 'team-1', name: 'Premier', key: 'PRM', description: 'Team', color: '#111', icon: 'triangle', private: false, timezone: 'UTC', archivedAt: null, memberships: jest.fn().mockResolvedValue({ nodes: [{ id: 'membership-1', owner: true, sortOrder: 1, createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }), user: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com', displayName: 'Alex' }) }] }), labels: jest.fn().mockResolvedValue({ nodes: [{ id: 'label-1', name: 'backend', color: '#f00', description: null, team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }), parent: undefined }] }) };
+    const createTeam = jest.fn().mockResolvedValue({ success: true, team: Promise.resolve(teamObj) });
+    const updateTeam = jest.fn().mockResolvedValue({ success: true, team: Promise.resolve(teamObj) });
+    const deleteTeam = jest.fn().mockResolvedValue({ success: true, entityId: 'team-1' });
+    const team = jest.fn().mockResolvedValue(teamObj);
+    const createTeamMembership = jest.fn().mockResolvedValue({ success: true, teamMembership: Promise.resolve((await team('team-1')).memberships().then((x: any) => x.nodes[0])) });
+    const updateTeamMembership = jest.fn().mockResolvedValue({ success: true, teamMembership: Promise.resolve((await team('team-1')).memberships().then((x: any) => x.nodes[0])) });
+    const deleteTeamMembership = jest.fn().mockResolvedValue({ success: true, entityId: 'membership-1' });
+    const createIssueLabel = jest.fn().mockResolvedValue({ success: true, issueLabel: Promise.resolve((await team('team-1')).labels().then((x: any) => x.nodes[0])) });
+    const service = new LinearService({ createWorkflowState, updateWorkflowState, createTeam, updateTeam, deleteTeam, team, createTeamMembership, updateTeamMembership, deleteTeamMembership, createIssueLabel } as never);
+
+    expect((await service.createWorkflowState({ name: 'Doing', teamId: 'team-1', type: 'started', color: '#ff00ff' })).id).toBe('state-1');
+    expect((await service.updateWorkflowState({ id: 'state-1', name: 'Doing' })).id).toBe('state-1');
+    expect((await service.createTeam({ name: 'Premier' })).id).toBe('team-1');
+    expect((await service.updateTeam({ id: 'team-1', name: 'Premier' })).id).toBe('team-1');
+    expect((await service.getTeamMemberships({ teamId: 'team-1', limit: 10 })).length).toBe(1);
+    expect((await service.addUserToTeam({ teamId: 'team-1', userId: 'user-1' })).id).toBe('membership-1');
+    expect((await service.updateTeamMembership({ id: 'membership-1', owner: true })).id).toBe('membership-1');
+    expect((await service.getTeamLabels({ teamId: 'team-1', limit: 10 })).length).toBe(1);
+    expect((await service.createTeamLabel({ teamId: 'team-1', name: 'backend', color: '#f00' })).id).toBe('label-1');
+    expect(await service.archiveTeam('team-1')).toEqual({ success: true, id: 'team-1' });
+    expect(await service.removeUserFromTeam({ teamId: 'team-1', userId: 'user-1' })).toEqual({ success: true, teamId: 'team-1', userId: 'user-1' });
+  });
+
+  it('handles webhooks, attachments, notifications, sessions, audits, integrations, and real issue subscription', async () => {
+    const webhook = { id: 'webhook-1', label: 'Premier', url: 'https://example.com', enabled: true, allPublicTeams: false, resourceTypes: ['Issue'], createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), archivedAt: null, team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }), creator: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }) };
+    const issueRecord = { id: 'issue-1', identifier: 'PS-1', title: 'Issue', subscribers: jest.fn().mockResolvedValue({ nodes: [] }) };
+    const attachment = { id: 'attachment-1', title: 'Spec', subtitle: null, url: 'https://example.com/spec', metadata: {}, sourceType: 'url', createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), issue: Promise.resolve(issueRecord) };
+    const notification = { id: 'notification-1', type: 'issueAssigned', title: 'Assigned', subtitle: 'Sub', url: 'https://linear.app', readAt: null, snoozedUntilAt: null, createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), actor: Promise.resolve({ id: 'user-2', name: 'Sam', email: 'sam@example.com' }) };
+    const subscription = { id: 'subscription-1', active: true, notificationSubscriptionTypes: ['issueAssigned'], contextViewType: null, userContextViewType: null, createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), team: Promise.resolve({ id: 'team-1', name: 'Premier' }), project: undefined, cycle: undefined, label: undefined, initiative: undefined, customView: undefined, subscriber: { id: 'user-1', name: 'Alex', email: 'alex@example.com' } };
+    const session = { id: 'session-1', name: 'Chrome on Mac', client: 'web', browserType: 'Chrome', operatingSystem: 'macOS', ip: '127.0.0.1', location: 'Local', isCurrentSession: true, countryCodes: ['US'], createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), lastActiveAt: new Date('2026-04-02T00:00:00.000Z'), type: 'web' };
+    const auditEntry = { id: 'audit-1', type: 'project.update', actorId: 'user-1', countryCode: 'US', ip: '127.0.0.1', metadata: {}, requestInformation: {}, createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), actor: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }) };
+    const integration = { id: 'integration-1', service: 'slack', createdAt: new Date('2026-04-01T00:00:00.000Z'), updatedAt: new Date('2026-04-02T00:00:00.000Z'), archivedAt: null, creator: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }), team: Promise.resolve({ id: 'team-1', name: 'Premier', key: 'PRM' }) };
+    const service = new LinearService({
+      webhooks: jest.fn().mockResolvedValue({ nodes: [webhook] }),
+      createWebhook: jest.fn().mockResolvedValue({ success: true, webhook: Promise.resolve(webhook) }),
+      deleteWebhook: jest.fn().mockResolvedValue({ success: true, entityId: 'webhook-1' }),
+      issue: jest.fn().mockResolvedValue({ ...issueRecord, attachments: jest.fn().mockResolvedValue({ nodes: [attachment] }), subscribers: jest.fn().mockResolvedValue({ nodes: [] }) }),
+      createAttachment: jest.fn().mockResolvedValue({ success: true, attachment: Promise.resolve(attachment) }),
+      notifications: jest.fn().mockResolvedValue({ nodes: [notification] }),
+      updateNotification: jest.fn().mockResolvedValue({ success: true }),
+      notificationSubscriptions: jest.fn().mockResolvedValue({ nodes: [subscription] }),
+      authenticationSessions: Promise.resolve([session]),
+      logoutSession: jest.fn().mockResolvedValue({ success: true }),
+      logoutOtherSessions: jest.fn().mockResolvedValue({ success: true }),
+      logoutAllSessions: jest.fn().mockResolvedValue({ success: true }),
+      auditEntries: jest.fn().mockResolvedValue({ nodes: [auditEntry] }),
+      organization: Promise.resolve({ integrations: jest.fn().mockResolvedValue({ nodes: [integration] }) }),
+      viewer: Promise.resolve({ id: 'user-1', name: 'Alex' }),
+      updateIssue: jest.fn().mockResolvedValue({ success: true }),
+    } as never);
+
+    expect((await service.getWebhooks({ limit: 10 })).length).toBe(1);
+    expect((await service.createWebhook({ url: 'https://example.com', resourceTypes: ['Issue'] })).id).toBe('webhook-1');
+    expect(await service.deleteWebhook('webhook-1')).toEqual({ success: true, id: 'webhook-1' });
+    expect((await service.getAttachments({ issueId: 'issue-1', limit: 10 })).length).toBe(1);
+    expect((await service.addAttachment({ issueId: 'issue-1', title: 'Spec', url: 'https://example.com/spec' })).id).toBe('attachment-1');
+    expect((await service.getNotifications({ limit: 10 })).length).toBe(1);
+    expect(await service.markNotificationAsRead('notification-1')).toEqual({ success: true, id: 'notification-1' });
+    expect((await service.getSubscriptions({ limit: 10 })).length).toBe(1);
+    expect(await service.markAllNotificationsAsRead(10)).toEqual({ success: true, count: 1 });
+    expect(await service.getUnreadNotificationCount(10)).toEqual({ count: 1 });
+    expect((await service.getAuthenticationSessions()).length).toBe(1);
+    expect(await service.logoutSession('session-1')).toEqual({ success: true });
+    expect(await service.logoutOtherSessions()).toEqual({ success: true });
+    expect(await service.logoutAllSessions()).toEqual({ success: true });
+    expect((await service.getOrganizationAuditEvents({ limit: 10 })).length).toBe(1);
+    expect((await service.getUserAuditEvents({ userId: 'user-1', limit: 10 })).length).toBe(1);
+    expect((await service.getIntegrations({ limit: 10 })).length).toBe(1);
+    expect(await service.subscribeToIssue('issue-1')).toEqual(expect.objectContaining({ success: true }));
+  });
+});

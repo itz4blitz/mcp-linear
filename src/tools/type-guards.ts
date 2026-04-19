@@ -288,6 +288,42 @@ export function isCreateCommentArgs(args: unknown): args is {
   );
 }
 
+export function isUpdateCommentArgs(args: unknown): args is {
+  id: string;
+  body?: string;
+  quotedText?: string;
+  resolvingCommentId?: string;
+  resolvingUserId?: string;
+  subscriberIds?: string[];
+  doNotSubscribeToIssue?: boolean;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+
+  const hasUpdateField = ['body', 'quotedText', 'resolvingCommentId', 'resolvingUserId', 'subscriberIds', 'doNotSubscribeToIssue']
+    .some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+
+  return (
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string' &&
+    hasUpdateField &&
+    (!('body' in args) || typeof (args as { body: unknown }).body === 'string') &&
+    (!('quotedText' in args) || typeof (args as { quotedText: unknown }).quotedText === 'string') &&
+    (!('resolvingCommentId' in args) ||
+      typeof (args as { resolvingCommentId: unknown }).resolvingCommentId === 'string') &&
+    (!('resolvingUserId' in args) ||
+      typeof (args as { resolvingUserId: unknown }).resolvingUserId === 'string') &&
+    (!('subscriberIds' in args) || isStringArray((args as { subscriberIds: unknown }).subscriberIds)) &&
+    (!('doNotSubscribeToIssue' in args) ||
+      typeof (args as { doNotSubscribeToIssue: unknown }).doNotSubscribeToIssue === 'boolean')
+  );
+}
+
+export function isDeleteCommentArgs(args: unknown): args is { id: string } {
+  return isJsonObject(args) && 'id' in args && typeof (args as { id: unknown }).id === 'string';
+}
+
 /**
  * Type guard for linear_createProject tool arguments
  */
@@ -529,6 +565,36 @@ export function isUpdateProjectArgs(args: unknown): args is {
     (!('content' in args) || typeof (args as { content: string }).content === 'string') &&
     (!('state' in args) || typeof (args as { state: string }).state === 'string')
   );
+}
+
+export function isGetProjectMembersArgs(args: unknown): args is {
+  projectId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  includeDisabled?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'projectId' in args &&
+    typeof (args as { projectId: unknown }).projectId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('includeDisabled' in args) || typeof (args as { includeDisabled: unknown }).includeDisabled === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isAddProjectMemberArgs(args: unknown): args is { projectId: string; userId: string } {
+  return (
+    isJsonObject(args) &&
+    'projectId' in args && typeof (args as { projectId: unknown }).projectId === 'string' &&
+    'userId' in args && typeof (args as { userId: unknown }).userId === 'string'
+  );
+}
+
+export function isRemoveProjectMemberArgs(args: unknown): args is { projectId: string; userId: string } {
+  return isAddProjectMemberArgs(args);
 }
 
 const PROJECT_UPDATE_HEALTH_STATUSES = ['onTrack', 'atRisk', 'offTrack'] as const;
@@ -1057,6 +1123,317 @@ export function isGetCyclesArgs(args: unknown): args is {
   );
 }
 
+export function isGetCycleByIdArgs(args: unknown): args is { id: string } {
+  return isJsonObject(args) && 'id' in args && typeof (args as { id: unknown }).id === 'string';
+}
+
+export function isCreateCycleArgs(args: unknown): args is {
+  teamId: string;
+  startsAt: string;
+  endsAt: string;
+  name?: string;
+  description?: string;
+  completedAt?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'startsAt' in args && typeof (args as { startsAt: unknown }).startsAt === 'string' &&
+    'endsAt' in args && typeof (args as { endsAt: unknown }).endsAt === 'string' &&
+    (!('name' in args) || typeof (args as { name: unknown }).name === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('completedAt' in args) || typeof (args as { completedAt: unknown }).completedAt === 'string')
+  );
+}
+
+export function isUpdateCycleArgs(args: unknown): args is {
+  id: string;
+  startsAt?: string;
+  endsAt?: string;
+  name?: string;
+  description?: string;
+  completedAt?: string;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+
+  const hasUpdateField = ['startsAt', 'endsAt', 'name', 'description', 'completedAt']
+    .some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+
+  return (
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string' &&
+    hasUpdateField &&
+    (!('startsAt' in args) || typeof (args as { startsAt: unknown }).startsAt === 'string') &&
+    (!('endsAt' in args) || typeof (args as { endsAt: unknown }).endsAt === 'string') &&
+    (!('name' in args) || typeof (args as { name: unknown }).name === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('completedAt' in args) || typeof (args as { completedAt: unknown }).completedAt === 'string')
+  );
+}
+
+export function isCompleteCycleArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isGetCycleStatsArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isGetIssueTemplatesArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isGetIssueTemplateByIdArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isCreateIssueTemplateArgs(args: unknown): args is {
+  name: string;
+  description?: string;
+  teamId?: string;
+  templateData: Record<string, JSONGuardValue>;
+  sortOrder?: number;
+} {
+  return (
+    isJsonObject(args) &&
+    'name' in args && typeof (args as { name: unknown }).name === 'string' &&
+    'templateData' in args && isJsonObject((args as { templateData: unknown }).templateData) &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('teamId' in args) || typeof (args as { teamId: unknown }).teamId === 'string') &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+export function isUpdateIssueTemplateArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  description?: string | null;
+  teamId?: string | null;
+  templateData?: Record<string, JSONGuardValue>;
+  sortOrder?: number;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+  const hasUpdateField = ['name', 'description', 'teamId', 'templateData', 'sortOrder']
+    .some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+
+  return (
+    'id' in args && typeof (args as { id: unknown }).id === 'string' && hasUpdateField &&
+    (!('name' in args) || typeof (args as { name: unknown }).name === 'string') &&
+    (!('description' in args) || isNullableString((args as { description: unknown }).description)) &&
+    (!('teamId' in args) || isNullableString((args as { teamId: unknown }).teamId)) &&
+    (!('templateData' in args) || isJsonObject((args as { templateData: unknown }).templateData)) &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+export function isCreateIssueFromTemplateArgs(args: unknown): args is {
+  teamId: string;
+  templateId: string;
+  title?: string;
+  description?: string;
+  priority?: number;
+  projectId?: string;
+  projectMilestoneId?: string;
+  cycleId?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'templateId' in args && typeof (args as { templateId: unknown }).templateId === 'string' &&
+    (!('title' in args) || typeof (args as { title: unknown }).title === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('priority' in args) || typeof (args as { priority: unknown }).priority === 'number') &&
+    (!('projectId' in args) || typeof (args as { projectId: unknown }).projectId === 'string') &&
+    (!('projectMilestoneId' in args) || typeof (args as { projectMilestoneId: unknown }).projectMilestoneId === 'string') &&
+    (!('cycleId' in args) || typeof (args as { cycleId: unknown }).cycleId === 'string')
+  );
+}
+
+export function isGetTeamTemplatesArgs(args: unknown): args is {
+  teamId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isArchiveTemplateArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isGetWebhooksArgs(args: unknown): args is {
+  teamId?: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    (!('teamId' in args) || typeof (args as { teamId: unknown }).teamId === 'string') &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isCreateWebhookArgs(args: unknown): args is {
+  url: string;
+  resourceTypes: string[];
+  teamId?: string;
+  enabled?: boolean;
+  label?: string;
+  secret?: string;
+  allPublicTeams?: boolean;
+} {
+  return (
+    isJsonObject(args) &&
+    'url' in args && typeof (args as { url: unknown }).url === 'string' &&
+    'resourceTypes' in args && isStringArray((args as { resourceTypes: unknown }).resourceTypes) &&
+    (!('teamId' in args) || typeof (args as { teamId: unknown }).teamId === 'string') &&
+    (!('enabled' in args) || typeof (args as { enabled: unknown }).enabled === 'boolean') &&
+    (!('label' in args) || typeof (args as { label: unknown }).label === 'string') &&
+    (!('secret' in args) || typeof (args as { secret: unknown }).secret === 'string') &&
+    (!('allPublicTeams' in args) || typeof (args as { allPublicTeams: unknown }).allPublicTeams === 'boolean')
+  );
+}
+
+export function isDeleteWebhookArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isGetAttachmentsArgs(args: unknown): args is {
+  issueId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'issueId' in args && typeof (args as { issueId: unknown }).issueId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isAddAttachmentArgs(args: unknown): args is {
+  issueId: string;
+  title: string;
+  url: string;
+  subtitle?: string;
+  iconUrl?: string;
+  metadata?: Record<string, JSONGuardValue>;
+  commentBody?: string;
+  groupBySource?: boolean;
+} {
+  return (
+    isJsonObject(args) &&
+    'issueId' in args && typeof (args as { issueId: unknown }).issueId === 'string' &&
+    'title' in args && typeof (args as { title: unknown }).title === 'string' &&
+    'url' in args && typeof (args as { url: unknown }).url === 'string' &&
+    (!('subtitle' in args) || typeof (args as { subtitle: unknown }).subtitle === 'string') &&
+    (!('iconUrl' in args) || typeof (args as { iconUrl: unknown }).iconUrl === 'string') &&
+    (!('metadata' in args) || isJsonObject((args as { metadata: unknown }).metadata)) &&
+    (!('commentBody' in args) || typeof (args as { commentBody: unknown }).commentBody === 'string') &&
+    (!('groupBySource' in args) || typeof (args as { groupBySource: unknown }).groupBySource === 'boolean')
+  );
+}
+
+export function isGetNotificationsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return isGetWebhooksArgs(args);
+}
+
+export function isMarkNotificationAsReadArgs(args: unknown): args is { id: string } {
+  return isGetCycleByIdArgs(args);
+}
+
+export function isGetSubscriptionsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return isGetWebhooksArgs(args);
+}
+
+export function isMarkAllNotificationsAsReadArgs(args: unknown): args is { limit?: number } {
+  return isJsonObject(args) && (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit));
+}
+
+export function isGetUnreadNotificationCountArgs(args: unknown): args is { limit?: number } {
+  return isMarkAllNotificationsAsReadArgs(args);
+}
+
+export function isGetAuthenticationSessionsArgs(args: unknown): args is Record<string, never> | undefined {
+  return args === undefined || (isJsonObject(args) && Object.keys(args).length === 0);
+}
+
+export function isLogoutSessionArgs(args: unknown): args is { sessionId: string } {
+  return isJsonObject(args) && 'sessionId' in args && typeof (args as { sessionId: unknown }).sessionId === 'string';
+}
+
+export function isLogoutOtherSessionsArgs(args: unknown): args is Record<string, never> | undefined {
+  return isGetAuthenticationSessionsArgs(args);
+}
+
+export function isLogoutAllSessionsArgs(args: unknown): args is Record<string, never> | undefined {
+  return isGetAuthenticationSessionsArgs(args);
+}
+
+export function isGetOrganizationAuditEventsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return isGetWebhooksArgs(args);
+}
+
+export function isGetUserAuditEventsArgs(args: unknown): args is {
+  userId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'userId' in args && typeof (args as { userId: unknown }).userId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isGetIntegrationsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return isGetWebhooksArgs(args);
+}
+
 /**
  * Type guard for linear_getCycleIssues tool arguments
  */
@@ -1170,6 +1547,196 @@ export function isGetInitiativesInput(args: unknown): args is {
     (!('includeArchived' in args) ||
       typeof (args as { includeArchived: boolean }).includeArchived === 'boolean') &&
     (!('limit' in args) || typeof (args as { limit: number }).limit === 'number')
+  );
+}
+
+export function isCreateWorkflowStateArgs(args: unknown): args is {
+  name: string;
+  teamId: string;
+  type: string;
+  color: string;
+  description?: string;
+  position?: number;
+} {
+  return (
+    isJsonObject(args) &&
+    'name' in args && typeof (args as { name: unknown }).name === 'string' &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'type' in args && typeof (args as { type: unknown }).type === 'string' &&
+    'color' in args && typeof (args as { color: unknown }).color === 'string' &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('position' in args) || typeof (args as { position: unknown }).position === 'number')
+  );
+}
+
+export function isUpdateWorkflowStateArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  color?: string;
+  description?: string;
+  position?: number;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+  const hasUpdateField = ['name', 'color', 'description', 'position']
+    .some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+  return (
+    'id' in args && typeof (args as { id: unknown }).id === 'string' && hasUpdateField &&
+    (!('name' in args) || typeof (args as { name: unknown }).name === 'string') &&
+    (!('color' in args) || typeof (args as { color: unknown }).color === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('position' in args) || typeof (args as { position: unknown }).position === 'number')
+  );
+}
+
+export function isUpdateTeamArgs(args: unknown): args is {
+  id: string;
+  name?: string;
+  key?: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  timezone?: string;
+  parentId?: string;
+  private?: boolean;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+  const hasUpdateField = ['name', 'key', 'description', 'color', 'icon', 'timezone', 'parentId', 'private']
+    .some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+  return (
+    'id' in args && typeof (args as { id: unknown }).id === 'string' && hasUpdateField &&
+    (!('name' in args) || typeof (args as { name: unknown }).name === 'string') &&
+    (!('key' in args) || typeof (args as { key: unknown }).key === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('color' in args) || typeof (args as { color: unknown }).color === 'string') &&
+    (!('icon' in args) || typeof (args as { icon: unknown }).icon === 'string') &&
+    (!('timezone' in args) || typeof (args as { timezone: unknown }).timezone === 'string') &&
+    (!('parentId' in args) || typeof (args as { parentId: unknown }).parentId === 'string') &&
+    (!('private' in args) || typeof (args as { private: unknown }).private === 'boolean')
+  );
+}
+
+export function isGetTeamMembershipsArgs(args: unknown): args is {
+  teamId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isCreateTeamArgs(args: unknown): args is {
+  name: string;
+  key?: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  timezone?: string;
+  parentId?: string;
+  private?: boolean;
+} {
+  return (
+    isJsonObject(args) &&
+    'name' in args && typeof (args as { name: unknown }).name === 'string' &&
+    (!('key' in args) || typeof (args as { key: unknown }).key === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('color' in args) || typeof (args as { color: unknown }).color === 'string') &&
+    (!('icon' in args) || typeof (args as { icon: unknown }).icon === 'string') &&
+    (!('timezone' in args) || typeof (args as { timezone: unknown }).timezone === 'string') &&
+    (!('parentId' in args) || typeof (args as { parentId: unknown }).parentId === 'string') &&
+    (!('private' in args) || typeof (args as { private: unknown }).private === 'boolean')
+  );
+}
+
+export function isArchiveTeamArgs(args: unknown): args is { id: string } {
+  return isJsonObject(args) && 'id' in args && typeof (args as { id: unknown }).id === 'string';
+}
+
+export function isAddUserToTeamArgs(args: unknown): args is {
+  teamId: string;
+  userId: string;
+  owner?: boolean;
+  sortOrder?: number;
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'userId' in args && typeof (args as { userId: unknown }).userId === 'string' &&
+    (!('owner' in args) || typeof (args as { owner: unknown }).owner === 'boolean') &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+export function isRemoveUserFromTeamArgs(args: unknown): args is {
+  teamId: string;
+  userId: string;
+  alsoLeaveParentTeams?: boolean;
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'userId' in args && typeof (args as { userId: unknown }).userId === 'string' &&
+    (!('alsoLeaveParentTeams' in args) ||
+      typeof (args as { alsoLeaveParentTeams: unknown }).alsoLeaveParentTeams === 'boolean')
+  );
+}
+
+export function isUpdateTeamMembershipArgs(args: unknown): args is {
+  id: string;
+  owner?: boolean;
+  sortOrder?: number;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+  const hasUpdateField = ['owner', 'sortOrder'].some(
+    (key) => key in args && (args as Record<string, unknown>)[key] !== undefined,
+  );
+  return (
+    'id' in args && typeof (args as { id: unknown }).id === 'string' && hasUpdateField &&
+    (!('owner' in args) || typeof (args as { owner: unknown }).owner === 'boolean') &&
+    (!('sortOrder' in args) || typeof (args as { sortOrder: unknown }).sortOrder === 'number')
+  );
+}
+
+export function isGetTeamLabelsArgs(args: unknown): args is {
+  teamId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) || typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy))
+  );
+}
+
+export function isCreateTeamLabelArgs(args: unknown): args is {
+  teamId: string;
+  name: string;
+  color?: string;
+  description?: string;
+  parentId?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    'teamId' in args && typeof (args as { teamId: unknown }).teamId === 'string' &&
+    'name' in args && typeof (args as { name: unknown }).name === 'string' &&
+    (!('color' in args) || typeof (args as { color: unknown }).color === 'string') &&
+    (!('description' in args) || typeof (args as { description: unknown }).description === 'string') &&
+    (!('parentId' in args) || typeof (args as { parentId: unknown }).parentId === 'string')
   );
 }
 
