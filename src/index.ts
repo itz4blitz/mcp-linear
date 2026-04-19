@@ -5,6 +5,7 @@ import { runMCPServer } from './mcp-server.js';
 
 import { getLinearPrompt, getLinearPromptDefinitions } from './mcp-prompts.js';
 import { getLinearResourceDefinitions, readLinearResource } from './mcp-resources.js';
+import { installRuntimeDiagnostics } from './runtime-diagnostics.js';
 import { createServerStatusProvider } from './server-status.js';
 import { LinearService } from './services/linear-service.js';
 import { allToolDefinitions } from './tools/definitions/index.js';
@@ -93,6 +94,7 @@ async function runServer() {
 }
 
 // Start the server
+installRuntimeDiagnostics();
 runServer().catch((error) => {
   logError('Fatal error in MCP Linear', error);
   process.exit(1);
