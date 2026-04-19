@@ -1331,8 +1331,16 @@ function isNullableString(value: unknown): value is string | null {
   return typeof value === 'string' || value === null;
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -1345,6 +1353,203 @@ function isPaginationOrderBy(value: unknown): value is 'createdAt' | 'updatedAt'
 
 function isMilestoneStatus(value: unknown): value is 'done' | 'next' | 'overdue' | 'unstarted' {
   return value === 'done' || value === 'next' || value === 'overdue' || value === 'unstarted';
+}
+
+/**
+ * Type guard for linear_getDocuments tool arguments
+ */
+export function isGetDocumentsArgs(args: unknown): args is {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+  projectId?: string;
+  initiativeId?: string;
+  title?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy)) &&
+    (!('projectId' in args) || typeof (args as { projectId: unknown }).projectId === 'string') &&
+    (!('initiativeId' in args) ||
+      typeof (args as { initiativeId: unknown }).initiativeId === 'string') &&
+    (!('title' in args) || typeof (args as { title: unknown }).title === 'string')
+  );
+}
+
+/**
+ * Type guard for linear_getDocumentById tool arguments
+ */
+export function isGetDocumentByIdArgs(args: unknown): args is { id: string } {
+  return (
+    isJsonObject(args) &&
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_getProjectDocuments tool arguments
+ */
+export function isGetProjectDocumentsArgs(args: unknown): args is {
+  projectId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+  title?: string;
+} {
+  return (
+    isJsonObject(args) &&
+    'projectId' in args &&
+    typeof (args as { projectId: unknown }).projectId === 'string' &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy)) &&
+    (!('title' in args) || typeof (args as { title: unknown }).title === 'string')
+  );
+}
+
+/**
+ * Type guard for linear_searchDocuments tool arguments
+ */
+export function isSearchDocumentsArgs(args: unknown): args is {
+  term: string;
+  teamId?: string;
+  includeComments?: boolean;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: 'createdAt' | 'updatedAt';
+  snippetSize?: number;
+} {
+  return (
+    isJsonObject(args) &&
+    'term' in args &&
+    isNonEmptyString((args as { term: unknown }).term) &&
+    (!('teamId' in args) || typeof (args as { teamId: unknown }).teamId === 'string') &&
+    (!('includeComments' in args) ||
+      typeof (args as { includeComments: unknown }).includeComments === 'boolean') &&
+    (!('limit' in args) || isPositiveInteger((args as { limit: unknown }).limit)) &&
+    (!('includeArchived' in args) ||
+      typeof (args as { includeArchived: unknown }).includeArchived === 'boolean') &&
+    (!('orderBy' in args) || isPaginationOrderBy((args as { orderBy: unknown }).orderBy)) &&
+    (!('snippetSize' in args) || isFiniteNumber((args as { snippetSize: unknown }).snippetSize))
+  );
+}
+
+/**
+ * Type guard for linear_getDocumentContentHistory tool arguments
+ */
+export function isGetDocumentContentHistoryArgs(args: unknown): args is { id: string } {
+  return (
+    isJsonObject(args) &&
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_createDocument tool arguments
+ */
+export function isCreateDocumentArgs(args: unknown): args is {
+  title: string;
+  content?: string;
+  icon?: string;
+  color?: string;
+  projectId?: string;
+  initiativeId?: string;
+  lastAppliedTemplateId?: string;
+  sortOrder?: number;
+} {
+  return (
+    isJsonObject(args) &&
+    'title' in args &&
+    isNonEmptyString((args as { title: unknown }).title) &&
+    (!('content' in args) || typeof (args as { content: unknown }).content === 'string') &&
+    (!('icon' in args) || typeof (args as { icon: unknown }).icon === 'string') &&
+    (!('color' in args) || typeof (args as { color: unknown }).color === 'string') &&
+    (!('projectId' in args) || typeof (args as { projectId: unknown }).projectId === 'string') &&
+    (!('initiativeId' in args) ||
+      typeof (args as { initiativeId: unknown }).initiativeId === 'string') &&
+    (!('lastAppliedTemplateId' in args) ||
+      typeof (args as { lastAppliedTemplateId: unknown }).lastAppliedTemplateId === 'string') &&
+    (!('sortOrder' in args) || isFiniteNumber((args as { sortOrder: unknown }).sortOrder))
+  );
+}
+
+/**
+ * Type guard for linear_updateDocument tool arguments
+ */
+export function isUpdateDocumentArgs(args: unknown): args is {
+  id: string;
+  title?: string;
+  content?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  hiddenAt?: string | null;
+  projectId?: string | null;
+  initiativeId?: string | null;
+  lastAppliedTemplateId?: string | null;
+  sortOrder?: number;
+  trashed?: boolean;
+} {
+  if (!isJsonObject(args)) {
+    return false;
+  }
+
+  const hasUpdateField = [
+    'title',
+    'content',
+    'icon',
+    'color',
+    'hiddenAt',
+    'projectId',
+    'initiativeId',
+    'lastAppliedTemplateId',
+    'sortOrder',
+    'trashed',
+  ].some((key) => key in args && (args as Record<string, unknown>)[key] !== undefined);
+
+  return (
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string' &&
+    hasUpdateField &&
+    (!('title' in args) || typeof (args as { title: unknown }).title === 'string') &&
+    (!('content' in args) || isNullableString((args as { content: unknown }).content)) &&
+    (!('icon' in args) || isNullableString((args as { icon: unknown }).icon)) &&
+    (!('color' in args) || isNullableString((args as { color: unknown }).color)) &&
+    (!('hiddenAt' in args) || isNullableString((args as { hiddenAt: unknown }).hiddenAt)) &&
+    (!('projectId' in args) || isNullableString((args as { projectId: unknown }).projectId)) &&
+    (!('initiativeId' in args) || isNullableString((args as { initiativeId: unknown }).initiativeId)) &&
+    (!('lastAppliedTemplateId' in args) ||
+      isNullableString((args as { lastAppliedTemplateId: unknown }).lastAppliedTemplateId)) &&
+    (!('sortOrder' in args) || isFiniteNumber((args as { sortOrder: unknown }).sortOrder)) &&
+    (!('trashed' in args) || typeof (args as { trashed: unknown }).trashed === 'boolean')
+  );
+}
+
+/**
+ * Type guard for linear_archiveDocument tool arguments
+ */
+export function isArchiveDocumentArgs(args: unknown): args is { id: string } {
+  return (
+    isJsonObject(args) &&
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string'
+  );
+}
+
+/**
+ * Type guard for linear_unarchiveDocument tool arguments
+ */
+export function isUnarchiveDocumentArgs(args: unknown): args is { id: string } {
+  return (
+    isJsonObject(args) &&
+    'id' in args &&
+    typeof (args as { id: unknown }).id === 'string'
+  );
 }
 
 /**

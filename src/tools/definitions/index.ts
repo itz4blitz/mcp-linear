@@ -53,6 +53,17 @@ import {
   updateMilestoneToolDefinition,
 } from './milestone-tools.js';
 import {
+  archiveDocumentToolDefinition,
+  createDocumentToolDefinition,
+  getDocumentByIdToolDefinition,
+  getDocumentContentHistoryToolDefinition,
+  getDocumentsToolDefinition,
+  getProjectDocumentsToolDefinition,
+  searchDocumentsToolDefinition,
+  unarchiveDocumentToolDefinition,
+  updateDocumentToolDefinition,
+} from './document-tools.js';
+import {
   addToFavoritesToolDefinition,
   createSavedViewToolDefinition,
   deleteSavedViewToolDefinition,
@@ -113,6 +124,17 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   createMilestoneToolDefinition,
   updateMilestoneToolDefinition,
   archiveMilestoneToolDefinition,
+
+  // Document tools
+  getDocumentsToolDefinition,
+  getDocumentByIdToolDefinition,
+  getProjectDocumentsToolDefinition,
+  searchDocumentsToolDefinition,
+  getDocumentContentHistoryToolDefinition,
+  createDocumentToolDefinition,
+  updateDocumentToolDefinition,
+  archiveDocumentToolDefinition,
+  unarchiveDocumentToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,
@@ -220,6 +242,17 @@ export {
   createMilestoneToolDefinition,
   updateMilestoneToolDefinition,
   archiveMilestoneToolDefinition,
+
+  // Document tools
+  getDocumentsToolDefinition,
+  getDocumentByIdToolDefinition,
+  getProjectDocumentsToolDefinition,
+  searchDocumentsToolDefinition,
+  getDocumentContentHistoryToolDefinition,
+  createDocumentToolDefinition,
+  updateDocumentToolDefinition,
+  archiveDocumentToolDefinition,
+  unarchiveDocumentToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,

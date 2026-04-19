@@ -1668,3 +1668,218 @@ describe('LinearService PM workflow queries', () => {
     );
   });
 });
+
+describe('LinearService document workflows', () => {
+  it('lists and filters workspace documents', async () => {
+    const documents = jest.fn().mockResolvedValue({
+      nodes: [
+        {
+          id: 'doc-1',
+          title: 'Auth spec',
+          content: '# Auth',
+          color: '#f00',
+          icon: 'book',
+          slugId: 'auth-spec',
+          sortOrder: 1,
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          url: 'https://linear.app/doc/auth-spec',
+          archivedAt: undefined,
+          hiddenAt: undefined,
+          trashed: false,
+          documentContentId: 'content-1',
+          creator: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }),
+          updatedBy: Promise.resolve({ id: 'user-2', name: 'Sam', email: 'sam@example.com' }),
+          project: Promise.resolve({ id: 'project-1', name: 'OrdelloTS' }),
+          initiative: undefined,
+          lastAppliedTemplate: undefined,
+        },
+      ],
+    });
+    const service = new LinearService({ documents } as never);
+
+    const result = await service.getDocuments({
+      limit: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+      projectId: 'project-1',
+      title: 'Auth',
+    });
+
+    expect(documents).toHaveBeenCalledWith({
+      first: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+      filter: {
+        project: { id: { eq: 'project-1' } },
+        title: { containsIgnoreCase: 'Auth' },
+      },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'doc-1',
+        title: 'Auth spec',
+        project: { id: 'project-1', name: 'OrdelloTS' },
+        creator: { id: 'user-1', name: 'Alex', email: 'alex@example.com' },
+        updatedBy: { id: 'user-2', name: 'Sam', email: 'sam@example.com' },
+      }),
+    ]);
+  });
+
+  it('gets project documents via the project-scoped SDK path', async () => {
+    const projectDocuments = jest.fn().mockResolvedValue({ nodes: [] });
+    const project = jest.fn().mockResolvedValue({ id: 'project-1', documents: projectDocuments });
+    const service = new LinearService({ project } as never);
+
+    await service.getProjectDocuments({
+      projectId: 'project-1',
+      limit: 10,
+      includeArchived: false,
+      orderBy: 'createdAt',
+      title: 'Spec',
+    });
+
+    expect(project).toHaveBeenCalledWith('project-1');
+    expect(projectDocuments).toHaveBeenCalledWith({
+      first: 10,
+      includeArchived: false,
+      orderBy: 'createdAt',
+      filter: {
+        title: { containsIgnoreCase: 'Spec' },
+      },
+    });
+  });
+
+  it('searches documents and normalizes search metadata', async () => {
+    const searchDocuments = jest.fn().mockResolvedValue({
+      totalCount: 1,
+      nodes: [
+        {
+          id: 'doc-1',
+          title: 'Auth spec',
+          content: '# Auth',
+          color: '#f00',
+          icon: 'book',
+          slugId: 'auth-spec',
+          sortOrder: 1,
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-04-02T00:00:00.000Z'),
+          url: 'https://linear.app/doc/auth-spec',
+          archivedAt: undefined,
+          hiddenAt: undefined,
+          trashed: false,
+          documentContentId: 'content-1',
+          metadata: { snippet: 'Auth flow' },
+          creator: Promise.resolve({ id: 'user-1', name: 'Alex', email: 'alex@example.com' }),
+          updatedBy: undefined,
+          project: Promise.resolve({ id: 'project-1', name: 'OrdelloTS' }),
+          initiative: undefined,
+          lastAppliedTemplate: undefined,
+        },
+      ],
+    });
+    const service = new LinearService({ searchDocuments } as never);
+
+    const result = await service.searchDocuments({
+      term: 'auth',
+      teamId: 'team-1',
+      includeComments: true,
+      limit: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+    });
+
+    expect(searchDocuments).toHaveBeenCalledWith('auth', {
+      teamId: 'team-1',
+      includeComments: true,
+      first: 5,
+      includeArchived: true,
+      orderBy: 'updatedAt',
+    });
+    expect(result).toEqual({
+      totalCount: 1,
+      nodes: [
+        expect.objectContaining({
+          id: 'doc-1',
+          metadata: { snippet: 'Auth flow' },
+        }),
+      ],
+    });
+  });
+
+  it('updates documents with nullable clearing support', async () => {
+    const updateDocument = jest.fn().mockResolvedValue({
+      success: true,
+      document: Promise.resolve({
+        id: 'doc-1',
+        title: 'Updated spec',
+        content: undefined,
+        color: undefined,
+        icon: undefined,
+        slugId: 'updated-spec',
+        sortOrder: 1,
+        createdAt: new Date('2026-04-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-04-03T00:00:00.000Z'),
+        url: 'https://linear.app/doc/updated-spec',
+        archivedAt: undefined,
+        hiddenAt: undefined,
+        trashed: false,
+        documentContentId: 'content-1',
+        creator: undefined,
+        updatedBy: undefined,
+        project: undefined,
+        initiative: undefined,
+        lastAppliedTemplate: undefined,
+      }),
+    });
+    const service = new LinearService({ updateDocument } as never);
+
+    const result = await service.updateDocument({
+      id: 'doc-1',
+      title: 'Updated spec',
+      content: null,
+      icon: null,
+      color: null,
+      projectId: null,
+    });
+
+    expect(updateDocument).toHaveBeenCalledWith('doc-1', {
+      title: 'Updated spec',
+      content: null,
+      icon: null,
+      color: null,
+      projectId: null,
+    });
+    expect(result).toEqual(expect.objectContaining({ id: 'doc-1', title: 'Updated spec' }));
+  });
+
+  it('returns document content history entries', async () => {
+    const documentContentHistory = jest.fn().mockResolvedValue({
+      success: true,
+      history: [
+        {
+          id: 'history-1',
+          actorIds: ['user-1'],
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          contentDataSnapshotAt: new Date('2026-04-01T00:00:00.000Z'),
+        },
+      ],
+    });
+    const service = new LinearService({ documentContentHistory } as never);
+
+    const result = await service.getDocumentContentHistory('content-1');
+
+    expect(documentContentHistory).toHaveBeenCalledWith('content-1');
+    expect(result).toEqual({
+      success: true,
+      history: [
+        {
+          id: 'history-1',
+          actorIds: ['user-1'],
+          createdAt: new Date('2026-04-01T00:00:00.000Z'),
+          contentDataSnapshotAt: new Date('2026-04-01T00:00:00.000Z'),
+        },
+      ],
+    });
+  });
+});

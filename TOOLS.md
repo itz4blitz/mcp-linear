@@ -40,6 +40,22 @@ Linear exposes milestones as `ProjectMilestone` in the SDK/API. Archiving is imp
 | `linear_updateMilestone`     | Update an existing project milestone         | ✅ Implemented |
 | `linear_archiveMilestone`    | Archive a project milestone                  | ✅ Implemented |
 
+### Document Tools
+
+Linear exposes workspace and project docs as `Document` in the SDK/API.
+
+| Tool Name                           | Description                                      | Status         |
+| ----------------------------------- | ------------------------------------------------ | -------------- |
+| `linear_getDocuments`               | Get workspace documents with optional filters    | ✅ Implemented |
+| `linear_getDocumentById`            | Get details of a specific document               | ✅ Implemented |
+| `linear_getProjectDocuments`        | Get documents for a specific project             | ✅ Implemented |
+| `linear_searchDocuments`            | Search Linear documents by term                  | ✅ Implemented |
+| `linear_getDocumentContentHistory`  | Get content history entries for a document       | ✅ Implemented |
+| `linear_createDocument`             | Create a new Linear document                     | ✅ Implemented |
+| `linear_updateDocument`             | Update an existing Linear document               | ✅ Implemented |
+| `linear_archiveDocument`            | Archive (trash) a document                       | ✅ Implemented |
+| `linear_unarchiveDocument`          | Restore an archived document                     | ✅ Implemented |
+
 ### Issue Tools
 
 | Tool Name                 | Description                                              | Status         |

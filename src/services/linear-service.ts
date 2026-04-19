@@ -1,5 +1,6 @@
 import {
   CustomView,
+  Document as LinearSdkDocument,
   LinearClient,
   LinearDocument,
   LinearFetch,
@@ -57,6 +58,58 @@ type MilestoneQueryArgs = {
   teamId?: string;
   status?: string;
   orderBy?: string;
+};
+
+type DocumentListArgs = {
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: string;
+  projectId?: string;
+  initiativeId?: string;
+  title?: string;
+};
+
+type ProjectDocumentListArgs = {
+  projectId: string;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: string;
+  title?: string;
+};
+
+type SearchDocumentsArgs = {
+  term: string;
+  teamId?: string;
+  includeComments?: boolean;
+  limit?: number;
+  includeArchived?: boolean;
+  orderBy?: string;
+  snippetSize?: number;
+};
+
+type DocumentCreateArgs = {
+  title: string;
+  content?: string;
+  icon?: string;
+  color?: string;
+  projectId?: string;
+  initiativeId?: string;
+  lastAppliedTemplateId?: string;
+  sortOrder?: number;
+};
+
+type DocumentUpdateArgs = {
+  id: string;
+  title?: string;
+  content?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  hiddenAt?: string | null;
+  projectId?: string | null;
+  initiativeId?: string | null;
+  lastAppliedTemplateId?: string | null;
+  sortOrder?: number;
+  trashed?: boolean;
 };
 
 const FAVORITE_VIEWS_QUERY = `
@@ -928,6 +981,19 @@ export class LinearService {
       : null;
   }
 
+  private async normalizeNamedReference(
+    entityFetch: LinearFetch<{ id: string; name: string }> | undefined,
+  ) {
+    const entity = entityFetch ? await entityFetch : null;
+
+    return entity
+      ? {
+          id: entity.id,
+          name: entity.name,
+        }
+      : null;
+  }
+
   private async assertRoadmapsEnabled() {
     const organization = await this.client.organization;
 
@@ -1078,7 +1144,60 @@ export class LinearService {
             name: project.name,
           }
         : null,
-      };
+    };
+  }
+
+  private buildDocumentFilter(args: {
+    projectId?: string;
+    initiativeId?: string;
+    title?: string;
+  }) {
+    return this.compactObject({
+      project: args.projectId ? { id: { eq: args.projectId } } : undefined,
+      initiative: args.initiativeId ? { id: { eq: args.initiativeId } } : undefined,
+      title: this.nonEmptyString(args.title)
+        ? { containsIgnoreCase: this.nonEmptyString(args.title) }
+        : undefined,
+    });
+  }
+
+  private async normalizeDocument(document: LinearSdkDocument | any) {
+    const [creator, updatedBy, project, initiative, lastAppliedTemplate] = await Promise.all([
+      this.normalizeUserReference(document.creator),
+      this.normalizeUserReference(document.updatedBy),
+      this.normalizeNamedReference(document.project),
+      this.normalizeNamedReference(document.initiative),
+      this.normalizeNamedReference(document.lastAppliedTemplate),
+    ]);
+
+    return {
+      id: document.id,
+      title: document.title,
+      content: document.content ?? null,
+      color: document.color ?? null,
+      icon: document.icon ?? null,
+      slugId: document.slugId,
+      sortOrder: document.sortOrder,
+      createdAt: document.createdAt,
+      updatedAt: document.updatedAt,
+      archivedAt: document.archivedAt ?? null,
+      hiddenAt: document.hiddenAt ?? null,
+      trashed: document.trashed ?? false,
+      documentContentId: document.documentContentId ?? null,
+      url: document.url,
+      creator,
+      updatedBy,
+      project,
+      initiative,
+      lastAppliedTemplate,
+    };
+  }
+
+  private async normalizeDocumentSearchResult(document: any) {
+    return {
+      ...(await this.normalizeDocument(document)),
+      metadata: document.metadata ?? null,
+    };
   }
 
   private buildPMIssueFilter(args: PMIssueQueryArgs) {
@@ -1748,6 +1867,142 @@ export class LinearService {
 
       return true;
     });
+  }
+
+  async getDocuments(args: DocumentListArgs = {}) {
+    const documents = await this.client.documents(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter: this.buildDocumentFilter(args),
+      }),
+    );
+
+    return await Promise.all(documents.nodes.map((document) => this.normalizeDocument(document)));
+  }
+
+  async getDocumentById(id: string) {
+    const document = await this.client.document(id);
+
+    if (!document) {
+      throw new Error(`Document with ID ${id} not found`);
+    }
+
+    return await this.normalizeDocument(document);
+  }
+
+  async getProjectDocuments(args: ProjectDocumentListArgs) {
+    const project = await this.client.project(args.projectId);
+    if (!project) {
+      throw new Error(`Project with ID ${args.projectId} not found`);
+    }
+
+    const documents = await project.documents(
+      this.compactObject({
+        first: args.limit ?? 25,
+        includeArchived: args.includeArchived ?? false,
+        orderBy: this.normalizePaginationOrderBy(args.orderBy),
+        filter: this.buildDocumentFilter({ title: args.title }),
+      }),
+    );
+
+    return await Promise.all(documents.nodes.map((document) => this.normalizeDocument(document)));
+  }
+
+  async searchDocuments(args: SearchDocumentsArgs) {
+    const payload = await this.client.searchDocuments(args.term, this.compactObject({
+      teamId: this.nonEmptyString(args.teamId),
+      includeComments: args.includeComments,
+      first: args.limit ?? 25,
+      includeArchived: args.includeArchived ?? false,
+      orderBy: this.normalizePaginationOrderBy(args.orderBy),
+      snippetSize: args.snippetSize,
+    }));
+
+    return {
+      totalCount: payload.totalCount,
+      nodes: await Promise.all(payload.nodes.map((document) => this.normalizeDocumentSearchResult(document))),
+    };
+  }
+
+  async getDocumentContentHistory(id: string) {
+    const payload = await this.client.documentContentHistory(id);
+
+    return {
+      success: payload.success,
+      history: payload.history.map((entry) => ({
+        id: entry.id,
+        actorIds: entry.actorIds ?? [],
+        createdAt: entry.createdAt,
+        contentDataSnapshotAt: entry.contentDataSnapshotAt,
+      })),
+    };
+  }
+
+  async createDocument(args: DocumentCreateArgs) {
+    const title = this.nonEmptyString(args.title);
+    if (!title) {
+      throw new Error('Document title is required');
+    }
+
+    const createdDocument = await this.client.createDocument(this.compactObject({
+      title,
+      content: args.content,
+      icon: this.nonEmptyString(args.icon),
+      color: this.nonEmptyString(args.color),
+      projectId: this.nonEmptyString(args.projectId),
+      initiativeId: this.nonEmptyString(args.initiativeId),
+      lastAppliedTemplateId: this.nonEmptyString(args.lastAppliedTemplateId),
+      sortOrder: args.sortOrder,
+    }));
+
+    if (createdDocument.success && createdDocument.document) {
+      return await this.normalizeDocument(await createdDocument.document);
+    }
+
+    throw new Error('Failed to create document');
+  }
+
+  async updateDocument(args: DocumentUpdateArgs) {
+    const updateInput = this.compactObject({
+      title: this.nonEmptyString(args.title),
+      content: args.content,
+      icon: this.nullableNonEmptyString(args.icon),
+      color: this.nullableNonEmptyString(args.color),
+      hiddenAt:
+        args.hiddenAt === null
+          ? null
+          : this.nonEmptyString(args.hiddenAt)
+            ? new Date(this.nonEmptyString(args.hiddenAt) as string)
+            : undefined,
+      projectId: this.nullableNonEmptyString(args.projectId),
+      initiativeId: this.nullableNonEmptyString(args.initiativeId),
+      lastAppliedTemplateId: this.nullableNonEmptyString(args.lastAppliedTemplateId),
+      sortOrder: args.sortOrder,
+      trashed: args.trashed,
+    });
+
+    if (Object.keys(updateInput).length === 0) {
+      throw new Error('At least one document field must be provided');
+    }
+
+    const updatedDocument = await this.client.updateDocument(args.id, updateInput);
+    if (updatedDocument.success && updatedDocument.document) {
+      return await this.normalizeDocument(await updatedDocument.document);
+    }
+
+    throw new Error('Failed to update document');
+  }
+
+  async archiveDocument(id: string) {
+    const payload = await this.client.deleteDocument(id);
+    return { success: payload.success, id };
+  }
+
+  async unarchiveDocument(id: string) {
+    const payload = await this.client.unarchiveDocument(id);
+    return { success: payload.success, id };
   }
 
   async getMilestoneById(id: string) {

@@ -52,6 +52,17 @@ import {
   handleUpdateMilestone,
 } from './milestone-handlers.js';
 import {
+  handleArchiveDocument,
+  handleCreateDocument,
+  handleGetDocumentById,
+  handleGetDocumentContentHistory,
+  handleGetDocuments,
+  handleGetProjectDocuments,
+  handleSearchDocuments,
+  handleUnarchiveDocument,
+  handleUpdateDocument,
+} from './document-handlers.js';
+import {
   handleAddToFavorites,
   handleCreateSavedView,
   handleDeleteSavedView,
@@ -133,6 +144,17 @@ export function registerToolHandlers(linearService: LinearService) {
     linear_createMilestone: handleCreateMilestone(linearService),
     linear_updateMilestone: handleUpdateMilestone(linearService),
     linear_archiveMilestone: handleArchiveMilestone(linearService),
+
+    // Document tools
+    linear_getDocuments: handleGetDocuments(linearService),
+    linear_getDocumentById: handleGetDocumentById(linearService),
+    linear_getProjectDocuments: handleGetProjectDocuments(linearService),
+    linear_searchDocuments: handleSearchDocuments(linearService),
+    linear_getDocumentContentHistory: handleGetDocumentContentHistory(linearService),
+    linear_createDocument: handleCreateDocument(linearService),
+    linear_updateDocument: handleUpdateDocument(linearService),
+    linear_archiveDocument: handleArchiveDocument(linearService),
+    linear_unarchiveDocument: handleUnarchiveDocument(linearService),
 
     // View tools
     linear_getSavedViews: handleGetSavedViews(linearService),
@@ -250,6 +272,17 @@ export {
   handleCreateMilestone,
   handleUpdateMilestone,
   handleArchiveMilestone,
+
+  // Document handlers
+  handleGetDocuments,
+  handleGetDocumentById,
+  handleGetProjectDocuments,
+  handleSearchDocuments,
+  handleGetDocumentContentHistory,
+  handleCreateDocument,
+  handleUpdateDocument,
+  handleArchiveDocument,
+  handleUnarchiveDocument,
 
   // View handlers
   handleGetSavedViews,
