@@ -207,7 +207,9 @@ Linear calls these "saved views" in the product UI. The GraphQL API and SDK expo
 
 ## Recommended Future Tools
 
-The following tools are recommended for future implementation to enhance the capabilities of the MCP Linear:
+The following tools are recommended for future implementation based on the current Linear SDK shape and the patterns already used in this repository.
+
+Items that looked conceptually mismatched with the current SDK or too speculative for this repo have been removed or moved to lower-priority sections.
 
 ### Comment Management
 
@@ -234,21 +236,23 @@ The following tools are recommended for future implementation to enhance the cap
 | `linear_completeCycle`        | Mark a cycle as complete        | Medium   | 📝 Planned |
 | `linear_getCycleStats`        | Get statistics for a cycle      | Medium   | 📝 Planned |
 
+### Roadmap Project Association
+
+Linear roadmaps appear to model project associations rather than a generic roadmap-item abstraction in the current SDK.
+
+| Tool Name                      | Description                                  | Priority | Status     |
+| ------------------------------ | -------------------------------------------- | -------- | ---------- |
+| `linear_getRoadmapProjects`    | Get projects associated with a roadmap       | Medium   | 📝 Planned |
+| `linear_addProjectToRoadmap`   | Add a project to a roadmap                   | Medium   | 📝 Planned |
+| `linear_removeProjectFromRoadmap` | Remove a project from a roadmap           | Medium   | 📝 Planned |
+
 ### Milestone Management
 
-| Tool Name                           | Description                              | Priority | Status     |
-| ----------------------------------- | ---------------------------------------- | -------- | ---------- |
-| `linear_getMilestoneProjects`       | Get projects associated with a milestone | Medium   | 📝 Planned |
-| `linear_addProjectToMilestone`      | Add a project to a milestone             | Medium   | 📝 Planned |
-| `linear_removeProjectFromMilestone` | Remove a project from a milestone        | Low      | 📝 Planned |
+Linear milestones currently appear to belong to a single project in the SDK. Reassignment may be feasible; true multi-project milestone membership does not appear to be.
 
-### Roadmap Tools
-
-| Tool Name                      | Description                       | Priority | Status     |
-| ------------------------------ | --------------------------------- | -------- | ---------- |
-| `linear_getRoadmapItems`       | Get items in a roadmap            | Medium   | 📝 Planned |
-| `linear_addItemToRoadmap`      | Add an item to a roadmap          | Medium   | 📝 Planned |
-| `linear_removeItemFromRoadmap` | Remove an item from a roadmap     | Low      | 📝 Planned |
+| Tool Name                         | Description                                | Priority | Status                |
+| --------------------------------- | ------------------------------------------ | -------- | --------------------- |
+| `linear_reassignMilestoneProject` | Reassign a milestone to a different project | Medium   | ❓ Under Consideration |
 
 ### Workflow Management
 
@@ -256,7 +260,6 @@ The following tools are recommended for future implementation to enhance the cap
 | ------------------------------ | --------------------------------------- | -------- | ---------- |
 | `linear_createWorkflowState`   | Create a new workflow state             | Low      | 📝 Planned |
 | `linear_updateWorkflowState`   | Update a workflow state                 | Low      | 📝 Planned |
-| `linear_getTeamStates`         | Get workflow states for a specific team | Medium   | 📝 Planned |
 | `linear_reorderWorkflowStates` | Change the order of workflow states     | Low      | 📝 Planned |
 
 ### Team Management
@@ -275,15 +278,14 @@ The following tools are recommended for future implementation to enhance the cap
 
 ### Custom Fields
 
-| Tool Name                       | Description                              | Priority | Status     |
-| ------------------------------- | ---------------------------------------- | -------- | ---------- |
-| `linear_getCustomFields`        | Get a list of custom fields              | Medium   | ✅ Implemented |
-| `linear_createCustomField`      | Create a new custom field                | Low      | 📝 Planned |
-| `linear_updateCustomField`      | Update a custom field                    | Low      | 📝 Planned |
-| `linear_getIssueCustomFields`   | Get custom field values for an issue     | Medium   | ✅ Implemented |
-| `linear_updateIssueCustomField` | Update a custom field value for an issue | Medium   | ✅ Implemented |
-| `linear_getTeamCustomFields`    | Get custom fields for a specific team    | Medium   | 📝 Planned |
-| `linear_deleteCustomField`      | Delete a custom field                    | Low      | 📝 Planned |
+The repo already supports custom field discovery and issue value reads/updates. Admin CRUD appears to require the same kind of schema-driven GraphQL work used by the existing custom field support.
+
+| Tool Name                    | Description                           | Priority | Status                |
+| ---------------------------- | ------------------------------------- | -------- | --------------------- |
+| `linear_getTeamCustomFields` | Get custom fields for a specific team | Medium   | 📝 Planned            |
+| `linear_createCustomField`   | Create a new custom field             | Low      | ❓ Under Consideration |
+| `linear_updateCustomField`   | Update a custom field                 | Low      | ❓ Under Consideration |
+| `linear_deleteCustomField`   | Delete a custom field                 | Low      | ❓ Under Consideration |
 
 ### Issue Templates
 
@@ -299,25 +301,36 @@ The following tools are recommended for future implementation to enhance the cap
 
 ### Import and Export
 
-| Tool Name                 | Description                            | Priority | Status     |
-| ------------------------- | -------------------------------------- | -------- | ---------- |
-| `linear_bulkCreateIssues` | Create multiple issues at once         | Medium   | 📝 Planned |
-| `linear_exportIssues`     | Export issues to a structured format   | Low      | 📝 Planned |
-| `linear_importIssues`     | Import issues from a structured format | Low      | 📝 Planned |
-| `linear_importCsvData`    | Import data from CSV                   | Low      | 📝 Planned |
+Bulk import/export is feasible, but it does not map cleanly to first-class SDK batch primitives. This likely belongs at a repo-orchestration layer rather than a thin Linear wrapper.
 
-### Integration Tools
+| Tool Name                 | Description                            | Priority | Status                |
+| ------------------------- | -------------------------------------- | -------- | --------------------- |
+| `linear_bulkCreateIssues` | Create multiple issues at once         | Medium   | 📝 Planned            |
+| `linear_exportIssues`     | Export issues to a structured format   | Low      | 📝 Planned            |
+| `linear_importIssues`     | Import issues from a structured format | Low      | 📝 Planned            |
+| `linear_importCsvData`    | Import data from CSV                   | Low      | ❓ Under Consideration |
 
-| Tool Name                  | Description                             | Priority | Status     |
-| -------------------------- | --------------------------------------- | -------- | ---------- |
-| `linear_createWebhook`     | Create a webhook for integration events | Low      | 📝 Planned |
-| `linear_getAttachments`    | Get attachments for an issue            | Medium   | 📝 Planned |
-| `linear_addAttachment`     | Add an attachment to an issue           | Medium   | 📝 Planned |
-| `linear_getIntegrations`   | Get a list of active integrations       | Low      | 📝 Planned |
-| `linear_createIntegration` | Create a new integration                | Low      | 📝 Planned |
-| `linear_removeIntegration` | Remove an integration                   | Low      | 📝 Planned |
-| `linear_getWebhooks`       | Get a list of webhooks                  | Low      | 📝 Planned |
-| `linear_deleteWebhook`     | Delete a webhook                        | Low      | 📝 Planned |
+### Webhooks and Attachments
+
+These are directly supported by the current SDK and fit the repo well.
+
+| Tool Name               | Description                             | Priority | Status     |
+| ----------------------- | --------------------------------------- | -------- | ---------- |
+| `linear_getWebhooks`    | Get a list of webhooks                  | Low      | 📝 Planned |
+| `linear_createWebhook`  | Create a webhook for integration events | Low      | 📝 Planned |
+| `linear_deleteWebhook`  | Delete a webhook                        | Low      | 📝 Planned |
+| `linear_getAttachments` | Get attachments for an issue            | Medium   | 📝 Planned |
+| `linear_addAttachment`  | Add an attachment to an issue           | Medium   | 📝 Planned |
+
+### Integrations
+
+Provider integrations mostly involve OAuth or provider-specific setup flows, so they are a weaker fit for this repo’s current MCP surface.
+
+| Tool Name                  | Description                       | Priority | Status                |
+| -------------------------- | --------------------------------- | -------- | --------------------- |
+| `linear_getIntegrations`   | Get a list of active integrations | Low      | 📝 Planned            |
+| `linear_createIntegration` | Create a new integration          | Low      | ❓ Under Consideration |
+| `linear_removeIntegration` | Remove an integration             | Low      | ❓ Under Consideration |
 
 ### Notifications and Subscriptions
 
@@ -326,17 +339,19 @@ The following tools are recommended for future implementation to enhance the cap
 | `linear_getNotifications`           | Get notifications for the current user  | Medium   | 📝 Planned |
 | `linear_markNotificationAsRead`     | Mark a notification as read             | Medium   | 📝 Planned |
 | `linear_getSubscriptions`           | Get subscriptions for the current user  | Low      | 📝 Planned |
-| `linear_manageSubscription`         | Subscribe or unsubscribe from an entity | Low      | 📝 Planned |
+| `linear_manageSubscription`         | Subscribe or unsubscribe from an entity | Low      | ❓ Under Consideration |
 | `linear_markAllNotificationsAsRead` | Mark all notifications as read          | Medium   | 📝 Planned |
 | `linear_getUnreadNotificationCount` | Get count of unread notifications       | Medium   | 📝 Planned |
 
 ### Favorites and Pinning
 
-| Tool Name                    | Description                         | Priority | Status     |
-| ---------------------------- | ----------------------------------- | -------- | ---------- |
-| `linear_getFavorites`        | Get a list of user's favorite items | Medium   | 📝 Planned |
-| `linear_pinIssue`            | Pin an issue to the top of a list   | Medium   | 📝 Planned |
-| `linear_unpinIssue`          | Unpin an issue                      | Medium   | 📝 Planned |
+The repo already supports favorite views plus favorite add/remove mutations. Generic pinning does not appear to map cleanly to the current SDK.
+
+| Tool Name             | Description                         | Priority | Status                |
+| --------------------- | ----------------------------------- | -------- | --------------------- |
+| `linear_getFavorites` | Get a list of user's favorite items | Medium   | 📝 Planned            |
+| `linear_pinIssue`     | Pin an issue to the top of a list   | Medium   | ❓ Under Consideration |
+| `linear_unpinIssue`   | Unpin an issue                      | Medium   | ❓ Under Consideration |
 
 ### User Preferences
 
@@ -349,15 +364,17 @@ The following tools are recommended for future implementation to enhance the cap
 
 ### Metrics and Reporting
 
-| Tool Name                           | Description                                 | Priority | Status     |
-| ----------------------------------- | ------------------------------------------- | -------- | ---------- |
-| `linear_getTeamCycles`              | Get information about team cycles           | Medium   | 📝 Planned |
-| `linear_getTeamMetrics`             | Get performance metrics for a team          | Low      | 📝 Planned |
-| `linear_getIssueAnalytics`          | Get analytics for issues (cycle time, etc.) | Medium   | 📝 Planned |
-| `linear_generateReport`             | Generate a custom report                    | Low      | 📝 Planned |
-| `linear_getVelocityMetrics`         | Get team velocity metrics                   | Medium   | 📝 Planned |
-| `linear_getCompletionRateMetrics`   | Get completion rate metrics                 | Medium   | 📝 Planned |
-| `linear_getTimeToResolutionMetrics` | Get time-to-resolution metrics              | Medium   | 📝 Planned |
+Rich reporting support appears thin in the current SDK beyond export/report helper surfaces, so these remain speculative until we have specific use cases.
+
+| Tool Name                           | Description                                 | Priority | Status                |
+| ----------------------------------- | ------------------------------------------- | -------- | --------------------- |
+| `linear_getTeamCycles`              | Get information about team cycles           | Medium   | 📝 Planned            |
+| `linear_getTeamMetrics`             | Get performance metrics for a team          | Low      | ❓ Under Consideration |
+| `linear_getIssueAnalytics`          | Get analytics for issues (cycle time, etc.) | Medium   | ❓ Under Consideration |
+| `linear_generateReport`             | Generate a custom report                    | Low      | ❓ Under Consideration |
+| `linear_getVelocityMetrics`         | Get team velocity metrics                   | Medium   | ❓ Under Consideration |
+| `linear_getCompletionRateMetrics`   | Get completion rate metrics                 | Medium   | ❓ Under Consideration |
+| `linear_getTimeToResolutionMetrics` | Get time-to-resolution metrics              | Medium   | ❓ Under Consideration |
 
 ### Audit and History
 
@@ -368,14 +385,16 @@ The following tools are recommended for future implementation to enhance the cap
 | `linear_getTeamAuditEvents`         | Get audit events for a specific team     | Medium   | 📝 Planned |
 | `linear_getEntityHistory`           | Get the history of changes for an entity | Medium   | 📝 Planned |
 
-### API and Authentication
+### Sessions and Authentication
 
-| Tool Name                   | Description                   | Priority | Status     |
-| --------------------------- | ----------------------------- | -------- | ---------- |
-| `linear_createApiKey`       | Create a new API key          | Low      | 📝 Planned |
-| `linear_revokeApiKey`       | Revoke an API key             | Low      | 📝 Planned |
-| `linear_getApiKeys`         | Get all API keys for the user | Low      | 📝 Planned |
-| `linear_revokeUserSessions` | Revoke all user sessions      | Low      | 📝 Planned |
+Session and audit reads are a better fit for this repo than broader API-key or OAuth-client admin flows.
+
+| Tool Name                        | Description                              | Priority | Status     |
+| -------------------------------- | ---------------------------------------- | -------- | ---------- |
+| `linear_getAuthenticationSessions` | Get active authentication sessions     | Low      | 📝 Planned |
+| `linear_logoutSession`           | Revoke a specific session                | Low      | 📝 Planned |
+| `linear_logoutOtherSessions`     | Revoke all other sessions                | Low      | 📝 Planned |
+| `linear_logoutAllSessions`       | Revoke all sessions                      | Low      | 📝 Planned |
 
 ## Implementation Guide
 
