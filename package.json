@@ -50,6 +50,8 @@
       "linear_updateDocument",
       "linear_archiveDocument",
       "linear_unarchiveDocument",
+      "linear_getRateLimitStatus",
+      "linear_getServerStatus",
       "linear_getSavedViews",
       "linear_createSavedView",
       "linear_updateSavedView",

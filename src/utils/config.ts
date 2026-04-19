@@ -44,12 +44,18 @@ export function getLinearApiToken(): string | undefined {
   return tokenFromArgs || tokenFromEnv;
 }
 
+export function isDebugLoggingEnabled(): boolean {
+  return process.env.MCP_LINEAR_DEBUG === '1' || process.env.MCP_LINEAR_DEBUG === 'true';
+}
+
 /**
  * Log initialization information
  * @param message The message to log
  */
 export function logInfo(message: string): void {
-  console.error(message);
+  if (isDebugLoggingEnabled()) {
+    console.error(message);
+  }
 }
 
 /**

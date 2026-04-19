@@ -63,6 +63,7 @@ import {
   unarchiveDocumentToolDefinition,
   updateDocumentToolDefinition,
 } from './document-tools.js';
+import { getRateLimitStatusToolDefinition, getServerStatusToolDefinition } from './server-tools.js';
 import {
   addToFavoritesToolDefinition,
   createSavedViewToolDefinition,
@@ -135,6 +136,10 @@ export const allToolDefinitions: MCPToolDefinition[] = [
   updateDocumentToolDefinition,
   archiveDocumentToolDefinition,
   unarchiveDocumentToolDefinition,
+
+  // Server tools
+  getRateLimitStatusToolDefinition,
+  getServerStatusToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,
@@ -253,6 +258,10 @@ export {
   updateDocumentToolDefinition,
   archiveDocumentToolDefinition,
   unarchiveDocumentToolDefinition,
+
+  // Server tools
+  getRateLimitStatusToolDefinition,
+  getServerStatusToolDefinition,
 
   // View tools
   getSavedViewsToolDefinition,

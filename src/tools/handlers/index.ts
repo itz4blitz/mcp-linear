@@ -62,6 +62,7 @@ import {
   handleUnarchiveDocument,
   handleUpdateDocument,
 } from './document-handlers.js';
+import { handleGetRateLimitStatus, handleGetServerStatus } from './server-handlers.js';
 import {
   handleAddToFavorites,
   handleCreateSavedView,
@@ -105,8 +106,20 @@ import {
  * @param linearService The Linear service instance
  * @returns A map of tool name to handler function
  */
-export function registerToolHandlers(linearService: LinearService) {
+type RegisterToolHandlerOptions = {
+  getRateLimitStatus?: () => unknown | Promise<unknown>;
+  getServerStatus?: () => unknown | Promise<unknown>;
+};
+
+export function registerToolHandlers(
+  linearService: LinearService,
+  options: RegisterToolHandlerOptions = {},
+) {
   return {
+    // Server tools
+    linear_getRateLimitStatus: handleGetRateLimitStatus(options.getRateLimitStatus),
+    linear_getServerStatus: handleGetServerStatus(options.getServerStatus),
+
     // User tools
     linear_getViewer: handleGetViewer(linearService),
     linear_getOrganization: handleGetOrganization(linearService),
@@ -283,6 +296,10 @@ export {
   handleUpdateDocument,
   handleArchiveDocument,
   handleUnarchiveDocument,
+
+  // Server handlers
+  handleGetRateLimitStatus,
+  handleGetServerStatus,
 
   // View handlers
   handleGetSavedViews,

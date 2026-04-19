@@ -56,6 +56,15 @@ Linear exposes workspace and project docs as `Document` in the SDK/API.
 | `linear_archiveDocument`            | Archive (trash) a document                       | ✅ Implemented |
 | `linear_unarchiveDocument`          | Restore an archived document                     | ✅ Implemented |
 
+### Server Tools
+
+These are MCP-server observability helpers for tool-only clients.
+
+| Tool Name                      | Description                                              | Status         |
+| ------------------------------ | -------------------------------------------------------- | -------------- |
+| `linear_getRateLimitStatus`    | Get the shared Linear rate-limit cooldown snapshot       | ✅ Implemented |
+| `linear_getServerStatus`       | Get MCP Linear runtime status, counts, and rate-limit state | ✅ Implemented |
+
 ### Issue Tools
 
 | Tool Name                 | Description                                              | Status         |
