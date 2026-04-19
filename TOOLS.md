@@ -346,8 +346,6 @@ Bulk import/export is feasible, but it does not map cleanly to first-class SDK b
 
 These are directly supported by the current SDK and fit the repo well.
 
-| Tool Name               | Description                             | Priority | Status     |
-| ----------------------- | --------------------------------------- | -------- | ---------- |
 Webhooks, attachment reads, and attachment creation are now covered.
 
 ### Integrations

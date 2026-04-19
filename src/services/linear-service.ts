@@ -192,6 +192,29 @@ const ISSUE_SUMMARIES_QUERY = `
   }
 `;
 
+const NOTIFICATION_SUMMARY_QUERY = `
+  query NotificationSummaries($first: Int, $includeArchived: Boolean, $orderBy: PaginationOrderBy) {
+    notifications(first: $first, includeArchived: $includeArchived, orderBy: $orderBy) {
+      nodes {
+        id
+        type
+        title
+        subtitle
+        url
+        readAt
+        snoozedUntilAt
+        createdAt
+        updatedAt
+        actor {
+          id
+          name
+          email
+        }
+      }
+    }
+  }
+`;
+
 type JSONPrimitive = string | number | boolean | null;
 type JSONValue = JSONPrimitive | JSONValue[] | { [key: string]: JSONValue };
 
@@ -1315,6 +1338,27 @@ export class LinearService {
             id: actor.id,
             name: actor.name,
             email: actor.email,
+          }
+        : null,
+    };
+  }
+
+  private normalizeNotificationNode(notification: any) {
+    return {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      subtitle: notification.subtitle,
+      url: notification.url,
+      readAt: notification.readAt ?? null,
+      snoozedUntilAt: notification.snoozedUntilAt ?? null,
+      createdAt: notification.createdAt,
+      updatedAt: notification.updatedAt,
+      actor: notification.actor
+        ? {
+            id: notification.actor.id,
+            name: notification.actor.name,
+            email: notification.actor.email,
           }
         : null,
     };
@@ -2755,12 +2799,12 @@ export class LinearService {
   }
 
   async getNotifications(args: { limit?: number; includeArchived?: boolean; orderBy?: string } = {}) {
-    const notifications = await this.client.notifications(this.compactObject({
+    const result = await this.requestGraphQL<{ notifications: { nodes: any[] } }>(NOTIFICATION_SUMMARY_QUERY, {
       first: args.limit ?? 25,
       includeArchived: args.includeArchived ?? false,
       orderBy: this.normalizePaginationOrderBy(args.orderBy),
-    }));
-    return Promise.all(notifications.nodes.map((notification) => this.normalizeNotification(notification)));
+    });
+    return result.notifications.nodes.map((notification) => this.normalizeNotificationNode(notification));
   }
 
   async markNotificationAsRead(id: string) {
@@ -2782,15 +2826,15 @@ export class LinearService {
   }
 
   async markAllNotificationsAsRead(limit = 100) {
-    const notifications = await this.client.notifications({ first: limit });
-    const unread = notifications.nodes.filter((notification) => !notification.readAt);
+    const notifications = await this.getNotifications({ limit });
+    const unread = notifications.filter((notification) => !notification.readAt);
     await Promise.all(unread.map((notification) => this.client.updateNotification(notification.id, { readAt: new Date() })));
     return { success: true, count: unread.length };
   }
 
   async getUnreadNotificationCount(limit = 100) {
-    const notifications = await this.client.notifications({ first: limit });
-    return { count: notifications.nodes.filter((notification) => !notification.readAt).length };
+    const notifications = await this.getNotifications({ limit });
+    return { count: notifications.filter((notification) => !notification.readAt).length };
   }
 
   async getAuthenticationSessions() {
